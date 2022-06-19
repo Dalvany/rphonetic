@@ -9,6 +9,7 @@ pub use crate::caverphone::Caverphone1;
 pub use crate::caverphone::Caverphone2;
 
 mod caverphone;
+mod helper;
 
 /// This trait represents a phonetic algorithm.
 pub trait Encoder {
@@ -64,5 +65,3 @@ pub trait Encoder {
         f == s
     }
 }
-
-

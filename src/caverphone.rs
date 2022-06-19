@@ -1,6 +1,6 @@
 use regex::Regex;
 
-use crate::Encoder;
+use crate::{helper, Encoder};
 
 const SIX_1: &str = "111111";
 const TEN_1: &str = "1111111111";
@@ -23,13 +23,6 @@ pub struct Caverphone1 {
     end_mb: Regex,
     start_vowel: Regex,
     vowel: Regex,
-    s: Regex,
-    t: Regex,
-    p: Regex,
-    k: Regex,
-    f: Regex,
-    m: Regex,
-    n: Regex,
 }
 
 impl Caverphone1 {
@@ -39,26 +32,12 @@ impl Caverphone1 {
         let end_mb = Regex::new("mb$").unwrap();
         let start_vowel = Regex::new("^[aeiou]").unwrap();
         let vowel = Regex::new("[aeiou]").unwrap();
-        let s = Regex::new("s+").unwrap();
-        let t = Regex::new("t+").unwrap();
-        let p = Regex::new("p+").unwrap();
-        let k = Regex::new("k+").unwrap();
-        let f = Regex::new("f+").unwrap();
-        let m = Regex::new("m+").unwrap();
-        let n = Regex::new("n+").unwrap();
 
         Self {
             non_letter,
             end_mb,
             start_vowel,
             vowel,
-            s,
-            t,
-            p,
-            k,
-            f,
-            m,
-            n,
         }
     }
 }
@@ -131,13 +110,13 @@ impl Encoder for Caverphone1 {
         let txt = txt.replace("3gh3", "3kh3");
         let txt = txt.replace("gh", "22");
         let txt = txt.replace('g', "k");
-        let txt = self.s.replace_all(&*txt, "S");
-        let txt = self.t.replace_all(&*txt, "T");
-        let txt = self.p.replace_all(&*txt, "P");
-        let txt = self.k.replace_all(&*txt, "K");
-        let txt = self.f.replace_all(&*txt, "F");
-        let txt = self.m.replace_all(&*txt, "M");
-        let txt = self.n.replace_all(&*txt, "N");
+        let txt = helper::replace_compact_all(txt, 's', 'S');
+        let txt = helper::replace_compact_all(txt, 't', 'T');
+        let txt = helper::replace_compact_all(txt, 'p', 'P');
+        let txt = helper::replace_compact_all(txt, 'k', 'K');
+        let txt = helper::replace_compact_all(txt, 'f', 'F');
+        let txt = helper::replace_compact_all(txt, 'm', 'M');
+        let txt = helper::replace_compact_all(txt, 'n', 'N');
         let txt = txt.replace("w3", "W3");
         let txt = txt.replace("wy", "Wy");
         let txt = txt.replace("wh3", "Wh3");
@@ -185,13 +164,6 @@ pub struct Caverphone2 {
     end_mb: Regex,
     start_vowel: Regex,
     vowel: Regex,
-    s: Regex,
-    t: Regex,
-    p: Regex,
-    k: Regex,
-    f: Regex,
-    m: Regex,
-    n: Regex,
     end_w: Regex,
     end_r: Regex,
     end_l: Regex,
@@ -206,13 +178,6 @@ impl Caverphone2 {
         let end_mb = Regex::new("mb$").unwrap();
         let start_vowel = Regex::new("^[aeiou]").unwrap();
         let vowel = Regex::new("[aeiou]").unwrap();
-        let s = Regex::new("s+").unwrap();
-        let t = Regex::new("t+").unwrap();
-        let p = Regex::new("p+").unwrap();
-        let k = Regex::new("k+").unwrap();
-        let f = Regex::new("f+").unwrap();
-        let m = Regex::new("m+").unwrap();
-        let n = Regex::new("n+").unwrap();
         let end_w = Regex::new("w$").unwrap();
         let end_r = Regex::new("r$").unwrap();
         let end_l = Regex::new("l$").unwrap();
@@ -224,13 +189,6 @@ impl Caverphone2 {
             end_mb,
             start_vowel,
             vowel,
-            s,
-            t,
-            p,
-            k,
-            f,
-            m,
-            n,
             end_w,
             end_r,
             end_l,
@@ -326,13 +284,13 @@ impl Encoder for Caverphone2 {
         let txt = txt.replace("3gh3", "3kh3");
         let txt = txt.replace("gh", "22");
         let txt = txt.replace('g', "k");
-        let txt = self.s.replace_all(&*txt, "S");
-        let txt = self.t.replace_all(&*txt, "T");
-        let txt = self.p.replace_all(&*txt, "P");
-        let txt = self.k.replace_all(&*txt, "K");
-        let txt = self.f.replace_all(&*txt, "F");
-        let txt = self.m.replace_all(&*txt, "M");
-        let txt = self.n.replace_all(&*txt, "N");
+        let txt = helper::replace_compact_all(txt, 's', 'S');
+        let txt = helper::replace_compact_all(txt, 't', 'T');
+        let txt = helper::replace_compact_all(txt, 'p', 'P');
+        let txt = helper::replace_compact_all(txt, 'k', 'K');
+        let txt = helper::replace_compact_all(txt, 'f', 'F');
+        let txt = helper::replace_compact_all(txt, 'm', 'M');
+        let txt = helper::replace_compact_all(txt, 'n', 'N');
         let txt = txt.replace("w3", "W3");
         let txt = txt.replace("wh3", "Wh3");
         let txt = self.end_w.replace_all(&*txt, "3");
@@ -452,92 +410,26 @@ mod tests {
         let caverphone = Caverphone2::default();
 
         let names = vec![
-            "Cailean",
-            "Calan",
-            "Calen",
-            "Callahan",
-            "Callan",
-            "Callean",
-            "Carleen",
-            "Carlen",
-            "Carlene",
-            "Carlin",
-            "Carline",
-            "Carlyn",
-            "Carlynn",
-            "Carlynne",
-            "Charlean",
-            "Charleen",
-            "Charlene",
-            "Charline",
-            "Cherlyn",
-            "Chirlin",
-            "Clein",
-            "Cleon",
-            "Cline",
-            "Cohleen",
-            "Colan",
-            "Coleen",
-            "Colene",
-            "Colin",
-            "Colleen",
-            "Collen",
-            "Collin",
-            "Colline",
-            "Colon",
-            "Cullan",
-            "Cullen",
-            "Cullin",
-            "Gaelan",
-            "Galan",
-            "Galen",
-            "Garlan",
-            "Garlen",
-            "Gaulin",
-            "Gayleen",
-            "Gaylene",
-            "Giliane",
-            "Gillan",
-            "Gillian",
-            "Glen",
-            "Glenn",
-            "Glyn",
-            "Glynn",
-            "Gollin",
-            "Gorlin",
-            "Kalin",
-            "Karlan",
-            "Karleen",
-            "Karlen",
-            "Karlene",
-            "Karlin",
-            "Karlyn",
-            "Kaylyn",
-            "Keelin",
-            "Kellen",
-            "Kellene",
-            "Kellyann",
-            "Kellyn",
-            "Khalin",
-            "Kilan",
-            "Kilian",
-            "Killen",
-            "Killian",
-            "Killion",
-            "Klein",
-            "Kleon",
-            "Kline",
-            "Koerlin",
-            "Kylen",
-            "Kylynn",
-            "Quillan",
-            "Quillon",
-            "Qulllon",
+            "Cailean", "Calan", "Calen", "Callahan", "Callan", "Callean", "Carleen", "Carlen",
+            "Carlene", "Carlin", "Carline", "Carlyn", "Carlynn", "Carlynne", "Charlean",
+            "Charleen", "Charlene", "Charline", "Cherlyn", "Chirlin", "Clein", "Cleon", "Cline",
+            "Cohleen", "Colan", "Coleen", "Colene", "Colin", "Colleen", "Collen", "Collin",
+            "Colline", "Colon", "Cullan", "Cullen", "Cullin", "Gaelan", "Galan", "Galen", "Garlan",
+            "Garlen", "Gaulin", "Gayleen", "Gaylene", "Giliane", "Gillan", "Gillian", "Glen",
+            "Glenn", "Glyn", "Glynn", "Gollin", "Gorlin", "Kalin", "Karlan", "Karleen", "Karlen",
+            "Karlene", "Karlin", "Karlyn", "Kaylyn", "Keelin", "Kellen", "Kellene", "Kellyann",
+            "Kellyn", "Khalin", "Kilan", "Kilian", "Killen", "Killian", "Killion", "Klein",
+            "Kleon", "Kline", "Koerlin", "Kylen", "Kylynn", "Quillan", "Quillon", "Qulllon",
             "Xylon",
         ];
 
         for name in names {
-            assert_eq!(caverphone.encode(name), "KLN1111111", "{} cause the error", name);
+            assert_eq!(
+                caverphone.encode(name),
+                "KLN1111111",
+                "{} cause the error",
+                name
+            );
         }
     }
 
@@ -546,79 +438,23 @@ mod tests {
         let caverphone = Caverphone2::default();
 
         let names = vec![
-            "Dan",
-            "Dane",
-            "Dann",
-            "Darn",
-            "Daune",
-            "Dawn",
-            "Ddene",
-            "Dean",
-            "Deane",
-            "Deanne",
-            "DeeAnn",
-            "Deeann",
-            "Deeanne",
-            "Deeyn",
-            "Den",
-            "Dene",
-            "Denn",
-            "Deonne",
-            "Diahann",
-            "Dian",
-            "Diane",
-            "Diann",
-            "Dianne",
-            "Diannne",
-            "Dine",
-            "Dion",
-            "Dione",
-            "Dionne",
-            "Doane",
-            "Doehne",
-            "Don",
-            "Donn",
-            "Doone",
-            "Dorn",
-            "Down",
-            "Downe",
-            "Duane",
-            "Dun",
-            "Dunn",
-            "Duyne",
-            "Dyan",
-            "Dyane",
-            "Dyann",
-            "Dyanne",
-            "Dyun",
-            "Tan",
-            "Tann",
-            "Teahan",
-            "Ten",
-            "Tenn",
-            "Terhune",
-            "Thain",
-            "Thaine",
-            "Thane",
-            "Thanh",
-            "Thayne",
-            "Theone",
-            "Thin",
-            "Thorn",
-            "Thorne",
-            "Thun",
-            "Thynne",
-            "Tien",
-            "Tine",
-            "Tjon",
-            "Town",
-            "Towne",
-            "Turne",
-            "Tyne",
+            "Dan", "Dane", "Dann", "Darn", "Daune", "Dawn", "Ddene", "Dean", "Deane", "Deanne",
+            "DeeAnn", "Deeann", "Deeanne", "Deeyn", "Den", "Dene", "Denn", "Deonne", "Diahann",
+            "Dian", "Diane", "Diann", "Dianne", "Diannne", "Dine", "Dion", "Dione", "Dionne",
+            "Doane", "Doehne", "Don", "Donn", "Doone", "Dorn", "Down", "Downe", "Duane", "Dun",
+            "Dunn", "Duyne", "Dyan", "Dyane", "Dyann", "Dyanne", "Dyun", "Tan", "Tann", "Teahan",
+            "Ten", "Tenn", "Terhune", "Thain", "Thaine", "Thane", "Thanh", "Thayne", "Theone",
+            "Thin", "Thorn", "Thorne", "Thun", "Thynne", "Tien", "Tine", "Tjon", "Town", "Towne",
+            "Turne", "Tyne",
         ];
 
         for name in names {
-            assert_eq!(caverphone.encode(name), "TN11111111", "{} cause the error", name);
+            assert_eq!(
+                caverphone.encode(name),
+                "TN11111111",
+                "{} cause the error",
+                name
+            );
         }
     }
 
@@ -627,78 +463,23 @@ mod tests {
         let caverphone = Caverphone2::default();
 
         let names = vec![
-            "Darda",
-            "Datha",
-            "Dedie",
-            "Deedee",
-            "Deerdre",
-            "Deidre",
-            "Deirdre",
-            "Detta",
-            "Didi",
-            "Didier",
-            "Dido",
-            "Dierdre",
-            "Dieter",
-            "Dita",
-            "Ditter",
-            "Dodi",
-            "Dodie",
-            "Dody",
-            "Doherty",
-            "Dorthea",
-            "Dorthy",
-            "Doti",
-            "Dotti",
-            "Dottie",
-            "Dotty",
-            "Doty",
-            "Doughty",
-            "Douty",
-            "Dowdell",
-            "Duthie",
-            "Tada",
-            "Taddeo",
-            "Tadeo",
-            "Tadio",
-            "Tati",
-            "Teador",
-            "Tedda",
-            "Tedder",
-            "Teddi",
-            "Teddie",
-            "Teddy",
-            "Tedi",
-            "Tedie",
-            "Teeter",
-            "Teodoor",
-            "Teodor",
-            "Terti",
-            "Theda",
-            "Theodor",
-            "Theodore",
-            "Theta",
-            "Thilda",
-            "Thordia",
-            "Tilda",
-            "Tildi",
-            "Tildie",
-            "Tildy",
-            "Tita",
-            "Tito",
-            "Tjader",
-            "Toddie",
-            "Toddy",
-            "Torto",
-            "Tuddor",
-            "Tudor",
-            "Turtle",
-            "Tuttle",
-            "Tutto",
+            "Darda", "Datha", "Dedie", "Deedee", "Deerdre", "Deidre", "Deirdre", "Detta", "Didi",
+            "Didier", "Dido", "Dierdre", "Dieter", "Dita", "Ditter", "Dodi", "Dodie", "Dody",
+            "Doherty", "Dorthea", "Dorthy", "Doti", "Dotti", "Dottie", "Dotty", "Doty", "Doughty",
+            "Douty", "Dowdell", "Duthie", "Tada", "Taddeo", "Tadeo", "Tadio", "Tati", "Teador",
+            "Tedda", "Tedder", "Teddi", "Teddie", "Teddy", "Tedi", "Tedie", "Teeter", "Teodoor",
+            "Teodor", "Terti", "Theda", "Theodor", "Theodore", "Theta", "Thilda", "Thordia",
+            "Tilda", "Tildi", "Tildie", "Tildy", "Tita", "Tito", "Tjader", "Toddie", "Toddy",
+            "Torto", "Tuddor", "Tudor", "Turtle", "Tuttle", "Tutto",
         ];
 
         for name in names {
-            assert_eq!(caverphone.encode(name), "TTA1111111", "{} cause the error", name);
+            assert_eq!(
+                caverphone.encode(name),
+                "TTA1111111",
+                "{} cause the error",
+                name
+            );
         }
     }
 
