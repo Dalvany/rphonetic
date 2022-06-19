@@ -20,7 +20,6 @@ const TEN_1: &str = "1111111111";
 /// ```
 pub struct Caverphone1 {
     non_letter: Regex,
-    end_mb: Regex,
     start_vowel: Regex,
     vowel: Regex,
 }
@@ -29,13 +28,11 @@ impl Caverphone1 {
     pub fn new() -> Self {
         // unwrap should work otherwise unit tests will fail.
         let non_letter = Regex::new("[^a-z]").unwrap();
-        let end_mb = Regex::new("mb$").unwrap();
         let start_vowel = Regex::new("^[aeiou]").unwrap();
         let vowel = Regex::new("[aeiou]").unwrap();
 
         Self {
             non_letter,
-            end_mb,
             start_vowel,
             vowel,
         }
@@ -85,8 +82,7 @@ impl Encoder for Caverphone1 {
             txt
         };
 
-        let txt = self.end_mb.replace_all(&*txt, "m2");
-
+        let txt = helper::replace_end(txt, "mb", "m2");
         let txt = txt.replace("cq", "2q");
         let txt = txt.replace("ci", "si");
         let txt = txt.replace("ce", "se");
@@ -160,39 +156,21 @@ impl Encoder for Caverphone1 {
 /// ```
 pub struct Caverphone2 {
     non_letter: Regex,
-    end_e: Regex,
-    end_mb: Regex,
     start_vowel: Regex,
     vowel: Regex,
-    end_w: Regex,
-    end_r: Regex,
-    end_l: Regex,
-    end_3: Regex,
 }
 
 impl Caverphone2 {
     pub fn new() -> Self {
         // unwrap should work otherwise unit tests will fail.
         let non_letter = Regex::new("[^a-z]").unwrap();
-        let end_e = Regex::new("e$").unwrap();
-        let end_mb = Regex::new("mb$").unwrap();
         let start_vowel = Regex::new("^[aeiou]").unwrap();
         let vowel = Regex::new("[aeiou]").unwrap();
-        let end_w = Regex::new("w$").unwrap();
-        let end_r = Regex::new("r$").unwrap();
-        let end_l = Regex::new("l$").unwrap();
-        let end_3 = Regex::new("3$").unwrap();
 
         Self {
             non_letter,
-            end_e,
-            end_mb,
             start_vowel,
             vowel,
-            end_w,
-            end_r,
-            end_l,
-            end_3,
         }
     }
 }
@@ -211,9 +189,9 @@ impl Encoder for Caverphone2 {
 
         let txt = s.to_lowercase();
 
-        let txt = self.non_letter.replace_all(&*txt, "");
+        let txt = self.non_letter.replace_all(&*txt, "").to_string();
 
-        let txt = self.end_e.replace_all(&*txt, "").to_string();
+        let txt = helper::replace_end(txt, "e", "");
 
         // Avoid regex since it's quite simple
         let txt = if txt.starts_with("cough") {
@@ -247,7 +225,7 @@ impl Encoder for Caverphone2 {
             txt
         };
 
-        let txt = self.end_mb.replace_all(&*txt, "m2");
+        let txt = helper::replace_end(txt, "mb", "m2");
 
         let txt = txt.replace("cq", "2q");
         let txt = txt.replace("ci", "si");
@@ -293,7 +271,7 @@ impl Encoder for Caverphone2 {
         let txt = helper::replace_compact_all(txt, 'n', 'N');
         let txt = txt.replace("w3", "W3");
         let txt = txt.replace("wh3", "Wh3");
-        let txt = self.end_w.replace_all(&*txt, "3");
+        let txt = helper::replace_end(txt, "w", "3");
         let txt = txt.replace('w', "2");
         let txt = if txt.starts_with('h') {
             txt.replacen('h', "A", 1)
@@ -302,14 +280,14 @@ impl Encoder for Caverphone2 {
         };
         let txt = txt.replace('h', "2");
         let txt = txt.replace("r3", "R3");
-        let txt = self.end_r.replace_all(&*txt, "3");
+        let txt = helper::replace_end(txt, "r", "3");
         let txt = txt.replace('r', "2");
         let txt = txt.replace("l3", "L3");
-        let txt = self.end_l.replace_all(&*txt, "3");
+        let txt = helper::replace_end(txt, "l", "3");
         let txt = txt.replace('l', "2");
 
         let txt = txt.replace('2', "");
-        let txt = self.end_3.replace_all(&*txt, "A");
+        let txt = helper::replace_end(txt, "3", "A");
         let txt = txt.replace('3', "");
 
         let txt = txt + &*TEN_1;
