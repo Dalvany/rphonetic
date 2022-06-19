@@ -1,4 +1,4 @@
-/// Replace regex like "s+" by a single char "S"
+/// Replace regex like "s+" by a single char "S".
 pub fn replace_compact_all(string: String, pattern: char, to: char) -> String {
     let mut already_replaced = false;
     let mut ret = String::with_capacity(string.len());
@@ -16,6 +16,7 @@ pub fn replace_compact_all(string: String, pattern: char, to: char) -> String {
     ret
 }
 
+/// Test if `string` ends with `pattern` and replace it by `to`.
 pub fn replace_end<'a>(mut string: String, pattern: &'a str, to: &'a str) -> String {
     if string.ends_with(pattern) {
         string.replace_range(string.len() - pattern.len().., to);
@@ -23,12 +24,9 @@ pub fn replace_end<'a>(mut string: String, pattern: &'a str, to: &'a str) -> Str
     string
 }
 
+/// Test if a char is a vowel.
 pub fn is_vowel(c: char) -> bool {
     matches!(c, 'a' | 'e' | 'i' | 'o' | 'u')
-}
-
-fn is_letter(c: char) -> bool {
-    matches!(c, 'a'..='z')
 }
 
 pub fn replace_char<F>(string: String, f: F) -> String
@@ -47,7 +45,7 @@ pub fn remove_all_nonletter(string: String) -> String {
     string
         .chars()
         .into_iter()
-        .filter(|&c| is_letter(c))
+        .filter(|&c| c.is_ascii_lowercase())
         .collect::<String>()
 }
 
@@ -71,42 +69,5 @@ mod tests {
         assert!(!is_vowel('A'));
         assert!(!is_vowel('I'));
         assert!(!is_vowel('3'));
-    }
-
-    #[test]
-    fn test_is_letter() {
-        assert!(is_letter('a'));
-        assert!(is_letter('b'));
-        assert!(is_letter('c'));
-        assert!(is_letter('d'));
-        assert!(is_letter('e'));
-        assert!(is_letter('f'));
-        assert!(is_letter('g'));
-        assert!(is_letter('h'));
-        assert!(is_letter('i'));
-        assert!(is_letter('j'));
-        assert!(is_letter('k'));
-        assert!(is_letter('l'));
-        assert!(is_letter('m'));
-        assert!(is_letter('n'));
-        assert!(is_letter('o'));
-        assert!(is_letter('p'));
-        assert!(is_letter('q'));
-        assert!(is_letter('r'));
-        assert!(is_letter('s'));
-        assert!(is_letter('t'));
-        assert!(is_letter('u'));
-        assert!(is_letter('v'));
-        assert!(is_letter('w'));
-        assert!(is_letter('x'));
-        assert!(is_letter('y'));
-        assert!(is_letter('z'));
-        assert!(!is_letter('A'));
-        assert!(!is_letter('Z'));
-        assert!(!is_letter('1'));
-        assert!(!is_letter('0'));
-        assert!(!is_letter('O'));
-        assert!(!is_letter('\n'));
-        assert!(!is_letter('こ'));
     }
 }
