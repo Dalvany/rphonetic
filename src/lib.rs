@@ -10,7 +10,7 @@ pub trait Encoder {
         let f = self.encode(first);
         let s = self.encode(second);
 
-        return f == s;
+        f == s
     }
 }
 

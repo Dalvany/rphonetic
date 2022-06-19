@@ -50,6 +50,12 @@ impl Caverphone1 {
     }
 }
 
+impl Default for Caverphone1 {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Encoder for Caverphone1 {
     fn encode(&self, s: &str) -> String {
         if s.is_empty() {
@@ -94,24 +100,24 @@ impl Encoder for Caverphone1 {
         let txt = txt.replace("ce", "se");
         let txt = txt.replace("cy", "sy");
         let txt = txt.replace("tch", "2ch");
-        let txt = txt.replace("c", "k");
-        let txt = txt.replace("q", "k");
-        let txt = txt.replace("x", "k");
-        let txt = txt.replace("v", "f");
+        let txt = txt.replace('c', "k");
+        let txt = txt.replace('q', "k");
+        let txt = txt.replace('x', "k");
+        let txt = txt.replace('v', "f");
         let txt = txt.replace("dg", "2g");
         let txt = txt.replace("tio", "sio");
         let txt = txt.replace("tia", "sia");
-        let txt = txt.replace("d", "t");
+        let txt = txt.replace('d', "t");
         let txt = txt.replace("ph", "fh");
-        let txt = txt.replace("b", "p");
+        let txt = txt.replace('b', "p");
         let txt = txt.replace("sh", "s2");
-        let txt = txt.replace("z", "s");
+        let txt = txt.replace('z', "s");
         let txt = self.start_vowel.replace_all(&*txt, "A");
 
         let txt = self.vowel.replace_all(&*txt, "3");
         let txt = txt.replace("3gh3", "3kh3");
         let txt = txt.replace("gh", "22");
-        let txt = txt.replace("g", "k");
+        let txt = txt.replace('g', "k");
         let txt = self.s.replace_all(&*txt, "S");
         let txt = self.t.replace_all(&*txt, "T");
         let txt = self.p.replace_all(&*txt, "P");
@@ -123,29 +129,29 @@ impl Encoder for Caverphone1 {
         let txt = txt.replace("wy", "Wy");
         let txt = txt.replace("wh3", "Wh3");
         let txt = txt.replace("why", "Why");
-        let txt = txt.replace("w", "2");
-        let txt = if txt.starts_with("h") {
-            txt.replacen("h", "A", 1)
+        let txt = txt.replace('w', "2");
+        let txt = if txt.starts_with('h') {
+            txt.replacen('h', "A", 1)
         } else {
             txt
         };
-        let txt = txt.replace("h", "2");
+        let txt = txt.replace('h', "2");
         let txt = txt.replace("r3", "R3");
         let txt = txt.replace("ry", "Ry");
-        let txt = txt.replace("r", "2");
+        let txt = txt.replace('r', "2");
         let txt = txt.replace("l3", "L3");
         let txt = txt.replace("ly", "Ly");
-        let txt = txt.replace("l", "2");
-        let txt = txt.replace("j", "y");
+        let txt = txt.replace('l', "2");
+        let txt = txt.replace('j', "y");
         let txt = txt.replace("y3", "Y3");
-        let txt = txt.replace("y", "2");
+        let txt = txt.replace('y', "2");
 
-        let txt = txt.replace("2", "");
-        let txt = txt.replace("3", "");
+        let txt = txt.replace('2', "");
+        let txt = txt.replace('3', "");
 
         let txt = txt + &*SIX_1;
 
-        return txt[0..SIX_1.len()].to_string();
+        txt[0..SIX_1.len()].to_string()
     }
 }
 
@@ -209,6 +215,12 @@ impl Caverphone2 {
     }
 }
 
+impl Default for Caverphone2 {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Encoder for Caverphone2 {
     fn encode(&self, s: &str) -> String {
         if s.is_empty() {
@@ -260,36 +272,36 @@ impl Encoder for Caverphone2 {
         let txt = txt.replace("ce", "se");
         let txt = txt.replace("cy", "sy");
         let txt = txt.replace("tch", "2ch");
-        let txt = txt.replace("c", "k");
-        let txt = txt.replace("q", "k");
-        let txt = txt.replace("x", "k");
-        let txt = txt.replace("v", "f");
+        let txt = txt.replace('c', "k");
+        let txt = txt.replace('q', "k");
+        let txt = txt.replace('x', "k");
+        let txt = txt.replace('v', "f");
         let txt = txt.replace("dg", "2g");
         let txt = txt.replace("tio", "sio");
         let txt = txt.replace("tia", "sia");
-        let txt = txt.replace("d", "t");
+        let txt = txt.replace('d', "t");
         let txt = txt.replace("ph", "fh");
-        let txt = txt.replace("b", "p");
+        let txt = txt.replace('b', "p");
         let txt = txt.replace("sh", "s2");
-        let txt = txt.replace("z", "s");
+        let txt = txt.replace('z', "s");
         let txt = self.start_vowel.replace_all(&*txt, "A");
 
         let txt = self.vowel.replace_all(&*txt, "3");
-        let txt = txt.replace("j", "y");
+        let txt = txt.replace('j', "y");
         let txt = if txt.starts_with("y3") {
             txt.replacen("y3", "Y3", 1)
         } else {
             txt
         };
-        let txt = if txt.starts_with("y") {
-            txt.replacen("y", "A", 1)
+        let txt = if txt.starts_with('y') {
+            txt.replacen('y', "A", 1)
         } else {
             txt
         };
-        let txt = txt.replace("y", "3");
+        let txt = txt.replace('y', "3");
         let txt = txt.replace("3gh3", "3kh3");
         let txt = txt.replace("gh", "22");
-        let txt = txt.replace("g", "k");
+        let txt = txt.replace('g', "k");
         let txt = self.s.replace_all(&*txt, "S");
         let txt = self.t.replace_all(&*txt, "T");
         let txt = self.p.replace_all(&*txt, "P");
@@ -300,27 +312,27 @@ impl Encoder for Caverphone2 {
         let txt = txt.replace("w3", "W3");
         let txt = txt.replace("wh3", "Wh3");
         let txt = self.end_w.replace_all(&*txt, "3");
-        let txt = txt.replace("w", "2");
-        let txt = if txt.starts_with("h") {
-            txt.replacen("h", "A", 1)
+        let txt = txt.replace('w', "2");
+        let txt = if txt.starts_with('h') {
+            txt.replacen('h', "A", 1)
         } else {
             txt
         };
-        let txt = txt.replace("h", "2");
+        let txt = txt.replace('h', "2");
         let txt = txt.replace("r3", "R3");
         let txt = self.end_r.replace_all(&*txt, "3");
-        let txt = txt.replace("r", "2");
+        let txt = txt.replace('r', "2");
         let txt = txt.replace("l3", "L3");
         let txt = self.end_l.replace_all(&*txt, "3");
-        let txt = txt.replace("l", "2");
+        let txt = txt.replace('l', "2");
 
-        let txt = txt.replace("2", "");
+        let txt = txt.replace('2', "");
         let txt = self.end_3.replace_all(&*txt, "A");
-        let txt = txt.replace("3", "");
+        let txt = txt.replace('3', "");
 
         let txt = txt + &*TEN_1;
 
-        return txt[0..TEN_1.len()].to_string();
+        txt[0..TEN_1.len()].to_string()
     }
 }
 
@@ -331,7 +343,7 @@ mod tests {
 
     #[test]
     fn test_caverphone1_revisited_common_code_at1111() {
-        let caverphone = Caverphone1::new();
+        let caverphone = Caverphone1::default();
 
         assert_eq!(caverphone.encode("add"), "AT1111");
         assert_eq!(caverphone.encode("aid"), "AT1111");
@@ -352,7 +364,7 @@ mod tests {
 
     #[test]
     fn test_end_mb_caverphone1() {
-        let caverphone = Caverphone1::new();
+        let caverphone = Caverphone1::default();
 
         assert_eq!(caverphone.encode("mb"), "M11111");
         assert_eq!(caverphone.encode("mbmb"), "MPM111");
@@ -360,15 +372,15 @@ mod tests {
 
     #[test]
     fn test_is_caverphone1_equals() {
-        let caverphone = Caverphone1::new();
+        let caverphone = Caverphone1::default();
 
-        assert_eq!(caverphone.is_encoded_equals("Peter", "Stevenson"), false);
+        assert!(!caverphone.is_encoded_equals("Peter", "Stevenson"));
         assert!(caverphone.is_encoded_equals("Peter", "Peady"));
     }
 
     #[test]
     fn test_specification_v1examples() {
-        let caverphone = Caverphone1::new();
+        let caverphone = Caverphone1::default();
 
         assert_eq!(caverphone.encode("David"), "TFT111");
         assert_eq!(caverphone.encode("Whittle"), "WTL111");
@@ -376,7 +388,7 @@ mod tests {
 
     #[test]
     fn test_wikipedia_examples() {
-        let caverphone = Caverphone1::new();
+        let caverphone = Caverphone1::default();
 
         assert_eq!(caverphone.encode("Lee"), "L11111");
         assert_eq!(caverphone.encode("Thompson"), "TMPSN1");
@@ -384,7 +396,7 @@ mod tests {
 
     #[test]
     fn test_caverphone_revisited_common_code_at11111111() {
-        let caverphone = Caverphone2::new();
+        let caverphone = Caverphone2::default();
 
         assert_eq!(caverphone.encode("add"), "AT11111111");
         assert_eq!(caverphone.encode("aid"), "AT11111111");
@@ -405,7 +417,7 @@ mod tests {
 
     #[test]
     fn test_caverphone_revisited_examples() {
-        let caverphone = Caverphone2::new();
+        let caverphone = Caverphone2::default();
 
         assert_eq!(caverphone.encode("Stevenson"), "STFNSN1111");
         assert_eq!(caverphone.encode("Peter"), "PTA1111111");
@@ -413,7 +425,7 @@ mod tests {
 
     #[test]
     fn test_caverphone_revisited_random_name_kln1111111() {
-        let caverphone = Caverphone2::new();
+        let caverphone = Caverphone2::default();
 
         let names = vec![
             "Cailean",
@@ -507,7 +519,7 @@ mod tests {
 
     #[test]
     fn test_caverphone_revisited_random_name_tn11111111() {
-        let caverphone = Caverphone2::new();
+        let caverphone = Caverphone2::default();
 
         let names = vec![
             "Dan",
@@ -588,7 +600,7 @@ mod tests {
 
     #[test]
     fn test_caverphone_revisited_random_name_tta1111111() {
-        let caverphone = Caverphone2::new();
+        let caverphone = Caverphone2::default();
 
         let names = vec![
             "Darda",
@@ -668,7 +680,7 @@ mod tests {
 
     #[test]
     fn test_caverphone_revisited_random_words() {
-        let caverphone = Caverphone2::new();
+        let caverphone = Caverphone2::default();
 
         assert_eq!(caverphone.encode("rather"), "RTA1111111");
         assert_eq!(caverphone.encode("ready"), "RTA1111111");
@@ -682,23 +694,23 @@ mod tests {
 
     #[test]
     fn test_end_mb_caverphone2() {
-        let caverphone = Caverphone2::new();
+        let caverphone = Caverphone2::default();
 
         assert_eq!(caverphone.encode("mb"), "M111111111");
         assert_eq!(caverphone.encode("mbmb"), "MPM1111111");
     }
 
     #[test]
-    fn test_is_caverphone2_equals(){
-        let caverphone = Caverphone2::new();
+    fn test_is_caverphone2_equals() {
+        let caverphone = Caverphone2::default();
 
-        assert_eq!(caverphone.is_encoded_equals("Peter", "Stevenson"), false);
+        assert!(!caverphone.is_encoded_equals("Peter", "Stevenson"));
         assert!(caverphone.is_encoded_equals("Peter", "Peady"));
     }
 
     #[test]
-    fn test_specification_examples(){
-        let caverphone = Caverphone2::new();
+    fn test_specification_examples() {
+        let caverphone = Caverphone2::default();
 
         assert_eq!(caverphone.encode("Peter"), "PTA1111111");
         assert_eq!(caverphone.encode("ready"), "RTA1111111");
