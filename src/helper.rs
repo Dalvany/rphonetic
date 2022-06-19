@@ -7,11 +7,9 @@ pub fn replace_compact_all(string: String, pattern: char, to: char) -> String {
         if ch != pattern {
             ret.push(ch);
             already_replaced = false;
-        } else {
-            if !already_replaced {
-                ret.push(to);
-                already_replaced = true;
-            }
+        } else if !already_replaced {
+            ret.push(to);
+            already_replaced = true;
         }
     });
 
@@ -26,17 +24,11 @@ pub fn replace_end<'a>(mut string: String, pattern: &'a str, to: &'a str) -> Str
 }
 
 pub fn is_vowel(c: char) -> bool {
-    match c {
-        'a' | 'e' | 'i' | 'o' | 'u' => true,
-        _ => false,
-    }
+    matches!(c, 'a' | 'e' | 'i' | 'o' | 'u')
 }
 
 fn is_letter(c: char) -> bool {
-    match c {
-        'a'..='z' => true,
-        _ => false,
-    }
+    matches!(c, 'a'..='z')
 }
 
 pub fn replace_char<F>(string: String, f: F) -> String
