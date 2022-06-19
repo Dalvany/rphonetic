@@ -41,9 +41,14 @@ fn is_letter(c: char) -> bool {
 
 pub fn replace_char<F>(string: String, f: F) -> String
 where
-    F: FnMut(char) -> char,
+    F: FnMut((usize, char)) -> char,
 {
-    string.chars().into_iter().map(f).collect::<String>()
+    string
+        .chars()
+        .into_iter()
+        .enumerate()
+        .map(f)
+        .collect::<String>()
 }
 
 pub fn remove_all_nonletter(string: String) -> String {

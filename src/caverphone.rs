@@ -1,5 +1,3 @@
-use regex::Regex;
-
 use crate::{helper, Encoder};
 
 const SIX_1: &str = "111111";
@@ -18,16 +16,11 @@ const TEN_1: &str = "1111111111";
 ///
 /// assert_eq!(caverphone.encode("Thompson"), "TMPSN1");
 /// ```
-pub struct Caverphone1 {
-    start_vowel: Regex,
-}
+pub struct Caverphone1 {}
 
 impl Caverphone1 {
     pub fn new() -> Self {
-        // unwrap should work otherwise unit tests will fail.
-        let start_vowel = Regex::new("^[aeiou]").unwrap();
-
-        Self { start_vowel }
+        Self {}
     }
 }
 
@@ -92,9 +85,15 @@ impl Encoder for Caverphone1 {
         let txt = txt.replace('b', "p");
         let txt = txt.replace("sh", "s2");
         let txt = txt.replace('z', "s");
-        let txt = self.start_vowel.replace_all(&*txt, "A").to_string();
+        let txt = helper::replace_char(txt, |(i, c)| {
+            if i == 0 && helper::is_vowel(c) {
+                'A'
+            } else {
+                c
+            }
+        });
 
-        let txt = helper::replace_char(txt, |c| if helper::is_vowel(c) { '3' } else { c });
+        let txt = helper::replace_char(txt, |(_, c)| if helper::is_vowel(c) { '3' } else { c });
         let txt = txt.replace("3gh3", "3kh3");
         let txt = txt.replace("gh", "22");
         let txt = txt.replace('g', "k");
@@ -146,16 +145,11 @@ impl Encoder for Caverphone1 {
 ///
 /// assert_eq!(caverphone.encode("Thompson"), "TMPSN11111");
 /// ```
-pub struct Caverphone2 {
-    start_vowel: Regex,
-}
+pub struct Caverphone2 {}
 
 impl Caverphone2 {
     pub fn new() -> Self {
-        // unwrap should work otherwise unit tests will fail.
-        let start_vowel = Regex::new("^[aeiou]").unwrap();
-
-        Self { start_vowel }
+        Self {}
     }
 }
 
@@ -228,9 +222,15 @@ impl Encoder for Caverphone2 {
         let txt = txt.replace('b', "p");
         let txt = txt.replace("sh", "s2");
         let txt = txt.replace('z', "s");
-        let txt = self.start_vowel.replace_all(&*txt, "A").to_string();
+        let txt = helper::replace_char(txt, |(i, c)| {
+            if i == 0 && helper::is_vowel(c) {
+                'A'
+            } else {
+                c
+            }
+        });
 
-        let txt = helper::replace_char(txt, |c| if helper::is_vowel(c) { '3' } else { c });
+        let txt = helper::replace_char(txt, |(_, c)| if helper::is_vowel(c) { '3' } else { c });
         let txt = txt.replace('j', "y");
         let txt = if txt.starts_with("y3") {
             txt.replacen("y3", "Y3", 1)
