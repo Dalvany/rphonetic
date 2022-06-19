@@ -5,6 +5,19 @@ use crate::Encoder;
 const SIX_1: &str = "111111";
 const TEN_1: &str = "1111111111";
 
+// TODO Try to remove as much regex as possible : they're quite simple.
+
+/// This a [Caverphone 1](https://en.wikipedia.org/wiki/Caverphone) encoder.
+///
+/// # Example
+///
+/// ```rust
+/// use rphonetic::{Caverphone1, Encoder};
+///
+/// let caverphone = Caverphone1::new();
+///
+/// assert_eq!(caverphone.encode("Thompson"), "TMPSN1");
+/// ```
 pub struct Caverphone1 {
     non_letter: Regex,
     end_mb: Regex,
@@ -155,6 +168,17 @@ impl Encoder for Caverphone1 {
     }
 }
 
+/// This a [Caverphone 2](https://en.wikipedia.org/wiki/Caverphone) encoder.
+///
+/// # Example
+///
+/// ```rust
+/// use rphonetic::{Caverphone2, Encoder};
+///
+/// let caverphone = Caverphone2::new();
+///
+/// assert_eq!(caverphone.encode("Thompson"), "TMPSN11111");
+/// ```
 pub struct Caverphone2 {
     non_letter: Regex,
     end_e: Regex,
