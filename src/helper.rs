@@ -58,55 +58,55 @@ mod tests {
 
     #[test]
     fn test_vowel() {
-        assert_eq!(is_vowel('a'), true);
-        assert_eq!(is_vowel('e'), true);
-        assert_eq!(is_vowel('i'), true);
-        assert_eq!(is_vowel('o'), true);
-        assert_eq!(is_vowel('u'), true);
-        assert_eq!(is_vowel('b'), false);
-        assert_eq!(is_vowel('d'), false);
-        assert_eq!(is_vowel('p'), false);
-        assert_eq!(is_vowel('q'), false);
-        assert_eq!(is_vowel('z'), false);
-        assert_eq!(is_vowel('A'), false);
-        assert_eq!(is_vowel('I'), false);
-        assert_eq!(is_vowel('3'), false);
+        assert!(is_vowel('a'));
+        assert!(is_vowel('e'));
+        assert!(is_vowel('i'));
+        assert!(is_vowel('o'));
+        assert!(is_vowel('u'));
+        assert!(!is_vowel('b'));
+        assert!(!is_vowel('d'));
+        assert!(!is_vowel('p'));
+        assert!(!is_vowel('q'));
+        assert!(!is_vowel('z'));
+        assert!(!is_vowel('A'));
+        assert!(!is_vowel('I'));
+        assert!(!is_vowel('3'));
     }
 
     #[test]
     fn test_is_letter() {
-        assert_eq!(is_letter('a'), true);
-        assert_eq!(is_letter('b'), true);
-        assert_eq!(is_letter('c'), true);
-        assert_eq!(is_letter('d'), true);
-        assert_eq!(is_letter('e'), true);
-        assert_eq!(is_letter('f'), true);
-        assert_eq!(is_letter('g'), true);
-        assert_eq!(is_letter('h'), true);
-        assert_eq!(is_letter('i'), true);
-        assert_eq!(is_letter('j'), true);
-        assert_eq!(is_letter('k'), true);
-        assert_eq!(is_letter('l'), true);
-        assert_eq!(is_letter('m'), true);
-        assert_eq!(is_letter('n'), true);
-        assert_eq!(is_letter('o'), true);
-        assert_eq!(is_letter('p'), true);
-        assert_eq!(is_letter('q'), true);
-        assert_eq!(is_letter('r'), true);
-        assert_eq!(is_letter('s'), true);
-        assert_eq!(is_letter('t'), true);
-        assert_eq!(is_letter('u'), true);
-        assert_eq!(is_letter('v'), true);
-        assert_eq!(is_letter('w'), true);
-        assert_eq!(is_letter('x'), true);
-        assert_eq!(is_letter('y'), true);
-        assert_eq!(is_letter('z'), true);
-        assert_eq!(is_letter('A'), false);
-        assert_eq!(is_letter('Z'), false);
-        assert_eq!(is_letter('1'), false);
-        assert_eq!(is_letter('0'), false);
-        assert_eq!(is_letter('O'), false);
-        assert_eq!(is_letter('\n'), false);
-        assert_eq!(is_letter('こ'), false);
+        assert!(is_letter('a'));
+        assert!(is_letter('b'));
+        assert!(is_letter('c'));
+        assert!(is_letter('d'));
+        assert!(is_letter('e'));
+        assert!(is_letter('f'));
+        assert!(is_letter('g'));
+        assert!(is_letter('h'));
+        assert!(is_letter('i'));
+        assert!(is_letter('j'));
+        assert!(is_letter('k'));
+        assert!(is_letter('l'));
+        assert!(is_letter('m'));
+        assert!(is_letter('n'));
+        assert!(is_letter('o'));
+        assert!(is_letter('p'));
+        assert!(is_letter('q'));
+        assert!(is_letter('r'));
+        assert!(is_letter('s'));
+        assert!(is_letter('t'));
+        assert!(is_letter('u'));
+        assert!(is_letter('v'));
+        assert!(is_letter('w'));
+        assert!(is_letter('x'));
+        assert!(is_letter('y'));
+        assert!(is_letter('z'));
+        assert!(!is_letter('A'));
+        assert!(!is_letter('Z'));
+        assert!(!is_letter('1'));
+        assert!(!is_letter('0'));
+        assert!(!is_letter('O'));
+        assert!(!is_letter('\n'));
+        assert!(!is_letter('こ'));
     }
 }
