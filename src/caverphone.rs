@@ -19,23 +19,15 @@ const TEN_1: &str = "1111111111";
 /// assert_eq!(caverphone.encode("Thompson"), "TMPSN1");
 /// ```
 pub struct Caverphone1 {
-    non_letter: Regex,
     start_vowel: Regex,
-    vowel: Regex,
 }
 
 impl Caverphone1 {
     pub fn new() -> Self {
         // unwrap should work otherwise unit tests will fail.
-        let non_letter = Regex::new("[^a-z]").unwrap();
         let start_vowel = Regex::new("^[aeiou]").unwrap();
-        let vowel = Regex::new("[aeiou]").unwrap();
 
-        Self {
-            non_letter,
-            start_vowel,
-            vowel,
-        }
+        Self { start_vowel }
     }
 }
 
@@ -53,7 +45,7 @@ impl Encoder for Caverphone1 {
 
         let txt = s.to_lowercase();
 
-        let txt = self.non_letter.replace_all(&*txt, "").to_string();
+        let txt = helper::remove_all_nonletter(txt);
 
         // Avoid regex since it's quite simple
         let txt = if txt.starts_with("cough") {
@@ -100,9 +92,9 @@ impl Encoder for Caverphone1 {
         let txt = txt.replace('b', "p");
         let txt = txt.replace("sh", "s2");
         let txt = txt.replace('z', "s");
-        let txt = self.start_vowel.replace_all(&*txt, "A");
+        let txt = self.start_vowel.replace_all(&*txt, "A").to_string();
 
-        let txt = self.vowel.replace_all(&*txt, "3");
+        let txt = helper::replace_char(txt, |c| if helper::is_vowel(c) { '3' } else { c });
         let txt = txt.replace("3gh3", "3kh3");
         let txt = txt.replace("gh", "22");
         let txt = txt.replace('g', "k");
@@ -155,23 +147,15 @@ impl Encoder for Caverphone1 {
 /// assert_eq!(caverphone.encode("Thompson"), "TMPSN11111");
 /// ```
 pub struct Caverphone2 {
-    non_letter: Regex,
     start_vowel: Regex,
-    vowel: Regex,
 }
 
 impl Caverphone2 {
     pub fn new() -> Self {
         // unwrap should work otherwise unit tests will fail.
-        let non_letter = Regex::new("[^a-z]").unwrap();
         let start_vowel = Regex::new("^[aeiou]").unwrap();
-        let vowel = Regex::new("[aeiou]").unwrap();
 
-        Self {
-            non_letter,
-            start_vowel,
-            vowel,
-        }
+        Self { start_vowel }
     }
 }
 
@@ -189,7 +173,7 @@ impl Encoder for Caverphone2 {
 
         let txt = s.to_lowercase();
 
-        let txt = self.non_letter.replace_all(&*txt, "").to_string();
+        let txt = helper::remove_all_nonletter(txt);
 
         let txt = helper::replace_end(txt, "e", "");
 
@@ -244,9 +228,9 @@ impl Encoder for Caverphone2 {
         let txt = txt.replace('b', "p");
         let txt = txt.replace("sh", "s2");
         let txt = txt.replace('z', "s");
-        let txt = self.start_vowel.replace_all(&*txt, "A");
+        let txt = self.start_vowel.replace_all(&*txt, "A").to_string();
 
-        let txt = self.vowel.replace_all(&*txt, "3");
+        let txt = helper::replace_char(txt, |c| if helper::is_vowel(c) { '3' } else { c });
         let txt = txt.replace('j', "y");
         let txt = if txt.starts_with("y3") {
             txt.replacen("y3", "Y3", 1)
