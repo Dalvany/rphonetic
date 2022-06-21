@@ -1,15 +1,22 @@
 /// Replace regex like "s+" by a single char "S".
-pub fn replace_compact_all(string: String, pattern: char, to: char) -> String {
-    let mut already_replaced = false;
+pub fn replace_compact_all_to_uppercase(string: String, chars: Vec<char>) -> String {
     let mut ret = String::with_capacity(string.len());
+    let mut previous: Option<char> = None;
 
     string.chars().for_each(|ch| {
-        if ch != pattern {
+        if chars.contains(&ch) {
+            if let Some(prev) = previous {
+                if prev != ch {
+                    ret.push(ch.to_ascii_uppercase());
+                    previous = Some(ch);
+                }
+            } else {
+                ret.push(ch.to_ascii_uppercase());
+                previous = Some(ch);
+            }
+        } else {
             ret.push(ch);
-            already_replaced = false;
-        } else if !already_replaced {
-            ret.push(to);
-            already_replaced = true;
+            previous = None;
         }
     });
 
@@ -30,8 +37,8 @@ pub fn is_vowel(c: char) -> bool {
 }
 
 pub fn replace_char<F>(string: String, f: F) -> String
-where
-    F: FnMut((usize, char)) -> char,
+    where
+        F: FnMut((usize, char)) -> char,
 {
     string
         .chars()
@@ -69,5 +76,23 @@ mod tests {
         assert!(!is_vowel('A'));
         assert!(!is_vowel('I'));
         assert!(!is_vowel('3'));
+    }
+
+    #[test]
+    fn test_replace_compact_all_to_uppercase_nothing_to_compact(){
+        let result = replace_compact_all_to_uppercase("aaaabbbbccccdddd".to_string(), vec!['e','f','g']);
+        assert_eq!(result, "aaaabbbbccccdddd");
+    }
+
+    #[test]
+    fn test_replace_compact_all_to_uppercase_compact_all(){
+        let result = replace_compact_all_to_uppercase("aaaabbbbccccdddd".to_string(), vec!['a','b','c','d']);
+        assert_eq!(result, "ABCD");
+    }
+
+    #[test]
+    fn test_replace_compact_all_to_uppercase() {
+        let result = replace_compact_all_to_uppercase("aaaabbbbccccdddd".to_string(), vec!['b','d']);
+        assert_eq!(result, "aaaaBccccD");
     }
 }
