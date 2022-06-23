@@ -4,9 +4,10 @@ This is a rust port of [Apache commons-codec](https://commons.apache.org/proper/
 
 ## Algorithms
 
-Currently there are :
+Currently, there are :
 * [Caverphone 1](https://en.wikipedia.org/wiki/Caverphone)
 * [Caverphone 2](https://en.wikipedia.org/wiki/Caverphone)
+* [Cologne](https://en.wikipedia.org/wiki/Cologne_phonetics).
 
 ## Benchmarking
 
