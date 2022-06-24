@@ -1,4 +1,4 @@
-name: Release
+name: New release
 
 on:
   workflow_dispatch:
@@ -25,16 +25,13 @@ jobs:
         run: cargo hack check --all --each-feature --clean-per-run --no-dev-deps
       - name: Install
         run: cargo install cargo-edit
-      - name: Check bump
-        run: |
-          if [[ "${{ github.event.inputs.release_version }}" != "patch" ]]; then cargo set-version --bump ${{ github.event.inputs.release_version }}; fi
+      - name: Bump new version
+        run: cargo set-version --bump ${{ github.event.inputs.release_version }}
       - name: Publish
         shell: bash
         env:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
         run: cargo publish --dry-run
-      - name: Prepare next version
-        run: cargo set-version --bump patch
       - name: Check
         run: cat Cargo.toml
 
