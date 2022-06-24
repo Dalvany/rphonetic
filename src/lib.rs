@@ -5,11 +5,14 @@
 //!
 //! * [Caverphone1] : see [Wikipedia](https://en.wikipedia.org/wiki/Caverphone).
 //! * [Caverphone2] : see [Wikipedia](https://en.wikipedia.org/wiki/Caverphone).
+//! * [Cologne] : see [Wikipedia](https://en.wikipedia.org/wiki/Cologne_phonetics).
 pub use crate::caverphone::Caverphone1;
 pub use crate::caverphone::Caverphone2;
+pub use crate::cologne::Cologne;
 
 mod caverphone;
 mod helper;
+mod cologne;
 
 /// This trait represents a phonetic algorithm.
 pub trait Encoder {
