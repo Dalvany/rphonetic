@@ -9,12 +9,15 @@ homepage = "https://github.com/Dalvany/rphonetic"
 documentation = "https://docs.rs/rphonetic"
 readme = "README.md"
 license = "Apache-2.0"
-license-file = "LICENSE"
 categories = ["text-processing", "algorithms"]
 keywords = ["phonetic"]
 exclude = ["/.github"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+regex = "1.5"
+lazy_static = "1.4"
 
 [dev-dependencies]
 criterion = "0.3"

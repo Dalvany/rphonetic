@@ -7,7 +7,8 @@ This is a rust port of [Apache commons-codec](https://commons.apache.org/proper/
 Currently, there are :
 * [Caverphone 1](https://en.wikipedia.org/wiki/Caverphone)
 * [Caverphone 2](https://en.wikipedia.org/wiki/Caverphone)
-* [Cologne](https://en.wikipedia.org/wiki/Cologne_phonetics).
+* [Cologne](https://en.wikipedia.org/wiki/Cologne_phonetics)
+* [Daitch Mokotoff Soundex](https://en.wikipedia.org/wiki/Daitch%E2%80%93Mokotoff_Soundex)
 
 ## Benchmarking
 
