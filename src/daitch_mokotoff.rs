@@ -300,73 +300,6 @@ impl<'a> DaitchMokotoffSoundex<'a> {
 
         result
     }
-
-    fn ascii_folding(&mut self, ascii_folding: bool) {
-        self.ascii_folding = ascii_folding;
-    }
-}
-
-/// Construct a [DaitchMokotoffSoundex] encoder with `ascii_folding` enable and
-/// using [commons-codec](https://github.com/apache/commons-codec/blob/master/src/main/resources/org/apache/commons/codec/language/dmrules.txt) rules.
-///
-/// # Warning
-///
-/// This will probably removed from futur version. Use [DaitchMokotoffSoundexBuilder] instead.
-impl<'a> Default for DaitchMokotoffSoundex<'a> {
-    fn default() -> Self {
-        // Test ensures that unwrap is safe
-        Self::try_from(DEFAULT_RULES).unwrap()
-    }
-}
-
-
-/// Construct a [DaitchMokotoffSoundex] encoder from custom rules and with `ascii_folding` enable.
-impl<'a> TryFrom<&'a str> for DaitchMokotoffSoundex<'a> {
-    type Error = PhoneticError;
-
-    fn try_from(custom_rules: &'a str) -> Result<Self, Self::Error> {
-        let mut rules: BTreeMap<char, Vec<Rule<'a>>> = BTreeMap::new();
-        let mut ascii_folding_rules: BTreeMap<char, char> = BTreeMap::new();
-        let mut multiline_comment = false;
-        for mut line in custom_rules.split('\n') {
-            line = line.trim();
-
-            // Start to test multiline comment ends, thus we can collapse some 'if'.
-            if line.ends_with("*/") {
-                multiline_comment = false;
-                continue;
-            } else if line.is_empty() || line.starts_with("//") || multiline_comment {
-                continue;
-            } else if line.starts_with("/*") {
-                multiline_comment = true;
-                continue;
-            }
-
-            if let Some(index) = line.find('=') {
-                let ch = line[0..index].chars().next();
-                let replacement = line[index + 1..index + 2].chars().next();
-
-                let _ = match (ch, replacement) {
-                    (Some(pattern), Some(replace_by)) => ascii_folding_rules.insert(pattern, replace_by),
-                    (_, _) => return Err(PhoneticError::ParseRuleError(format!("Line contains an '=' but is not a char replacement. Got : {}", line))),
-                };
-            } else {
-                let rule = Rule::try_from(line)?;
-                // There's always at least one char, the regex ensures that.
-                let ch = rule.pattern.chars().next().unwrap();
-                rules.entry(ch).or_insert_with(Vec::new).push(rule);
-            }
-        }
-
-        // Ordering by pattern length decreasing.
-        rules.values_mut().for_each(|v| v.sort_by(|a, b| a.pattern.len().cmp(&b.pattern.len()).reverse()));
-
-        Ok(Self {
-            ascii_folding: true,
-            rules,
-            ascii_folding_rules,
-        })
-    }
 }
 
 impl<'a> Encoder for DaitchMokotoffSoundex<'a> {
@@ -417,10 +350,47 @@ impl<'a> DaitchMokotoffSoundexBuilder<'a> {
     ///
     /// This method return an error in case it can't parse the rules.
     pub fn build(self) -> Result<DaitchMokotoffSoundex<'a>, PhoneticError> {
-        let mut result = DaitchMokotoffSoundex::try_from(self.rules)?;
-        result.ascii_folding(self.ascii_folding);
+        let mut rules: BTreeMap<char, Vec<Rule<'a>>> = BTreeMap::new();
+        let mut ascii_folding_rules: BTreeMap<char, char> = BTreeMap::new();
+        let mut multiline_comment = false;
+        for mut line in self.rules.split('\n') {
+            line = line.trim();
 
-        Ok(result)
+            // Start to test multiline comment ends, thus we can collapse some 'if'.
+            if line.ends_with("*/") {
+                multiline_comment = false;
+                continue;
+            } else if line.is_empty() || line.starts_with("//") || multiline_comment {
+                continue;
+            } else if line.starts_with("/*") {
+                multiline_comment = true;
+                continue;
+            }
+
+            if let Some(index) = line.find('=') {
+                let ch = line[0..index].chars().next();
+                let replacement = line[index + 1..index + 2].chars().next();
+
+                let _ = match (ch, replacement) {
+                    (Some(pattern), Some(replace_by)) => ascii_folding_rules.insert(pattern, replace_by),
+                    (_, _) => return Err(PhoneticError::ParseRuleError(format!("Line contains an '=' but is not a char replacement. Got : {}", line))),
+                };
+            } else {
+                let rule = Rule::try_from(line)?;
+                // There's always at least one char, the regex ensures that.
+                let ch = rule.pattern.chars().next().unwrap();
+                rules.entry(ch).or_insert_with(Vec::new).push(rule);
+            }
+        }
+
+        // Ordering by pattern length decreasing.
+        rules.values_mut().for_each(|v| v.sort_by(|a, b| a.pattern.len().cmp(&b.pattern.len()).reverse()));
+
+        Ok(DaitchMokotoffSoundex {
+            ascii_folding: self.ascii_folding,
+            rules,
+            ascii_folding_rules,
+        })
     }
 }
 

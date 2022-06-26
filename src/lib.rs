@@ -105,7 +105,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_regexp(){
+    fn test_regexp() {
         let data = "  \"part1\"   \"part2\" \"part3\"\t\"part4\"";
         assert!(RULE_LINE.is_match(data));
         for cap in RULE_LINE.captures_iter(data) {
@@ -117,7 +117,7 @@ mod tests {
     }
 
     #[test]
-    fn test_regexp_with_one_line_comment(){
+    fn test_regexp_with_one_line_comment() {
         let data = "  \"part1\"   \"part2\"\t \"part3\"\t\"part4\"\t\t // This is a one line comment";
         assert!(RULE_LINE.is_match(data));
         for cap in RULE_LINE.captures_iter(data) {
@@ -129,7 +129,7 @@ mod tests {
     }
 
     #[test]
-    fn test_regexp_with_empty_parts(){
+    fn test_regexp_with_empty_parts() {
         let data = "  \"part1\"   \"part2\"\t \"\"\t\"\"\t\t";
         assert!(RULE_LINE.is_match(data));
         for cap in RULE_LINE.captures_iter(data) {
@@ -141,13 +141,13 @@ mod tests {
     }
 
     #[test]
-    fn test_regexp_no_match(){
+    fn test_regexp_no_match() {
         let data = "  \"part1\"   \t \"part3\"\t\"part4\"\t\t // This is not a match, missing a part \"test\"";
         assert!(!RULE_LINE.is_match(data));
     }
 
     #[test]
-    fn test_regexp_whatever(){
+    fn test_regexp_whatever() {
         let data = "This is not a match";
         assert!(!RULE_LINE.is_match(data));
     }
