@@ -5,10 +5,12 @@ This is a rust port of [Apache commons-codec](https://commons.apache.org/proper/
 ## Algorithms
 
 Currently, there are :
+
 * [Caverphone 1](https://en.wikipedia.org/wiki/Caverphone)
 * [Caverphone 2](https://en.wikipedia.org/wiki/Caverphone)
 * [Cologne](https://en.wikipedia.org/wiki/Cologne_phonetics)
 * [Daitch Mokotoff Soundex](https://en.wikipedia.org/wiki/Daitch%E2%80%93Mokotoff_Soundex)
+* [Double Metaphone](https://en.wikipedia.org/wiki/Metaphone#Double_Metaphone)
 
 ## Benchmarking
 
@@ -26,5 +28,7 @@ To replace `main` baseline :
 cargo bench --bench benchmark -- --save-baseline main
 ```
 
-Do not run [Criterion benches on CI](https://bheisler.github.io/criterion.rs/book/faq.html#how-should-i-run-criterionrs-benchmarks-in-a-ci-pipeline).
+Do not
+run [Criterion benches on CI](https://bheisler.github.io/criterion.rs/book/faq.html#how-should-i-run-criterionrs-benchmarks-in-a-ci-pipeline)
+.
 

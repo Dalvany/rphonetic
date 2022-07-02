@@ -1,4 +1,4 @@
-use criterion::{Criterion, criterion_group, criterion_main};
+use criterion::{criterion_group, criterion_main, Criterion};
 
 use rphonetic::*;
 
@@ -24,12 +24,29 @@ pub fn bench_cologne(c: &mut Criterion) {
 pub fn bench_daitch_mokotoff_soundex_soundex(c: &mut Criterion) {
     let daitch_mokotoff = DaitchMokotoffSoundexBuilder::default().build().unwrap();
     // Do not use `bench_encoder` function as it will call `encode` and we want to bench also soundex (ie. with branching)
-    c.bench_function("Daitch Mokotoff Soundex (soundex)", |b| b.iter(|| daitch_mokotoff.soundex("Rosochowaciec")));
+    c.bench_function("Daitch Mokotoff Soundex (soundex)", |b| {
+        b.iter(|| daitch_mokotoff.soundex("Rosochowaciec"))
+    });
 }
 
 pub fn bench_daitch_mokotoff_soundex_encode(c: &mut Criterion) {
     let daitch_mokotoff = DaitchMokotoffSoundexBuilder::default().build().unwrap();
-    bench_encoder(c, "Daitch Mokotoff Soundex (encode)", Box::new(daitch_mokotoff), "Rosochowaciec");
+    bench_encoder(
+        c,
+        "Daitch Mokotoff Soundex (encode)",
+        Box::new(daitch_mokotoff),
+        "Rosochowaciec",
+    );
+}
+
+pub fn bench_double_metaphone(c: &mut Criterion) {
+    let double_metaphone = DoubleMetaphone::default();
+    bench_encoder(
+        c,
+        "Double Metaphone",
+        Box::new(double_metaphone),
+        "unconscious",
+    );
 }
 
 criterion_group!(
@@ -47,5 +64,10 @@ criterion_group!(
     config = Criterion::default().sample_size(300);
     targets = bench_daitch_mokotoff_soundex_soundex, bench_daitch_mokotoff_soundex_encode
 );
+criterion_group!(
+    name = double_metaphone;
+    config = Criterion::default().sample_size(300);
+    targets = bench_double_metaphone
+);
 
-criterion_main!(caverphone, cologne, daitch_mokotoff);
+criterion_main!(caverphone, cologne, daitch_mokotoff, double_metaphone);

@@ -259,8 +259,8 @@ mod tests {
     }
 
     #[test]
-    fn test_variations_mella(){
-        let data:Vec<&str> = vec!["mella", "milah", "moulla", "mellah", "muehle", "mule"];
+    fn test_variations_mella() {
+        let data: Vec<&str> = vec!["mella", "milah", "moulla", "mellah", "muehle", "mule"];
 
         for text in data {
             let result = Cologne.encode(text);
@@ -269,8 +269,8 @@ mod tests {
     }
 
     #[test]
-    fn test_variations_meyer(){
-        let data:Vec<&str> = vec!["Meier", "Maier", "Mair", "Meyer", "Meyr", "Mejer", "Major"];
+    fn test_variations_meyer() {
+        let data: Vec<&str> = vec!["Meier", "Maier", "Mair", "Meyer", "Meyr", "Mejer", "Major"];
 
         for text in data {
             let result = Cologne.encode(text);
@@ -279,8 +279,14 @@ mod tests {
     }
 
     #[test]
-    fn test_special_chars_between_same_letters(){
-        let data:Vec<&str> = vec!["Test test", "Testtest", "Test-test", "TesT#Test", "TesT?test"];
+    fn test_special_chars_between_same_letters() {
+        let data: Vec<&str> = vec![
+            "Test test",
+            "Testtest",
+            "Test-test",
+            "TesT#Test",
+            "TesT?test",
+        ];
 
         for text in data {
             let result = Cologne.encode(text);

@@ -7,6 +7,7 @@
 //! * [Caverphone2] : see [Wikipedia](https://en.wikipedia.org/wiki/Caverphone).
 //! * [Cologne] : see [Wikipedia](https://en.wikipedia.org/wiki/Cologne_phonetics).
 //! * [Daitch-Motokoff soundex] : see [Wikipedia](https://en.wikipedia.org/wiki/Daitch%E2%80%93Mokotoff_Soundex)
+//! * [Double Metaphone] : see [Wikipedia](https://en.wikipedia.org/wiki/Metaphone#Double_Metaphone)
 #[macro_use]
 extern crate lazy_static;
 
@@ -19,14 +20,19 @@ pub use crate::caverphone::Caverphone1;
 pub use crate::caverphone::Caverphone2;
 pub use crate::cologne::Cologne;
 pub use crate::daitch_mokotoff::{DaitchMokotoffSoundex, DaitchMokotoffSoundexBuilder};
+pub use crate::double_metaphone::DoubleMetaphone;
 
 mod caverphone;
-mod helper;
 mod cologne;
 mod daitch_mokotoff;
+mod double_metaphone;
+mod helper;
 
 lazy_static! {
-    static ref RULE_LINE:Regex = Regex::new(r"\s*\x22(.+?)\x22\s+\x22(.*?)\x22\s+\x22(.*?)\x22\s+\x22(.*?)\x22\s*(//.*){0,1}$").unwrap();
+    static ref RULE_LINE: Regex = Regex::new(
+        r"\s*\x22(.+?)\x22\s+\x22(.*?)\x22\s+\x22(.*?)\x22\s+\x22(.*?)\x22\s*(//.*){0,1}$"
+    )
+    .unwrap();
 }
 
 /// Errors
@@ -118,7 +124,8 @@ mod tests {
 
     #[test]
     fn test_regexp_with_one_line_comment() {
-        let data = "  \"part1\"   \"part2\"\t \"part3\"\t\"part4\"\t\t // This is a one line comment";
+        let data =
+            "  \"part1\"   \"part2\"\t \"part3\"\t\"part4\"\t\t // This is a one line comment";
         assert!(RULE_LINE.is_match(data));
         for cap in RULE_LINE.captures_iter(data) {
             assert_eq!(&cap[1], "part1");
