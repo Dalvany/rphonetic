@@ -32,13 +32,16 @@ pub fn replace_end<'a>(mut string: String, pattern: &'a str, to: &'a str) -> Str
 }
 
 /// Test if a char is a vowel.
-pub fn is_vowel(c: char) -> bool {
-    matches!(c, 'a' | 'e' | 'i' | 'o' | 'u')
+pub fn is_vowel(c: Option<char>, include_y: bool) -> bool {
+    match c {
+        Some(ch) => matches!(ch, 'a' | 'e' | 'i' | 'o' | 'u') || (include_y && ch == 'y'),
+        None => false,
+    }
 }
 
 pub fn replace_char<F>(string: String, f: F) -> String
-    where
-        F: FnMut((usize, char)) -> char,
+where
+    F: FnMut((usize, char)) -> char,
 {
     string
         .chars()
@@ -63,36 +66,46 @@ mod tests {
 
     #[test]
     fn test_vowel() {
-        assert!(is_vowel('a'));
-        assert!(is_vowel('e'));
-        assert!(is_vowel('i'));
-        assert!(is_vowel('o'));
-        assert!(is_vowel('u'));
-        assert!(!is_vowel('b'));
-        assert!(!is_vowel('d'));
-        assert!(!is_vowel('p'));
-        assert!(!is_vowel('q'));
-        assert!(!is_vowel('z'));
-        assert!(!is_vowel('A'));
-        assert!(!is_vowel('I'));
-        assert!(!is_vowel('3'));
+        assert!(is_vowel(Some('a'), false));
+        assert!(is_vowel(Some('e'), false));
+        assert!(is_vowel(Some('i'), false));
+        assert!(is_vowel(Some('o'), false));
+        assert!(is_vowel(Some('u'), false));
+        assert!(!is_vowel(Some('b'), false));
+        assert!(!is_vowel(Some('d'), false));
+        assert!(!is_vowel(Some('p'), false));
+        assert!(!is_vowel(Some('q'), false));
+        assert!(!is_vowel(Some('z'), false));
+        assert!(!is_vowel(Some('A'), false));
+        assert!(!is_vowel(Some('I'), false));
+        assert!(!is_vowel(Some('3'), false));
+
+        assert!(!is_vowel(Some('y'), false));
+        assert!(is_vowel(Some('y'), true));
+
+        assert!(!is_vowel(None, false));
     }
 
     #[test]
-    fn test_replace_compact_all_to_uppercase_nothing_to_compact(){
-        let result = replace_compact_all_to_uppercase("aaaabbbbccccdddd".to_string(), vec!['e','f','g']);
+    fn test_replace_compact_all_to_uppercase_nothing_to_compact() {
+        let result =
+            replace_compact_all_to_uppercase("aaaabbbbccccdddd".to_string(), vec!['e', 'f', 'g']);
         assert_eq!(result, "aaaabbbbccccdddd");
     }
 
     #[test]
-    fn test_replace_compact_all_to_uppercase_compact_all(){
-        let result = replace_compact_all_to_uppercase("aaaabbbbccccdddd".to_string(), vec!['a','b','c','d']);
+    fn test_replace_compact_all_to_uppercase_compact_all() {
+        let result = replace_compact_all_to_uppercase(
+            "aaaabbbbccccdddd".to_string(),
+            vec!['a', 'b', 'c', 'd'],
+        );
         assert_eq!(result, "ABCD");
     }
 
     #[test]
     fn test_replace_compact_all_to_uppercase() {
-        let result = replace_compact_all_to_uppercase("aaaabbbbccccdddd".to_string(), vec!['b','d']);
+        let result =
+            replace_compact_all_to_uppercase("aaaabbbbccccdddd".to_string(), vec!['b', 'd']);
         assert_eq!(result, "aaaaBccccD");
     }
 }

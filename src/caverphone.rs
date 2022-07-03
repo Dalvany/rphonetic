@@ -86,18 +86,25 @@ impl Encoder for Caverphone1 {
         let txt = txt.replace("sh", "s2");
         let txt = txt.replace('z', "s");
         let txt = helper::replace_char(txt, |(i, c)| {
-            if i == 0 && helper::is_vowel(c) {
+            if i == 0 && helper::is_vowel(Some(c), false) {
                 'A'
             } else {
                 c
             }
         });
 
-        let txt = helper::replace_char(txt, |(_, c)| if helper::is_vowel(c) { '3' } else { c });
+        let txt = helper::replace_char(txt, |(_, c)| {
+            if helper::is_vowel(Some(c), false) {
+                '3'
+            } else {
+                c
+            }
+        });
         let txt = txt.replace("3gh3", "3kh3");
         let txt = txt.replace("gh", "22");
         let txt = txt.replace('g', "k");
-        let txt = helper::replace_compact_all_to_uppercase(txt, vec!['s', 't', 'p', 'k', 'f', 'm', 'n']);
+        let txt =
+            helper::replace_compact_all_to_uppercase(txt, vec!['s', 't', 'p', 'k', 'f', 'm', 'n']);
         let txt = txt.replace("w3", "W3");
         let txt = txt.replace("wy", "Wy");
         let txt = txt.replace("wh3", "Wh3");
@@ -217,14 +224,20 @@ impl Encoder for Caverphone2 {
         let txt = txt.replace("sh", "s2");
         let txt = txt.replace('z', "s");
         let txt = helper::replace_char(txt, |(i, c)| {
-            if i == 0 && helper::is_vowel(c) {
+            if i == 0 && helper::is_vowel(Some(c), false) {
                 'A'
             } else {
                 c
             }
         });
 
-        let txt = helper::replace_char(txt, |(_, c)| if helper::is_vowel(c) { '3' } else { c });
+        let txt = helper::replace_char(txt, |(_, c)| {
+            if helper::is_vowel(Some(c), false) {
+                '3'
+            } else {
+                c
+            }
+        });
         let txt = txt.replace('j', "y");
         let txt = if txt.starts_with("y3") {
             txt.replacen("y3", "Y3", 1)
@@ -240,7 +253,8 @@ impl Encoder for Caverphone2 {
         let txt = txt.replace("3gh3", "3kh3");
         let txt = txt.replace("gh", "22");
         let txt = txt.replace('g', "k");
-        let txt = helper::replace_compact_all_to_uppercase(txt, vec!['s', 't', 'p', 'k', 'f', 'm', 'n']);
+        let txt =
+            helper::replace_compact_all_to_uppercase(txt, vec!['s', 't', 'p', 'k', 'f', 'm', 'n']);
         let txt = txt.replace("w3", "W3");
         let txt = txt.replace("wh3", "Wh3");
         let txt = helper::replace_end(txt, "w", "3");
