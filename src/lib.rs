@@ -20,7 +20,7 @@ pub use crate::caverphone::Caverphone1;
 pub use crate::caverphone::Caverphone2;
 pub use crate::cologne::Cologne;
 pub use crate::daitch_mokotoff::{DaitchMokotoffSoundex, DaitchMokotoffSoundexBuilder};
-pub use crate::double_metaphone::DoubleMetaphone;
+pub use crate::double_metaphone::{DoubleMetaphone, DoubleMetaphoneResult};
 
 mod caverphone;
 mod cologne;
