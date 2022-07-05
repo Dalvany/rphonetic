@@ -6,9 +6,9 @@
 //! * [Caverphone1] : see [Wikipedia](https://en.wikipedia.org/wiki/Caverphone).
 //! * [Caverphone2] : see [Wikipedia](https://en.wikipedia.org/wiki/Caverphone).
 //! * [Cologne] : see [Wikipedia](https://en.wikipedia.org/wiki/Cologne_phonetics).
-//! * [Daitch-Motokoff soundex] : see [Wikipedia](https://en.wikipedia.org/wiki/Daitch%E2%80%93Mokotoff_Soundex)
-//! * [Double Metaphone] : see [Wikipedia](https://en.wikipedia.org/wiki/Metaphone#Double_Metaphone)
-//! * [Match Rating approach] : see [Wikipedia](https://en.wikipedia.org/wiki/Match_rating_approach)
+//! * [DaitchMokotoffSoundex] : see [Wikipedia](https://en.wikipedia.org/wiki/Daitch%E2%80%93Mokotoff_Soundex)
+//! * [DoubleMetaphone] : see [Wikipedia](https://en.wikipedia.org/wiki/Metaphone#Double_Metaphone)
+//! * [MatchRatingApproach] : see [Wikipedia](https://en.wikipedia.org/wiki/Match_rating_approach)
 #[macro_use]
 extern crate lazy_static;
 
