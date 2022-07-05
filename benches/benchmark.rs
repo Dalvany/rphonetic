@@ -49,6 +49,16 @@ pub fn bench_double_metaphone(c: &mut Criterion) {
     );
 }
 
+pub fn bench_match_rating_approach(c: &mut Criterion) {
+    let match_rating = MatchRatingApproach;
+    bench_encoder(
+        c,
+        "Match Rating Approach",
+        Box::new(match_rating),
+        "Franciszek",
+    );
+}
+
 criterion_group!(
     name = caverphone;
     config = Criterion::default().sample_size(300);
@@ -69,5 +79,16 @@ criterion_group!(
     config = Criterion::default().sample_size(300);
     targets = bench_double_metaphone
 );
+criterion_group!(
+    name = match_rating_approach;
+    config = Criterion::default().sample_size(300);
+    targets = bench_match_rating_approach
+);
 
-criterion_main!(caverphone, cologne, daitch_mokotoff, double_metaphone);
+criterion_main!(
+    caverphone,
+    cologne,
+    daitch_mokotoff,
+    double_metaphone,
+    match_rating_approach
+);
