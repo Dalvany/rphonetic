@@ -107,7 +107,7 @@ impl DoubleMetaphoneResult {
 /// Double Metaphone can generate two codes :  `primary` and `alternate`.
 /// [Encoder] implementation return the primary code while `encode_alternate()` returns `alternate` code.
 ///
-/// # Examples
+/// # Example
 ///
 /// ```rust
 /// use rphonetic::{DoubleMetaphone, Encoder};
