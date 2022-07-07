@@ -9,6 +9,7 @@
 //! * [DaitchMokotoffSoundex] : see [Wikipedia](https://en.wikipedia.org/wiki/Daitch%E2%80%93Mokotoff_Soundex)
 //! * [DoubleMetaphone] : see [Wikipedia](https://en.wikipedia.org/wiki/Metaphone#Double_Metaphone)
 //! * [MatchRatingApproach] : see [Wikipedia](https://en.wikipedia.org/wiki/Match_rating_approach)
+//! * [Metaphone] : see [Wikipedia](https://en.wikipedia.org/wiki/Metaphone)
 #[macro_use]
 extern crate lazy_static;
 
@@ -23,6 +24,7 @@ pub use crate::cologne::Cologne;
 pub use crate::daitch_mokotoff::{DaitchMokotoffSoundex, DaitchMokotoffSoundexBuilder};
 pub use crate::double_metaphone::{DoubleMetaphone, DoubleMetaphoneResult};
 pub use crate::match_rating_approach::MatchRatingApproach;
+pub use crate::metaphone::Metaphone;
 
 mod caverphone;
 mod cologne;
@@ -30,6 +32,7 @@ mod daitch_mokotoff;
 mod double_metaphone;
 mod helper;
 mod match_rating_approach;
+mod metaphone;
 
 lazy_static! {
     static ref RULE_LINE: Regex = Regex::new(

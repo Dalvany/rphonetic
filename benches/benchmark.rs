@@ -59,6 +59,11 @@ pub fn bench_match_rating_approach(c: &mut Criterion) {
     );
 }
 
+pub fn bench_metaphone(c: &mut Criterion) {
+    let metaphone = Metaphone::default();
+    bench_encoder(c, "Metaphone", Box::new(metaphone), "Johnna");
+}
+
 criterion_group!(
     name = caverphone;
     config = Criterion::default().sample_size(300);
@@ -84,11 +89,17 @@ criterion_group!(
     config = Criterion::default().sample_size(300);
     targets = bench_match_rating_approach
 );
+criterion_group!(
+    name = metaphone;
+    config = Criterion::default().sample_size(300);
+    targets = bench_metaphone
+);
 
 criterion_main!(
     caverphone,
     cologne,
     daitch_mokotoff,
     double_metaphone,
-    match_rating_approach
+    match_rating_approach,
+    metaphone
 );

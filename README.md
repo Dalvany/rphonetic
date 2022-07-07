@@ -12,7 +12,8 @@ Currently, there are :
 * [Cologne](https://en.wikipedia.org/wiki/Cologne_phonetics)
 * [Daitch Mokotoff Soundex](https://en.wikipedia.org/wiki/Daitch%E2%80%93Mokotoff_Soundex)
 * [Double Metaphone](https://en.wikipedia.org/wiki/Metaphone#Double_Metaphone)
-* [Match Rating Approach](https://en.wikipedia.org/wiki/Match_rating_approach~~~~)
+* [Match Rating Approach](https://en.wikipedia.org/wiki/Match_rating_approach)
+* [Metaphone](https://en.wikipedia.org/wiki/Metaphone)
 
 ## Benchmarking
 
