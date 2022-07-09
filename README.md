@@ -14,6 +14,7 @@ Currently, there are :
 * [Double Metaphone](https://en.wikipedia.org/wiki/Metaphone#Double_Metaphone)
 * [Match Rating Approach](https://en.wikipedia.org/wiki/Match_rating_approach)
 * [Metaphone](https://en.wikipedia.org/wiki/Metaphone)
+* [NYSIIS](https://en.wikipedia.org/wiki/New_York_State_Identification_and_Intelligence_System)
 
 ## Benchmarking
 
