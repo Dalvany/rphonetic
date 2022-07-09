@@ -1,3 +1,5 @@
+use serde::{Deserialize, Serialize};
+
 use crate::helper::is_vowel;
 use crate::Encoder;
 
@@ -61,6 +63,7 @@ const CHAR_TO_TRIM: [char; 5] = ['-', '&', '\'', '.', ','];
 /// // This does not match
 /// assert!(!match_rating.is_encoded_equals("Karl", "Alessandro"));
 /// ```
+#[derive(Copy, Clone, Debug, Ord, PartialOrd, Eq, PartialEq, Hash, Serialize, Deserialize)]
 pub struct MatchRatingApproach;
 
 impl MatchRatingApproach {
