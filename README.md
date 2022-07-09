@@ -15,10 +15,16 @@ Currently, there are :
 * [Match Rating Approach](https://en.wikipedia.org/wiki/Match_rating_approach)
 * [Metaphone](https://en.wikipedia.org/wiki/Metaphone)
 * [NYSIIS](https://en.wikipedia.org/wiki/New_York_State_Identification_and_Intelligence_System)
+* [Refined Soundex](https://en.wikipedia.org/wiki/Soundex)
+
+Please note that most of these algorithms are design for ASCII and there are usually design for certain use case (eg.
+english names, ...etc).
 
 ## Benchmarking
 
 Benchmarking use [criterion](https://bheisler.github.io/criterion.rs/book/criterion_rs.html).
+
+They were done on an Intel® Core™ i7-4720HQ with 16GB RAM.
 
 To run benches against `main` baseline :
 

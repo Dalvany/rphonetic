@@ -74,6 +74,16 @@ pub fn bench_nysiis_not_strict(c: &mut Criterion) {
     bench_encoder(c, "Nysiis (not strict)", Box::new(nysiis), "Phillipson");
 }
 
+pub fn bench_refined_soundex(c: &mut Criterion) {
+    let refined_soundex = RefinedSoundex::default();
+    bench_encoder(
+        c,
+        "Refined Soundex",
+        Box::new(refined_soundex),
+        "Blotchet-Halls",
+    );
+}
+
 criterion_group!(
     name = caverphone;
     config = Criterion::default().sample_size(300);
@@ -109,6 +119,11 @@ criterion_group!(
     config = Criterion::default().sample_size(300);
     targets = bench_nysiis_strict, bench_nysiis_not_strict
 );
+criterion_group!(
+    name = refined_soundex;
+    config = Criterion::default().sample_size(300);
+    targets = bench_refined_soundex
+);
 
 criterion_main!(
     caverphone,
@@ -118,4 +133,5 @@ criterion_main!(
     match_rating_approach,
     metaphone,
     nysiis,
+    refined_soundex,
 );
