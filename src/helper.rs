@@ -59,14 +59,6 @@ pub fn remove_all_nonletter(string: String) -> String {
         .collect::<String>()
 }
 
-pub fn soundex_clean(value: &str) -> String {
-    value
-        .chars()
-        .filter(|c| c.is_alphabetic())
-        .map(|c| c.to_uppercase().collect::<String>())
-        .collect()
-}
-
 #[cfg(test)]
 mod tests {
     // Note this useful idiom: importing names from outer (for mod tests) scope.
@@ -115,16 +107,5 @@ mod tests {
         let result =
             replace_compact_all_to_uppercase("aaaabbbbccccdddd".to_string(), vec!['b', 'd']);
         assert_eq!(result, "aaaaBccccD");
-    }
-
-    #[test]
-    fn test_soundex_clean() {
-        let result =
-            soundex_clean("This is a test ! With numbers like 0 and other alphabet like 中 or δ.");
-
-        assert_eq!(
-            result,
-            "THISISATESTWITHNUMBERSLIKEANDOTHERALPHABETLIKE中ORΔ"
-        );
     }
 }

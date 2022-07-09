@@ -11,6 +11,7 @@
 //! * [MatchRatingApproach] : see [Wikipedia](https://en.wikipedia.org/wiki/Match_rating_approach)
 //! * [Metaphone] : see [Wikipedia](https://en.wikipedia.org/wiki/Metaphone)
 //! * [Nysiis] : see [Wikipedia](https://en.wikipedia.org/wiki/New_York_State_Identification_and_Intelligence_System)
+//! * [RefinedSoundex] : see [Wikipedia](https://en.wikipedia.org/wiki/Soundex)
 #![warn(
     missing_copy_implementations,
     missing_debug_implementations,
@@ -37,6 +38,7 @@ pub use crate::double_metaphone::{DoubleMetaphone, DoubleMetaphoneResult};
 pub use crate::match_rating_approach::MatchRatingApproach;
 pub use crate::metaphone::Metaphone;
 pub use crate::nysiis::Nysiis;
+pub use crate::refined_soundex::RefinedSoundex;
 
 mod caverphone;
 mod cologne;
@@ -46,6 +48,7 @@ mod helper;
 mod match_rating_approach;
 mod metaphone;
 mod nysiis;
+mod refined_soundex;
 
 lazy_static! {
     static ref RULE_LINE: Regex = Regex::new(
@@ -122,6 +125,73 @@ pub trait Encoder {
         let s = self.encode(second);
 
         f == s
+    }
+}
+
+trait SoundexUtils {
+    fn soundex_clean(value: &str) -> String {
+        value
+            .chars()
+            .filter(|c| c.is_alphabetic())
+            .map(|c| c.to_uppercase().collect::<String>())
+            .collect()
+    }
+}
+
+/// This trait represent a soundex algorithm (except for [Nysiis]).
+///
+/// It has a method, [difference(value1, value2)](Soundex::difference) that returns
+/// the number of letter that are at the same place in both encoded strings.
+pub trait Soundex: Encoder {
+    /// This methode compute the number of characters thar are at the same place
+    /// in both encoded strings.
+    ///
+    /// It calls [encode(value)](Encoder::encode).
+    ///
+    ///
+    /// # Parameters
+    ///
+    /// * `value1` : first value
+    /// * `value2` : second value
+    ///
+    /// # Return
+    ///
+    /// The number of characters at the same position. 0 indicates no similarities, while 4 (out of 4)
+    /// indicates strong similarity. Please note that [RefinedSoundex] difference can be greater than 4.
+    ///
+    /// # Examples
+    ///
+    /// An example with [RefinedSoundex] :
+    ///
+    /// ```rust
+    /// use rphonetic::{RefinedSoundex, Soundex};
+    ///
+    /// let refined_soundex = RefinedSoundex::default();
+    ///
+    /// // Low similarity
+    /// assert_eq!(refined_soundex.difference("Margaret", "Andrew"), 1);
+    ///
+    /// // High similarity
+    /// assert_eq!(refined_soundex.difference("Smithers", "Smythers"), 8);
+    /// ```
+    ///
+    /// TODO with soundex.
+    fn difference(&self, value1: &str, value2: &str) -> usize {
+        let value1 = self.encode(value1);
+        let value2 = self.encode(value2);
+
+        if value1.is_empty() || value2.is_empty() {
+            return 0;
+        }
+
+        let mut result: usize = 0;
+        for (ch1, ch2) in value1.chars().zip(value2.chars()) {
+            if ch1 == ch2 {
+                result += 1;
+            }
+        }
+
+        result
     }
 }
 

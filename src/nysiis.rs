@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 
-use crate::helper::{is_vowel, soundex_clean};
-use crate::Encoder;
+use crate::helper::is_vowel;
+use crate::{Encoder, SoundexUtils};
 
 const CHARS_A: &str = "A";
 const CHARS_AF: &str = "AF";
@@ -109,9 +109,11 @@ impl Default for Nysiis {
     }
 }
 
+impl SoundexUtils for Nysiis {}
+
 impl Encoder for Nysiis {
     fn encode(&self, value: &str) -> String {
-        let mut tmp = soundex_clean(value);
+        let mut tmp = Self::soundex_clean(value);
 
         if tmp.is_empty() {
             return tmp;
