@@ -1,3 +1,5 @@
+use serde::{Deserialize, Serialize};
+
 use crate::{helper, Encoder};
 
 const SIX_1: &str = "111111";
@@ -12,23 +14,12 @@ const TEN_1: &str = "1111111111";
 /// ```rust
 /// use rphonetic::{Caverphone1, Encoder};
 ///
-/// let caverphone = Caverphone1::new();
+/// let caverphone = Caverphone1;
 ///
 /// assert_eq!(caverphone.encode("Thompson"), "TMPSN1");
 /// ```
-pub struct Caverphone1 {}
-
-impl Caverphone1 {
-    pub fn new() -> Self {
-        Self {}
-    }
-}
-
-impl Default for Caverphone1 {
-    fn default() -> Self {
-        Self::new()
-    }
-}
+#[derive(Copy, Clone, Debug, Ord, PartialOrd, Eq, PartialEq, Hash, Serialize, Deserialize)]
+pub struct Caverphone1;
 
 impl Encoder for Caverphone1 {
     fn encode(&self, s: &str) -> String {
@@ -142,23 +133,12 @@ impl Encoder for Caverphone1 {
 /// ```rust
 /// use rphonetic::{Caverphone2, Encoder};
 ///
-/// let caverphone = Caverphone2::new();
+/// let caverphone = Caverphone2;
 ///
 /// assert_eq!(caverphone.encode("Thompson"), "TMPSN11111");
 /// ```
-pub struct Caverphone2 {}
-
-impl Caverphone2 {
-    pub fn new() -> Self {
-        Self {}
-    }
-}
-
-impl Default for Caverphone2 {
-    fn default() -> Self {
-        Self::new()
-    }
-}
+#[derive(Copy, Clone, Debug, Ord, PartialOrd, Eq, PartialEq, Hash, Serialize, Deserialize)]
+pub struct Caverphone2;
 
 impl Encoder for Caverphone2 {
     fn encode(&self, s: &str) -> String {
@@ -289,7 +269,7 @@ mod tests {
 
     #[test]
     fn test_caverphone1_revisited_common_code_at1111() {
-        let caverphone = Caverphone1::default();
+        let caverphone = Caverphone1 {};
 
         assert_eq!(caverphone.encode("add"), "AT1111");
         assert_eq!(caverphone.encode("aid"), "AT1111");
@@ -310,7 +290,7 @@ mod tests {
 
     #[test]
     fn test_end_mb_caverphone1() {
-        let caverphone = Caverphone1::default();
+        let caverphone = Caverphone1;
 
         assert_eq!(caverphone.encode("mb"), "M11111");
         assert_eq!(caverphone.encode("mbmb"), "MPM111");
@@ -318,7 +298,7 @@ mod tests {
 
     #[test]
     fn test_is_caverphone1_equals() {
-        let caverphone = Caverphone1::default();
+        let caverphone = Caverphone1;
 
         assert!(!caverphone.is_encoded_equals("Peter", "Stevenson"));
         assert!(caverphone.is_encoded_equals("Peter", "Peady"));
@@ -326,7 +306,7 @@ mod tests {
 
     #[test]
     fn test_specification_v1examples() {
-        let caverphone = Caverphone1::default();
+        let caverphone = Caverphone1;
 
         assert_eq!(caverphone.encode("David"), "TFT111");
         assert_eq!(caverphone.encode("Whittle"), "WTL111");
@@ -334,7 +314,7 @@ mod tests {
 
     #[test]
     fn test_wikipedia_examples() {
-        let caverphone = Caverphone1::default();
+        let caverphone = Caverphone1;
 
         assert_eq!(caverphone.encode("Lee"), "L11111");
         assert_eq!(caverphone.encode("Thompson"), "TMPSN1");
@@ -342,7 +322,7 @@ mod tests {
 
     #[test]
     fn test_caverphone_revisited_common_code_at11111111() {
-        let caverphone = Caverphone2::default();
+        let caverphone = Caverphone2;
 
         assert_eq!(caverphone.encode("add"), "AT11111111");
         assert_eq!(caverphone.encode("aid"), "AT11111111");
@@ -363,7 +343,7 @@ mod tests {
 
     #[test]
     fn test_caverphone_revisited_examples() {
-        let caverphone = Caverphone2::default();
+        let caverphone = Caverphone2;
 
         assert_eq!(caverphone.encode("Stevenson"), "STFNSN1111");
         assert_eq!(caverphone.encode("Peter"), "PTA1111111");
@@ -371,7 +351,7 @@ mod tests {
 
     #[test]
     fn test_caverphone_revisited_random_name_kln1111111() {
-        let caverphone = Caverphone2::default();
+        let caverphone = Caverphone2;
 
         let names = vec![
             "Cailean", "Calan", "Calen", "Callahan", "Callan", "Callean", "Carleen", "Carlen",
@@ -399,7 +379,7 @@ mod tests {
 
     #[test]
     fn test_caverphone_revisited_random_name_tn11111111() {
-        let caverphone = Caverphone2::default();
+        let caverphone = Caverphone2;
 
         let names = vec![
             "Dan", "Dane", "Dann", "Darn", "Daune", "Dawn", "Ddene", "Dean", "Deane", "Deanne",
@@ -424,7 +404,7 @@ mod tests {
 
     #[test]
     fn test_caverphone_revisited_random_name_tta1111111() {
-        let caverphone = Caverphone2::default();
+        let caverphone = Caverphone2;
 
         let names = vec![
             "Darda", "Datha", "Dedie", "Deedee", "Deerdre", "Deidre", "Deirdre", "Detta", "Didi",
@@ -449,7 +429,7 @@ mod tests {
 
     #[test]
     fn test_caverphone_revisited_random_words() {
-        let caverphone = Caverphone2::default();
+        let caverphone = Caverphone2;
 
         assert_eq!(caverphone.encode("rather"), "RTA1111111");
         assert_eq!(caverphone.encode("ready"), "RTA1111111");
@@ -463,7 +443,7 @@ mod tests {
 
     #[test]
     fn test_end_mb_caverphone2() {
-        let caverphone = Caverphone2::default();
+        let caverphone = Caverphone2;
 
         assert_eq!(caverphone.encode("mb"), "M111111111");
         assert_eq!(caverphone.encode("mbmb"), "MPM1111111");
@@ -471,7 +451,7 @@ mod tests {
 
     #[test]
     fn test_is_caverphone2_equals() {
-        let caverphone = Caverphone2::default();
+        let caverphone = Caverphone2;
 
         assert!(!caverphone.is_encoded_equals("Peter", "Stevenson"));
         assert!(caverphone.is_encoded_equals("Peter", "Peady"));
@@ -479,7 +459,7 @@ mod tests {
 
     #[test]
     fn test_specification_examples() {
-        let caverphone = Caverphone2::default();
+        let caverphone = Caverphone2;
 
         assert_eq!(caverphone.encode("Peter"), "PTA1111111");
         assert_eq!(caverphone.encode("ready"), "RTA1111111");

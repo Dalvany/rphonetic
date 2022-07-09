@@ -1,4 +1,17 @@
+use serde::{Deserialize, Serialize};
+
 use crate::Encoder;
+
+const CHAR_IGNORE: char = '-';
+const AEIJOUY: [char; 7] = ['A', 'E', 'I', 'J', 'O', 'U', 'Y'];
+const CSZ: [char; 3] = ['C', 'S', 'Z'];
+const FPVW: [char; 4] = ['F', 'P', 'V', 'W'];
+const GKQ: [char; 3] = ['G', 'K', 'Q'];
+const CKQ: [char; 3] = ['C', 'K', 'Q'];
+const AHKLOQRUX: [char; 9] = ['A', 'H', 'K', 'L', 'O', 'Q', 'R', 'U', 'X'];
+const SZ: [char; 2] = ['S', 'Z'];
+const AHKOQUX: [char; 7] = ['A', 'H', 'K', 'O', 'Q', 'U', 'X'];
+const DTX: [char; 3] = ['D', 'T', 'X'];
 
 struct CologneOutput {
     last_char: char,
@@ -33,18 +46,8 @@ impl CologneOutput {
 ///
 /// assert_eq!(cologne.encode("m\u{00FC}ller"), "657");
 /// ```
+#[derive(Copy, Clone, Debug, Ord, PartialOrd, Eq, PartialEq, Hash, Serialize, Deserialize)]
 pub struct Cologne;
-
-const CHAR_IGNORE: char = '-';
-const AEIJOUY: [char; 7] = ['A', 'E', 'I', 'J', 'O', 'U', 'Y'];
-const CSZ: [char; 3] = ['C', 'S', 'Z'];
-const FPVW: [char; 4] = ['F', 'P', 'V', 'W'];
-const GKQ: [char; 3] = ['G', 'K', 'Q'];
-const CKQ: [char; 3] = ['C', 'K', 'Q'];
-const AHKLOQRUX: [char; 9] = ['A', 'H', 'K', 'L', 'O', 'Q', 'R', 'U', 'X'];
-const SZ: [char; 2] = ['S', 'Z'];
-const AHKOQUX: [char; 7] = ['A', 'H', 'K', 'O', 'Q', 'U', 'X'];
-const DTX: [char; 3] = ['D', 'T', 'X'];
 
 impl Encoder for Cologne {
     fn encode(&self, s: &str) -> String {

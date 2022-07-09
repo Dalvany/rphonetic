@@ -7,12 +7,12 @@ fn bench_encoder(c: &mut Criterion, encoder_name: &str, encoder: Box<dyn Encoder
 }
 
 pub fn bench_caverphone_1(c: &mut Criterion) {
-    let caverphone = Caverphone1::new();
+    let caverphone = Caverphone1;
     bench_encoder(c, "Caverphone 1", Box::new(caverphone), "Thompson");
 }
 
 pub fn bench_caverphone_2(c: &mut Criterion) {
-    let caverphone = Caverphone1::new();
+    let caverphone = Caverphone2;
     bench_encoder(c, "Caverphone 2", Box::new(caverphone), "Thompson");
 }
 
@@ -64,6 +64,16 @@ pub fn bench_metaphone(c: &mut Criterion) {
     bench_encoder(c, "Metaphone", Box::new(metaphone), "Johnna");
 }
 
+pub fn bench_nysiis_strict(c: &mut Criterion) {
+    let nysiis = Nysiis::default();
+    bench_encoder(c, "Nysiis (strict)", Box::new(nysiis), "Phillipson");
+}
+
+pub fn bench_nysiis_not_strict(c: &mut Criterion) {
+    let nysiis = Nysiis::new(false);
+    bench_encoder(c, "Nysiis (not strict)", Box::new(nysiis), "Phillipson");
+}
+
 criterion_group!(
     name = caverphone;
     config = Criterion::default().sample_size(300);
@@ -94,6 +104,11 @@ criterion_group!(
     config = Criterion::default().sample_size(300);
     targets = bench_metaphone
 );
+criterion_group!(
+    name = nysiis;
+    config = Criterion::default().sample_size(300);
+    targets = bench_nysiis_strict, bench_nysiis_not_strict
+);
 
 criterion_main!(
     caverphone,
@@ -101,5 +116,6 @@ criterion_main!(
     daitch_mokotoff,
     double_metaphone,
     match_rating_approach,
-    metaphone
+    metaphone,
+    nysiis,
 );

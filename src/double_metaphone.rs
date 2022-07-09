@@ -117,7 +117,7 @@ impl DoubleMetaphoneResult {
 /// assert_eq!(double_metaphone.encode("jumped"), "JMPT");
 /// assert_eq!(double_metaphone.encode_alternate("jumped"), "AMPT");
 /// ```
-#[derive(Clone, Debug, Ord, PartialOrd, Eq, PartialEq, Copy, Hash)]
+#[derive(Copy, Clone, Debug, Ord, PartialOrd, Eq, PartialEq, Hash, Serialize, Deserialize)]
 pub struct DoubleMetaphone {
     max_code_length: usize,
 }

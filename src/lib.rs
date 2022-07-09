@@ -10,6 +10,17 @@
 //! * [DoubleMetaphone] : see [Wikipedia](https://en.wikipedia.org/wiki/Metaphone#Double_Metaphone)
 //! * [MatchRatingApproach] : see [Wikipedia](https://en.wikipedia.org/wiki/Match_rating_approach)
 //! * [Metaphone] : see [Wikipedia](https://en.wikipedia.org/wiki/Metaphone)
+//! * [Nysiis] : see [Wikipedia](https://en.wikipedia.org/wiki/New_York_State_Identification_and_Intelligence_System)
+#![warn(
+    missing_copy_implementations,
+    missing_debug_implementations,
+    missing_docs,
+    trivial_numeric_casts,
+    unsafe_code,
+    unused_extern_crates,
+    unused_import_braces,
+    unused_qualifications
+)]
 #[macro_use]
 extern crate lazy_static;
 
@@ -25,6 +36,7 @@ pub use crate::daitch_mokotoff::{DaitchMokotoffSoundex, DaitchMokotoffSoundexBui
 pub use crate::double_metaphone::{DoubleMetaphone, DoubleMetaphoneResult};
 pub use crate::match_rating_approach::MatchRatingApproach;
 pub use crate::metaphone::Metaphone;
+pub use crate::nysiis::Nysiis;
 
 mod caverphone;
 mod cologne;
@@ -33,6 +45,7 @@ mod double_metaphone;
 mod helper;
 mod match_rating_approach;
 mod metaphone;
+mod nysiis;
 
 lazy_static! {
     static ref RULE_LINE: Regex = Regex::new(
@@ -76,7 +89,7 @@ pub trait Encoder {
     /// ```rust
     /// use rphonetic::{Caverphone1, Encoder};
     ///
-    /// let caverphone = Caverphone1::new();
+    /// let caverphone = Caverphone1;
     ///
     /// assert_eq!(caverphone.encode("Thompson"), "TMPSN1");
     /// ```
@@ -100,7 +113,7 @@ pub trait Encoder {
     /// ```rust
     /// use rphonetic::{Encoder, Caverphone1};
     ///
-    /// let caverphone = Caverphone1::new();
+    /// let caverphone = Caverphone1;
     /// assert!(!caverphone.is_encoded_equals("Peter", "Stevenson"));
     /// assert!(caverphone.is_encoded_equals("Peter", "Peady"));
     /// ```
