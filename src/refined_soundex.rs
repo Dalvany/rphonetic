@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::{Encoder, Soundex, SoundexUtils};
+use crate::{Encoder, SoundexCommons, SoundexUtils};
 
 const ENGLISH_MAPPING: [char; 26] = [
     '0', '1', '3', '6', '0', '2', '4', '0', '0', '4', '3', '7', '8', '8', '0', '1', '5', '9', '3',
@@ -109,7 +109,6 @@ impl Default for RefinedSoundex {
     }
 }
 
-impl SoundexUtils for RefinedSoundex {}
 
 impl Encoder for RefinedSoundex {
     fn encode(&self, value: &str) -> String {
@@ -135,7 +134,9 @@ impl Encoder for RefinedSoundex {
     }
 }
 
-impl Soundex for RefinedSoundex {}
+impl SoundexUtils for RefinedSoundex {}
+
+impl SoundexCommons for RefinedSoundex {}
 
 #[cfg(test)]
 mod tests {

@@ -84,6 +84,11 @@ pub fn bench_refined_soundex(c: &mut Criterion) {
     );
 }
 
+pub fn bench_soundex(c: &mut Criterion) {
+    let soundex = Soundex::default();
+    bench_encoder(c, "Refined Soundex", Box::new(soundex), "Blotchet-Halls");
+}
+
 criterion_group!(
     name = caverphone;
     config = Criterion::default().sample_size(300);
@@ -124,6 +129,11 @@ criterion_group!(
     config = Criterion::default().sample_size(300);
     targets = bench_refined_soundex
 );
+criterion_group!(
+    name = soundex;
+    config = Criterion::default().sample_size(300);
+    targets = bench_soundex
+);
 
 criterion_main!(
     caverphone,
@@ -134,4 +144,5 @@ criterion_main!(
     metaphone,
     nysiis,
     refined_soundex,
+    soundex,
 );
