@@ -12,6 +12,7 @@
 //! * [Metaphone] : see [Wikipedia](https://en.wikipedia.org/wiki/Metaphone)
 //! * [Nysiis] : see [Wikipedia](https://en.wikipedia.org/wiki/New_York_State_Identification_and_Intelligence_System)
 //! * [RefinedSoundex] : see [Wikipedia](https://en.wikipedia.org/wiki/Soundex)
+//! * [Soundex] : see [Wikipedia](https://en.wikipedia.org/wiki/Soundex)
 #![warn(
     missing_copy_implementations,
     missing_debug_implementations,
@@ -39,6 +40,9 @@ pub use crate::match_rating_approach::MatchRatingApproach;
 pub use crate::metaphone::Metaphone;
 pub use crate::nysiis::Nysiis;
 pub use crate::refined_soundex::RefinedSoundex;
+pub use crate::soundex::{
+    Soundex, DEFAULT_US_ENGLISH_GENEALOGY_MAPPING_SOUNDEX, DEFAULT_US_ENGLISH_MAPPING_SOUNDEX,
+};
 
 mod caverphone;
 mod cologne;
@@ -49,6 +53,7 @@ mod match_rating_approach;
 mod metaphone;
 mod nysiis;
 mod refined_soundex;
+mod soundex;
 
 lazy_static! {
     static ref RULE_LINE: Regex = Regex::new(
@@ -142,7 +147,7 @@ trait SoundexUtils {
 ///
 /// It has a method, [difference(value1, value2)](Soundex::difference) that returns
 /// the number of letter that are at the same place in both encoded strings.
-pub trait Soundex: Encoder {
+pub trait SoundexCommons: Encoder {
     /// This methode compute the number of characters thar are at the same place
     /// in both encoded strings.
     ///
@@ -164,7 +169,7 @@ pub trait Soundex: Encoder {
     /// An example with [RefinedSoundex] :
     ///
     /// ```rust
-    /// use rphonetic::{RefinedSoundex, Soundex};
+    /// use rphonetic::{RefinedSoundex, Soundex, SoundexCommons};
     ///
     /// let refined_soundex = RefinedSoundex::default();
     ///
@@ -175,7 +180,19 @@ pub trait Soundex: Encoder {
     /// assert_eq!(refined_soundex.difference("Smithers", "Smythers"), 8);
     /// ```
     ///
-    /// TODO with soundex.
+    /// With [Soundex], maximum proximity will be 4 as values are coded with 4 characters :
+    ///
+    /// ```rust
+    /// use rphonetic::{Soundex, SoundexCommons};
+    ///
+    /// let soundex = Soundex::default();
+    ///
+    /// // Low similarity
+    /// assert_eq!(soundex.difference("Margaret", "Andrew"), 1);
+    ///
+    /// // High similarity
+    /// assert_eq!(soundex.difference("Smithers", "Smythers"), 4);
+    /// ```
     fn difference(&self, value1: &str, value2: &str) -> usize {
         let value1 = self.encode(value1);
         let value2 = self.encode(value2);

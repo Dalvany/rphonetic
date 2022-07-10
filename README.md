@@ -24,6 +24,7 @@ Currently, there are :
 * [Metaphone](https://en.wikipedia.org/wiki/Metaphone)
 * [NYSIIS](https://en.wikipedia.org/wiki/New_York_State_Identification_and_Intelligence_System)
 * [Refined Soundex](https://en.wikipedia.org/wiki/Soundex)
+* [Soundex](https://en.wikipedia.org/wiki/Soundex)
 
 Please note that most of these algorithms are design for ASCII and there are usually design for certain use case (eg.
 english names, ...etc).
