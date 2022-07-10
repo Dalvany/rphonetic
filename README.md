@@ -26,7 +26,7 @@ Currently, there are :
 * [Refined Soundex](https://en.wikipedia.org/wiki/Soundex)
 * [Soundex](https://en.wikipedia.org/wiki/Soundex)
 
-Please note that most of these algorithms are design for ASCII and there are usually design for certain use case (eg.
+Please note that most of these algorithms are design for ASCII, and they are usually design for certain use case (eg.
 english names, ...etc).
 
 ## Benchmarking
