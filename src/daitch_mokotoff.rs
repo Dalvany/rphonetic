@@ -19,7 +19,7 @@ use std::collections::BTreeMap;
 use crate::helper::is_vowel;
 use crate::{Encoder, PhoneticError, RULE_LINE};
 
-const DEFAULT_RULES: &str = include_str!("rules/dmrules.txt");
+const DEFAULT_RULES: &str = include_str!("../rules/dmrules.txt");
 
 /// Max length of a DM soundex value.
 const MAX_LENGTH: usize = 6;

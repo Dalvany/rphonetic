@@ -1,0 +1,264 @@
+use std::collections::{BTreeMap, BTreeSet};
+use std::fmt::{Display, Formatter};
+use std::path::Path;
+
+use serde::{Deserialize, Serialize};
+
+use crate::beider_morse::{BMError, NameType};
+use crate::DM_LANGUAGE_LINE;
+
+#[derive(Clone, Debug, Ord, PartialOrd, Eq, PartialEq, Hash, Serialize, Deserialize)]
+pub enum LanguageSet {
+    Any,
+    NoLanguages,
+    SomeLanguages(BTreeSet<String>),
+}
+
+impl LanguageSet {
+    pub fn contains(&self, language: &str) -> bool {
+        match self {
+            LanguageSet::Any => true,
+            LanguageSet::NoLanguages => false,
+            LanguageSet::SomeLanguages(languages) => languages.contains(language),
+        }
+    }
+
+    pub fn is_empty(&self) -> bool {
+        match self {
+            LanguageSet::Any => false,
+            LanguageSet::NoLanguages => true,
+            LanguageSet::SomeLanguages(languages) => languages.is_empty(),
+        }
+    }
+
+    pub fn is_singleton(&self) -> bool {
+        match self {
+            LanguageSet::Any => false,
+            LanguageSet::NoLanguages => false,
+            LanguageSet::SomeLanguages(languages) => languages.len() == 1,
+        }
+    }
+
+    pub fn restrict_to(&self, other: &Self) -> Self {
+        match (self, other) {
+            (_, LanguageSet::Any) => self.clone(),
+            (_, LanguageSet::NoLanguages) => other.clone(),
+            (LanguageSet::SomeLanguages(languages1), LanguageSet::SomeLanguages(languages2)) => {
+                let languages = languages1
+                    .intersection(&languages2)
+                    .cloned()
+                    .collect::<BTreeSet<String>>();
+                Self::SomeLanguages(languages)
+            }
+            (LanguageSet::Any, _) => other.clone(),
+            (LanguageSet::NoLanguages, _) => self.clone(),
+        }
+    }
+
+    pub fn merge(&self, other: &Self) -> Self {
+        match (self, other) {
+            (_, LanguageSet::Any) => other.clone(),
+            (_, LanguageSet::NoLanguages) => self.clone(),
+            (LanguageSet::SomeLanguages(languages1), LanguageSet::SomeLanguages(languages2)) => {
+                let languages = languages1
+                    .union(&languages2)
+                    .cloned()
+                    .collect::<BTreeSet<String>>();
+                Self::SomeLanguages(languages)
+            }
+            (LanguageSet::Any, _) => self.clone(),
+            (LanguageSet::NoLanguages, _) => other.clone(),
+        }
+    }
+
+    pub fn get_any(&self) -> Option<String> {
+        match self {
+            LanguageSet::Any => None,
+            LanguageSet::NoLanguages => None,
+            LanguageSet::SomeLanguages(languages) => languages.iter().next().cloned(),
+        }
+    }
+}
+
+impl From<BTreeSet<String>> for LanguageSet {
+    fn from(languages: BTreeSet<String>) -> Self {
+        Self::SomeLanguages(languages)
+    }
+}
+
+impl From<Vec<String>> for LanguageSet {
+    fn from(languages: Vec<String>) -> Self {
+        Self::SomeLanguages(BTreeSet::from_iter(languages.iter().cloned()))
+    }
+}
+
+impl Display for LanguageSet {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            LanguageSet::Any => write!(f, "ANY_LANGUAGE"),
+            LanguageSet::NoLanguages => write!(f, "NO_LANGUAGES"),
+            LanguageSet::SomeLanguages(languages) => write!(f, "{:?}", languages),
+        }
+    }
+}
+
+#[derive(Clone, Debug, Ord, PartialOrd, Eq, PartialEq, Hash, Serialize, Deserialize)]
+pub struct Languages {
+    languages: BTreeMap<NameType, BTreeSet<String>>,
+}
+
+impl Languages {
+    pub fn get(&self, name_type: &NameType) -> Option<&BTreeSet<String>> {
+        self.languages.get(name_type)
+    }
+}
+
+impl Default for Languages {
+    fn default() -> Self {
+        // As we only provide "any" language there's no need to parse a file or anything
+        // Just hardcode stuff.
+        let languages = BTreeMap::from([
+            (NameType::Ashkenazi, BTreeSet::from(["any".to_string()])),
+            (NameType::Generic, BTreeSet::from(["any".to_string()])),
+            (NameType::Sephardic, BTreeSet::from(["any".to_string()])),
+        ]);
+
+        Languages { languages }
+    }
+}
+
+impl TryFrom<&Path> for Languages {
+    type Error = BMError;
+
+    fn try_from(directory: &Path) -> Result<Self, Self::Error> {
+        let mut map: BTreeMap<NameType, BTreeSet<String>> = BTreeMap::new();
+        let paths = std::fs::read_dir(directory)?;
+
+        for path in paths {
+            let path = path?;
+            if let Ok(name_type) = NameType::try_from(path.file_name()) {
+                let content = std::fs::read_to_string(path.path())?;
+                let languages = parse_liste(content);
+                map.insert(name_type, languages);
+            }
+        }
+
+        Ok(Self { languages: map })
+    }
+}
+
+fn parse_liste(list: String) -> BTreeSet<String> {
+    let mut result = BTreeSet::new();
+    let mut multiline_comment = false;
+    for mut line in list.split('\n') {
+        line = line.trim();
+
+        // Start to test multiline comment ends, thus we can collapse some 'if'.
+        if line.ends_with("*/") {
+            multiline_comment = false;
+            continue;
+        } else if line.is_empty() || line.starts_with("//") || multiline_comment {
+            continue;
+        } else if line.starts_with("/*") {
+            multiline_comment = true;
+            continue;
+        }
+
+        match DM_LANGUAGE_LINE.captures(line) {
+            None => {
+                result.insert(line.to_string());
+            }
+            Some(capture) => {
+                let tmp = capture.get(1).unwrap().as_str();
+                result.insert(tmp.to_string());
+            }
+        }
+    }
+
+    result
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_default() {
+        let result = Languages::default();
+
+        assert_eq!(
+            result.get(&NameType::Ashkenazi),
+            Some(&BTreeSet::from(["any".to_string()]))
+        );
+        assert_eq!(
+            result.get(&NameType::Generic),
+            Some(&BTreeSet::from(["any".to_string()]))
+        );
+        assert_eq!(
+            result.get(&NameType::Sephardic),
+            Some(&BTreeSet::from(["any".to_string()]))
+        );
+    }
+
+    #[test]
+    fn test_from_path() -> Result<(), BMError> {
+        let result = Languages::try_from(Path::new(&String::from("./test_assets/")))?;
+        let languages = BTreeMap::from([
+            (
+                NameType::Ashkenazi,
+                BTreeSet::from([
+                    "any".to_string(),
+                    "cyrillic".to_string(),
+                    "english".to_string(),
+                    "french".to_string(),
+                    "german".to_string(),
+                    "hebrew".to_string(),
+                    "hungarian".to_string(),
+                    "polish".to_string(),
+                    "romanian".to_string(),
+                    "russian".to_string(),
+                    "spanish".to_string(),
+                ]),
+            ),
+            (
+                NameType::Generic,
+                BTreeSet::from([
+                    "any".to_string(),
+                    "arabic".to_string(),
+                    "cyrillic".to_string(),
+                    "czech".to_string(),
+                    "dutch".to_string(),
+                    "english".to_string(),
+                    "french".to_string(),
+                    "german".to_string(),
+                    "greek".to_string(),
+                    "greeklatin".to_string(),
+                    "hebrew".to_string(),
+                    "hungarian".to_string(),
+                    "italian".to_string(),
+                    "polish".to_string(),
+                    "portuguese".to_string(),
+                    "romanian".to_string(),
+                    "russian".to_string(),
+                    "spanish".to_string(),
+                    "turkish".to_string(),
+                ]),
+            ),
+            (
+                NameType::Sephardic,
+                BTreeSet::from([
+                    "any".to_string(),
+                    "french".to_string(),
+                    "hebrew".to_string(),
+                    "italian".to_string(),
+                    "portuguese".to_string(),
+                    "spanish".to_string(),
+                ]),
+            ),
+        ]);
+        let expected = Languages { languages };
+
+        assert_eq!(result, expected);
+        Ok(())
+    }
+}

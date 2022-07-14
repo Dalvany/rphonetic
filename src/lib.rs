@@ -47,6 +47,7 @@ use std::fmt::Formatter;
 
 use regex::Regex;
 
+pub use crate::beider_morse::{BMError, NameType};
 pub use crate::caverphone::Caverphone1;
 pub use crate::caverphone::Caverphone2;
 pub use crate::cologne::Cologne;
@@ -60,6 +61,7 @@ pub use crate::soundex::{
     Soundex, DEFAULT_US_ENGLISH_GENEALOGY_MAPPING_SOUNDEX, DEFAULT_US_ENGLISH_MAPPING_SOUNDEX,
 };
 
+mod beider_morse;
 mod caverphone;
 mod cologne;
 mod daitch_mokotoff;
@@ -76,6 +78,7 @@ lazy_static! {
         r"\s*\x22(.+?)\x22\s+\x22(.*?)\x22\s+\x22(.*?)\x22\s+\x22(.*?)\x22\s*(//.*){0,1}$"
     )
     .unwrap();
+    static ref DM_LANGUAGE_LINE: Regex = Regex::new(r"^\s*(.+?)\s*(//.*){0,1}$").unwrap();
 }
 
 /// Errors
