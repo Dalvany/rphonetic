@@ -1,15 +1,19 @@
 use std::error::Error;
 use std::ffi::OsString;
 use std::fmt::{Display, Formatter};
+use std::path::PathBuf;
 
-use enum_iterator::Sequence;
+use enum_iterator::{all, Sequence};
 use serde::{Deserialize, Serialize};
 
+mod engine;
 mod lang;
 mod languages;
 mod rule;
 
-pub use languages::{LanguageSet, Languages};
+use crate::beider_morse::lang::{Lang, Langs};
+use crate::beider_morse::languages::{LanguageSet, Languages};
+use crate::beider_morse::rule::Rules;
 pub use rule::RuleType;
 
 const ASH: &str = "ash";
@@ -112,5 +116,26 @@ impl TryFrom<OsString> for NameType {
                 value.to_string_lossy().to_string(),
             ))
         }
+    }
+}
+
+#[derive(Default)]
+pub struct ConfigFiles {
+    languages: Languages,
+    langs: Langs,
+    rules: Rules,
+}
+
+impl ConfigFiles {
+    pub fn new(directory: &PathBuf) -> Result<Self, BMError> {
+        let languages = Languages::try_from(directory)?;
+        let langs = Langs::new(directory, &languages)?;
+        let rules = Rules::new(directory, &languages)?;
+
+        Ok(Self {
+            languages,
+            langs,
+            rules,
+        })
     }
 }

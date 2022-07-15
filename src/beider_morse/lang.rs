@@ -53,14 +53,34 @@ impl Lang {
     }
 }
 
+impl Default for Lang {
+    fn default() -> Self {
+        Lang {
+            languages: Default::default(),
+            rules: vec![],
+        }
+    }
+}
+
 #[derive(Clone, Debug)]
 pub struct Langs {
     langs: BTreeMap<NameType, Lang>,
 }
 
+impl Default for Langs {
+    fn default() -> Self {
+        let mut langs: BTreeMap<NameType, Lang> = BTreeMap::new();
+        for name_type in all::<NameType>() {
+            langs.insert(name_type, Lang::default());
+        }
+
+        Self { langs }
+    }
+}
+
 impl Langs {
-    pub fn new(directory: &PathBuf) -> Result<Self, BMError> {
-        build_langs(directory)
+    pub fn new(directory: &PathBuf, languages: &Languages) -> Result<Self, BMError> {
+        build_langs(directory, languages)
     }
 
     pub fn get(&self, name_type: &NameType) -> Option<&Lang> {
@@ -117,10 +137,8 @@ fn parse_lang(content: String, languages: &BTreeSet<String>) -> Result<Lang, BME
     })
 }
 
-fn build_langs(directory: &PathBuf) -> Result<Langs, BMError> {
+fn build_langs(directory: &PathBuf, languages_set: &Languages) -> Result<Langs, BMError> {
     let mut langs: BTreeMap<NameType, Lang> = BTreeMap::new();
-
-    let languages_set = Languages::try_from(directory)?;
 
     for name_type in all::<NameType>() {
         let languages = languages_set.get(&name_type).unwrap();
@@ -139,7 +157,8 @@ mod tests {
 
     #[test]
     fn test_langs() -> Result<(), BMError> {
-        let langs = Langs::new(&PathBuf::from("./test_assets/"))?;
+        let path = &PathBuf::from("./test_assets/");
+        let langs = Langs::new(path, &Languages::try_from(path)?)?;
 
         assert!(!langs.langs.is_empty());
         Ok(())
@@ -147,7 +166,8 @@ mod tests {
 
     #[test]
     fn test_language_guessing() -> Result<(), BMError> {
-        let langs = Langs::new(&PathBuf::from("./test_assets/"))?;
+        let path = &PathBuf::from("./test_assets/");
+        let langs = Langs::new(path, &Languages::try_from(path)?)?;
         let langs = langs.get(&NameType::Generic).unwrap();
 
         let data = vec![

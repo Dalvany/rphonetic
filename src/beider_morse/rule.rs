@@ -1,6 +1,6 @@
 use std::cmp::Ordering;
 use std::collections::btree_map::BTreeMap;
-use std::fmt::{Display, Formatter};
+use std::fmt::{Debug, Display, Formatter};
 use std::path::PathBuf;
 
 use enum_iterator::{all, Sequence};
@@ -57,7 +57,7 @@ impl Display for PrivateRuleType {
     }
 }
 
-trait PhonemeExpr {
+trait PhonemeExpr: Debug {
     fn get_phonemes(&self) -> Vec<&Phoneme>;
 }
 
@@ -243,12 +243,7 @@ fn parse_rule(resolver: &Resolver, filename: &str) -> Result<BTreeMap<char, Vec<
     Ok(result)
 }
 
-fn build_rules(resolver: Resolver) -> Result<Rules, BMError> {
-    let languages = match resolver.path() {
-        Some(path) => Languages::try_from(path)?,
-        None => Languages::default(),
-    };
-
+fn build_rules(resolver: Resolver, languages: &Languages) -> Result<Rules, BMError> {
     let mut rules: BTreeMap<(NameType, PrivateRuleType, String), BTreeMap<char, Vec<Rule>>> =
         BTreeMap::new();
 
@@ -353,18 +348,18 @@ impl Rules {
             .get(&(name_type, rule_type, language.to_string()))
     }
 
-    pub fn new(rules_folder: PathBuf) -> Result<Self, BMError> {
+    pub fn new(rules_folder: &PathBuf, languages: &Languages) -> Result<Self, BMError> {
         let resolver = Resolver {
-            path: Some(rules_folder),
+            path: Some(rules_folder.clone()),
         };
-        build_rules(resolver)
+        build_rules(resolver, languages)
     }
 }
 
 impl Default for Rules {
     fn default() -> Self {
         let resolver = Resolver { path: None };
-        build_rules(resolver).unwrap()
+        build_rules(resolver, &Languages::default()).unwrap()
     }
 }
 
@@ -514,7 +509,8 @@ mod tests {
 
     #[test]
     fn test_with_path() -> Result<(), BMError> {
-        let rules = Rules::new(PathBuf::from("./test_assets/"))?;
+        let path = &PathBuf::from("./test_assets/");
+        let rules = Rules::new(path, &Languages::try_from(path)?)?;
 
         assert!(!rules.rules.is_empty());
 
