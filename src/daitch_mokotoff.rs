@@ -16,8 +16,11 @@
  */
 use std::collections::BTreeMap;
 
+use crate::constants::{
+    MULTI_LINE_COMMENT_END, MULTI_LINE_COMMENT_START, RULE_LINE, SINGLE_LINE_COMMENT,
+};
 use crate::helper::is_vowel;
-use crate::{Encoder, PhoneticError, RULE_LINE};
+use crate::{Encoder, PhoneticError};
 
 const DEFAULT_RULES: &str = include_str!("../rules/dmrules.txt");
 
@@ -387,12 +390,13 @@ impl<'a> DaitchMokotoffSoundexBuilder<'a> {
             line = line.trim();
 
             // Start to test multiline comment ends, thus we can collapse some 'if'.
-            if line.ends_with("*/") {
+            if line.ends_with(MULTI_LINE_COMMENT_END) {
                 multiline_comment = false;
                 continue;
-            } else if line.is_empty() || line.starts_with("//") || multiline_comment {
+            } else if line.is_empty() || line.starts_with(SINGLE_LINE_COMMENT) || multiline_comment
+            {
                 continue;
-            } else if line.starts_with("/*") {
+            } else if line.starts_with(MULTI_LINE_COMMENT_START) {
                 multiline_comment = true;
                 continue;
             }

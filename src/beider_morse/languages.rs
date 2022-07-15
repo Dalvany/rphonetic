@@ -1,11 +1,13 @@
 use std::collections::{BTreeMap, BTreeSet};
 use std::fmt::{Display, Formatter};
-use std::path::Path;
+use std::path::PathBuf;
 
 use serde::{Deserialize, Serialize};
 
 use crate::beider_morse::{BMError, NameType};
-use crate::DM_LANGUAGE_LINE;
+use crate::constants::{
+    DM_LANGUAGE_LINE, MULTI_LINE_COMMENT_END, MULTI_LINE_COMMENT_START, SINGLE_LINE_COMMENT,
+};
 
 #[derive(Clone, Debug, Ord, PartialOrd, Eq, PartialEq, Hash, Serialize, Deserialize)]
 pub enum LanguageSet {
@@ -45,7 +47,7 @@ impl LanguageSet {
             (_, LanguageSet::NoLanguages) => other.clone(),
             (LanguageSet::SomeLanguages(languages1), LanguageSet::SomeLanguages(languages2)) => {
                 let languages = languages1
-                    .intersection(&languages2)
+                    .intersection(languages2)
                     .cloned()
                     .collect::<BTreeSet<String>>();
                 Self::SomeLanguages(languages)
@@ -61,7 +63,7 @@ impl LanguageSet {
             (_, LanguageSet::NoLanguages) => self.clone(),
             (LanguageSet::SomeLanguages(languages1), LanguageSet::SomeLanguages(languages2)) => {
                 let languages = languages1
-                    .union(&languages2)
+                    .union(languages2)
                     .cloned()
                     .collect::<BTreeSet<String>>();
                 Self::SomeLanguages(languages)
@@ -86,9 +88,9 @@ impl From<BTreeSet<String>> for LanguageSet {
     }
 }
 
-impl From<Vec<String>> for LanguageSet {
-    fn from(languages: Vec<String>) -> Self {
-        Self::SomeLanguages(BTreeSet::from_iter(languages.iter().cloned()))
+impl From<Vec<&str>> for LanguageSet {
+    fn from(languages: Vec<&str>) -> Self {
+        Self::SomeLanguages(BTreeSet::from_iter(languages.iter().map(|v| v.to_string())))
     }
 }
 
@@ -127,10 +129,10 @@ impl Default for Languages {
     }
 }
 
-impl TryFrom<&Path> for Languages {
+impl TryFrom<&PathBuf> for Languages {
     type Error = BMError;
 
-    fn try_from(directory: &Path) -> Result<Self, Self::Error> {
+    fn try_from(directory: &PathBuf) -> Result<Self, Self::Error> {
         let mut map: BTreeMap<NameType, BTreeSet<String>> = BTreeMap::new();
         let paths = std::fs::read_dir(directory)?;
 
@@ -154,12 +156,12 @@ fn parse_liste(list: String) -> BTreeSet<String> {
         line = line.trim();
 
         // Start to test multiline comment ends, thus we can collapse some 'if'.
-        if line.ends_with("*/") {
+        if line.ends_with(MULTI_LINE_COMMENT_END) {
             multiline_comment = false;
             continue;
-        } else if line.is_empty() || line.starts_with("//") || multiline_comment {
+        } else if line.is_empty() || line.starts_with(SINGLE_LINE_COMMENT) || multiline_comment {
             continue;
-        } else if line.starts_with("/*") {
+        } else if line.starts_with(MULTI_LINE_COMMENT_START) {
             multiline_comment = true;
             continue;
         }
@@ -181,6 +183,7 @@ fn parse_liste(list: String) -> BTreeSet<String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::path::Path;
 
     #[test]
     fn test_default() {
@@ -202,7 +205,8 @@ mod tests {
 
     #[test]
     fn test_from_path() -> Result<(), BMError> {
-        let result = Languages::try_from(Path::new(&String::from("./test_assets/")))?;
+        let path = PathBuf::from("./test_assets/");
+        let result = Languages::try_from(&path)?;
         let languages = BTreeMap::from([
             (
                 NameType::Ashkenazi,

@@ -9,6 +9,7 @@ mod languages;
 mod rule;
 
 pub use languages::{LanguageSet, Languages};
+pub use rule::RuleType;
 
 const ASH: &str = "ash";
 const GEN: &str = "gen";
@@ -19,14 +20,20 @@ pub enum BMError {
     UnknownNameType(String),
     ParseConfiguration(std::io::Error),
     WrongFilename(String),
+    WrongPhoneme(String),
+    BadContextRegex(regex::Error),
 }
 
 impl Display for BMError {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
-            BMError::UnknownNameType(error) => write!(f, "Unkown NameType {}", error),
+            BMError::UnknownNameType(error) => write!(f, "Unknown NameType {}", error),
             BMError::ParseConfiguration(error) => write!(f, "Error reading files {}", error),
             BMError::WrongFilename(error) => write!(f, "Wrong file name : {}", error),
+            BMError::WrongPhoneme(error) => write!(f, "{}", error),
+            BMError::BadContextRegex(error) => {
+                write!(f, "{}", error)
+            }
         }
     }
 }
@@ -34,6 +41,12 @@ impl Display for BMError {
 impl From<std::io::Error> for BMError {
     fn from(error: std::io::Error) -> Self {
         Self::ParseConfiguration(error)
+    }
+}
+
+impl From<regex::Error> for BMError {
+    fn from(error: regex::Error) -> Self {
+        Self::BadContextRegex(error)
     }
 }
 
