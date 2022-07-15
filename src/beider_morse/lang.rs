@@ -62,6 +62,10 @@ impl Langs {
     pub fn new(directory: &PathBuf) -> Result<Self, BMError> {
         build_langs(directory)
     }
+
+    pub fn get(&self, name_type: &NameType) -> Option<&Lang> {
+        self.langs.get(name_type)
+    }
 }
 
 fn parse_lang(content: String, languages: &BTreeSet<String>) -> Result<Lang, BMError> {
@@ -131,15 +135,46 @@ fn build_langs(directory: &PathBuf) -> Result<Langs, BMError> {
 
 #[cfg(test)]
 mod tests {
-    use crate::beider_morse::lang::Langs;
-    use crate::BMError;
-    use std::path::PathBuf;
+    use super::*;
 
     #[test]
     fn test_langs() -> Result<(), BMError> {
         let langs = Langs::new(&PathBuf::from("./test_assets/"))?;
 
         assert!(!langs.langs.is_empty());
+        Ok(())
+    }
+
+    #[test]
+    fn test_language_guessing() -> Result<(), BMError> {
+        let langs = Langs::new(&PathBuf::from("./test_assets/"))?;
+        let langs = langs.get(&NameType::Generic).unwrap();
+
+        let data = vec![
+            ("Renault", LanguageSet::from(vec!["french"])),
+            ("Mickiewicz", LanguageSet::from(vec!["polish"])),
+            ("Thompson", LanguageSet::from(vec!["greeklatin", "english"])),
+            ("Nu\u{00f1}ez", LanguageSet::from(vec!["spanish"])),
+            ("Carvalho", LanguageSet::from(vec!["portuguese"])),
+            ("\u{010c}apek", LanguageSet::from(vec!["czech"])),
+            ("Sjneijder", LanguageSet::from(vec!["dutch"])),
+            ("Klausewitz", LanguageSet::from(vec!["german"])),
+            ("K\u{00fc}\u{00e7}\u{00fc}k", LanguageSet::from(vec!["turkish"])),
+            ("Giacometti", LanguageSet::from(vec!["italian"])),
+            ("Nagy", LanguageSet::from(vec!["hungarian"])),
+            ("Ceau\u{015f}escu", LanguageSet::from(vec!["romanian"])),
+            ("Angelopoulos", LanguageSet::from(vec!["greeklatin"])),
+            ("\u{0391}\u{03b3}\u{03b3}\u{03b5}\u{03bb}\u{03cc}\u{03c0}\u{03bf}\u{03c5}\u{03bb}\u{03bf}\u{03c2}", LanguageSet::from(vec!["greek"])),
+            ("\u{041f}\u{0443}\u{0448}\u{043a}\u{0438}\u{043d}", LanguageSet::from(vec!["cyrillic"])),
+            ("\u{05db}\u{05d4}\u{05df}", LanguageSet::from(vec!["hebrew"])),
+            ("\u{00e1}cz", LanguageSet::Any),
+            ("\u{00e1}tz", LanguageSet::Any),
+        ];
+
+        for (input, expected) in data {
+            let result = langs.guess_languages(input);
+            assert_eq!(result, expected,);
+        }
         Ok(())
     }
 }

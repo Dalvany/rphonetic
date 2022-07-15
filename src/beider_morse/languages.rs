@@ -103,7 +103,13 @@ impl Display for LanguageSet {
         match self {
             LanguageSet::Any => write!(f, "ANY_LANGUAGE"),
             LanguageSet::NoLanguages => write!(f, "NO_LANGUAGES"),
-            LanguageSet::SomeLanguages(languages) => write!(f, "{:?}", languages),
+            LanguageSet::SomeLanguages(languages) => {
+                write!(
+                    f,
+                    "{}",
+                    languages.iter().cloned().collect::<Vec<String>>().join(",")
+                )
+            }
         }
     }
 }

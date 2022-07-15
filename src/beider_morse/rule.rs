@@ -1,3 +1,4 @@
+use std::cmp::Ordering;
 use std::collections::btree_map::BTreeMap;
 use std::fmt::{Display, Formatter};
 use std::path::PathBuf;
@@ -60,15 +61,43 @@ trait PhonemeExpr {
     fn get_phonemes(&self) -> Vec<&Phoneme>;
 }
 
-#[derive(Clone, Debug, PartialOrd, Eq, PartialEq, Hash, Serialize, Deserialize)]
+#[derive(Clone, Debug, Eq, PartialEq, Hash, Serialize, Deserialize)]
 struct Phoneme {
     phoneme_text: String,
     languages: LanguageSet,
 }
 
+impl PartialOrd<Self> for Phoneme {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        let iterator = self.phoneme_text.chars().zip(other.phoneme_text.chars());
+        for (ch1, ch2) in iterator {
+            if ch1 != ch2 {
+                return ch1.partial_cmp(&ch2);
+            }
+        }
+
+        let o1length = self.phoneme_text.len();
+        let o2length = other.phoneme_text.len();
+
+        o1length.partial_cmp(&o2length)
+    }
+}
+
+impl Ord for Phoneme {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.partial_cmp(other).unwrap()
+    }
+}
+
 impl PhonemeExpr for Phoneme {
     fn get_phonemes(&self) -> Vec<&Phoneme> {
         vec![self]
+    }
+}
+
+impl Display for Phoneme {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}[{}]", self.phoneme_text, self.languages)
     }
 }
 
@@ -385,6 +414,31 @@ mod embedded {
 mod tests {
     use super::*;
 
+    fn make_phonemes() -> Vec<Vec<Phoneme>> {
+        let mut result = Vec::new();
+
+        let data: Vec<Phoneme> = vec![
+            "rinD", "rinDlt", "rina", "rinalt", "rino", "rinolt", "rinu", "rinult",
+        ]
+        .iter()
+        .map(|v| Phoneme {
+            phoneme_text: v.to_string(),
+            languages: LanguageSet::NoLanguages,
+        })
+        .collect();
+        result.push(data);
+
+        let data: Vec<Phoneme> = vec!["dortlaj", "dortlej", "ortlaj", "ortlej", "ortlej-dortlaj"]
+            .iter()
+            .map(|v| Phoneme {
+                phoneme_text: v.to_string(),
+                languages: LanguageSet::NoLanguages,
+            })
+            .collect();
+        result.push(data);
+
+        result
+    }
     #[test]
     fn test_default() {
         let rules = Rules::default();
@@ -462,6 +516,45 @@ mod tests {
     fn test_with_path() -> Result<(), BMError> {
         let rules = Rules::new(PathBuf::from("./test_assets/"))?;
 
+        assert!(!rules.rules.is_empty());
+
         Ok(())
+    }
+
+    #[test]
+    fn test_phoneme_compared_to_later_is_less() {
+        let data = make_phonemes();
+        for (set, phonemes) in data.iter().enumerate() {
+            for (index, phoneme1) in phonemes.iter().enumerate() {
+                for phoneme2 in phonemes.iter().skip(index + 1) {
+                    assert_eq!(
+                        phoneme1.cmp(phoneme2),
+                        Ordering::Less,
+                        "Error for data ({}, {}) : {} should be 'less' than {}",
+                        set,
+                        index,
+                        phoneme1,
+                        phoneme2
+                    );
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn test_phoneme_compared_to_self_is_equals() {
+        let data = make_phonemes();
+        for (set, phonemes) in data.iter().enumerate() {
+            for (index, phoneme1) in phonemes.iter().enumerate() {
+                assert_eq!(
+                    phoneme1.cmp(phoneme1),
+                    Ordering::Equal,
+                    "Error for data ({}, {}) : {} should be 'equals' to itself",
+                    set,
+                    index,
+                    phoneme1
+                );
+            }
+        }
     }
 }
