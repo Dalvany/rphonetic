@@ -5,6 +5,8 @@ lazy_static! {
         r"\s*\x22(.+?)\x22\s+\x22(.*?)\x22\s+\x22(.*?)\x22\s+\x22(.*?)\x22\s*(//.*){0,1}$"
     )
     .unwrap();
+    pub static ref RULE_LANG_LINE: Regex =
+        Regex::new(r"\s*(.+?)\s+(.*?)\s+(.*?)\s*(//.*){0,1}$").unwrap();
     pub static ref DM_LANGUAGE_LINE: Regex = Regex::new(r"^\s*(.+?)\s*(//.*){0,1}$").unwrap();
     pub static ref BM_INCLUDE_LINE: Regex =
         Regex::new(r"^\s*#include\s+([a-z\\-]+?)\s*(//.*){0,1}$").unwrap();

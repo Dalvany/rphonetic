@@ -84,7 +84,11 @@ impl LanguageSet {
 
 impl From<BTreeSet<String>> for LanguageSet {
     fn from(languages: BTreeSet<String>) -> Self {
-        Self::SomeLanguages(languages)
+        if languages.is_empty() {
+            Self::NoLanguages
+        } else {
+            Self::SomeLanguages(languages)
+        }
     }
 }
 

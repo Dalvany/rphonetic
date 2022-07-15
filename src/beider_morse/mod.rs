@@ -5,6 +5,7 @@ use std::fmt::{Display, Formatter};
 use enum_iterator::Sequence;
 use serde::{Deserialize, Serialize};
 
+mod lang;
 mod languages;
 mod rule;
 
@@ -22,6 +23,8 @@ pub enum BMError {
     WrongFilename(String),
     WrongPhoneme(String),
     BadContextRegex(regex::Error),
+    NotABoolean(String),
+    BadRule(String),
 }
 
 impl Display for BMError {
@@ -31,9 +34,9 @@ impl Display for BMError {
             BMError::ParseConfiguration(error) => write!(f, "Error reading files {}", error),
             BMError::WrongFilename(error) => write!(f, "Wrong file name : {}", error),
             BMError::WrongPhoneme(error) => write!(f, "{}", error),
-            BMError::BadContextRegex(error) => {
-                write!(f, "{}", error)
-            }
+            BMError::BadContextRegex(error) => write!(f, "{}", error),
+            BMError::NotABoolean(error) => write!(f, "{}", error),
+            BMError::BadRule(error) => write!(f, "{}", error),
         }
     }
 }
