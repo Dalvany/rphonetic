@@ -1,5 +1,5 @@
 use std::collections::{BTreeMap, BTreeSet};
-use std::path::PathBuf;
+use std::path::Path;
 use std::str::FromStr;
 
 use enum_iterator::all;
@@ -25,13 +25,14 @@ impl LangRule {
 }
 
 #[derive(Clone, Debug)]
+#[cfg_attr(feature = "embedded", derive(Default))]
 pub struct Lang {
     languages: BTreeSet<String>,
     rules: Vec<LangRule>,
 }
 
 impl Lang {
-    fn guess_languages(&self, input: &str) -> LanguageSet {
+    pub fn guess_languages(&self, input: &str) -> LanguageSet {
         let input = input.to_lowercase();
 
         let mut langs: BTreeSet<String> = BTreeSet::from_iter(self.languages.iter().cloned());
@@ -53,20 +54,12 @@ impl Lang {
     }
 }
 
-impl Default for Lang {
-    fn default() -> Self {
-        Lang {
-            languages: Default::default(),
-            rules: vec![],
-        }
-    }
-}
-
 #[derive(Clone, Debug)]
 pub struct Langs {
     langs: BTreeMap<NameType, Lang>,
 }
 
+#[cfg(feature = "embedded")]
 impl Default for Langs {
     fn default() -> Self {
         let mut langs: BTreeMap<NameType, Lang> = BTreeMap::new();
@@ -79,7 +72,7 @@ impl Default for Langs {
 }
 
 impl Langs {
-    pub fn new(directory: &PathBuf, languages: &Languages) -> Result<Self, BMError> {
+    pub fn new(directory: &Path, languages: &Languages) -> Result<Self, BMError> {
         build_langs(directory, languages)
     }
 
@@ -116,7 +109,7 @@ fn parse_lang(content: String, languages: &BTreeSet<String>) -> Result<Lang, BME
                 let langs: BTreeSet<String> =
                     BTreeSet::from_iter(langs.split('+').map(|v| v.to_string()));
                 let accept_on_match = matcher.get(3).unwrap().as_str();
-                let accept_on_match: bool = bool::from_str(accept_on_match).map_err(|error| {
+                let accept_on_match: bool = bool::from_str(accept_on_match).map_err(|_error| {
                     BMError::NotABoolean(format!(
                         "{} is not a boolean. Should be 'true' or 'false'",
                         accept_on_match
@@ -137,7 +130,7 @@ fn parse_lang(content: String, languages: &BTreeSet<String>) -> Result<Lang, BME
     })
 }
 
-fn build_langs(directory: &PathBuf, languages_set: &Languages) -> Result<Langs, BMError> {
+fn build_langs(directory: &Path, languages_set: &Languages) -> Result<Langs, BMError> {
     let mut langs: BTreeMap<NameType, Lang> = BTreeMap::new();
 
     for name_type in all::<NameType>() {
@@ -154,6 +147,7 @@ fn build_langs(directory: &PathBuf, languages_set: &Languages) -> Result<Langs, 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::path::PathBuf;
 
     #[test]
     fn test_langs() -> Result<(), BMError> {

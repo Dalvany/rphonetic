@@ -45,7 +45,9 @@ extern crate lazy_static;
 use std::fmt;
 use std::fmt::Formatter;
 
-pub use crate::beider_morse::{BMError, NameType, RuleType};
+pub use crate::beider_morse::{
+    BMError, BeiderMorse, BeiderMorseBuilder, ConfigFiles, NameType, RuleType,
+};
 pub use crate::caverphone::Caverphone1;
 pub use crate::caverphone::Caverphone2;
 pub use crate::cologne::Cologne;

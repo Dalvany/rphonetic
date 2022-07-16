@@ -1,7 +1,7 @@
 use std::cmp::Ordering;
 use std::collections::btree_map::BTreeMap;
 use std::fmt::{Debug, Display, Formatter};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use enum_iterator::{all, Sequence};
 use regex::Regex;
@@ -20,9 +20,12 @@ const APPROX: &str = "approx";
 const EXACT: &str = "exact";
 const RULES: &str = "rules";
 
+/// Type of rules.
 #[derive(Copy, Clone, Debug, Ord, PartialOrd, Eq, PartialEq, Hash, Serialize, Deserialize)]
 pub enum RuleType {
+    /// Approximate rules. It will lead to the largest number phonetic interpretation.
     Approx,
+    /// Exact rules. It will lead to the minimum number phonetic interpretation.
     Exact,
 }
 
@@ -57,12 +60,12 @@ impl Display for PrivateRuleType {
     }
 }
 
-trait PhonemeExpr: Debug {
-    fn get_phonemes(&self) -> Vec<&Phoneme>;
+pub trait PhonemeExpr: Debug {
+    fn phonemes(&self) -> Vec<&Phoneme>;
 }
 
 #[derive(Clone, Debug, Eq, PartialEq, Hash, Serialize, Deserialize)]
-struct Phoneme {
+pub struct Phoneme {
     phoneme_text: String,
     languages: LanguageSet,
 }
@@ -90,7 +93,7 @@ impl Ord for Phoneme {
 }
 
 impl PhonemeExpr for Phoneme {
-    fn get_phonemes(&self) -> Vec<&Phoneme> {
+    fn phonemes(&self) -> Vec<&Phoneme> {
         vec![self]
     }
 }
@@ -102,12 +105,27 @@ impl Display for Phoneme {
 }
 
 impl Phoneme {
+    pub fn new(phoneme_text: &str, languages: LanguageSet) -> Self {
+        Self {
+            phoneme_text: phoneme_text.to_string(),
+            languages,
+        }
+    }
+
+    pub fn join(phoneme1: &Phoneme, phoneme2: &Phoneme, languages: LanguageSet) -> Self {
+        let phoneme_text = format!("{}{}", phoneme1.phoneme_text, phoneme2.phoneme_text);
+        Self {
+            phoneme_text,
+            languages,
+        }
+    }
+
     pub fn append(mut self, value: &str) -> Self {
         self.phoneme_text.push_str(value);
         self
     }
 
-    pub fn get_phoneme_text(&self) -> String {
+    pub fn phoneme_text(&self) -> String {
         self.phoneme_text.clone()
     }
 
@@ -117,6 +135,10 @@ impl Phoneme {
             languages: self.languages.merge(languages),
         }
     }
+
+    pub fn languages(&self) -> &LanguageSet {
+        &self.languages
+    }
 }
 
 #[derive(Clone, Debug, PartialOrd, Eq, PartialEq, Hash, Serialize, Deserialize)]
@@ -125,7 +147,7 @@ struct PhonemeList {
 }
 
 impl PhonemeExpr for PhonemeList {
-    fn get_phonemes(&self) -> Vec<&Phoneme> {
+    fn phonemes(&self) -> Vec<&Phoneme> {
         self.phonemes.iter().collect()
     }
 }
@@ -273,10 +295,6 @@ struct Resolver {
 }
 
 impl Resolver {
-    fn path(&self) -> &Option<PathBuf> {
-        &self.path
-    }
-
     fn resolve(&self, filename: &str) -> Result<String, BMError> {
         match &self.path {
             Some(folder) => {
@@ -285,17 +303,23 @@ impl Resolver {
                     BMError::WrongFilename(format!("Can't find file for {} rules", filename))
                 })
             }
+            #[cfg(feature = "embedded")]
             None => embedded::EMBEDDED_RULES
                 .get(filename)
                 .map(|v| v.to_string())
                 .ok_or_else(|| {
                     BMError::WrongFilename(format!("Missing embedded rule {}", filename))
                 }),
+            #[cfg(not(feature = "embedded"))]
+            None => Err(BMError::WrongFilename(
+                "Missing embedded configuration. Use corresponding feature".to_string(),
+            )),
         }
     }
 }
 
-pub struct Rule {
+#[derive(Debug)]
+pub(crate) struct Rule {
     location: String,
     line: usize,
     left_context: Regex,
@@ -305,7 +329,7 @@ pub struct Rule {
 }
 
 impl Rule {
-    pub fn pattern_and_context_matches(&self, input: &str, index: usize) -> bool {
+    pub(crate) fn pattern_and_context_matches(&self, input: &str, index: usize) -> bool {
         let ipl = input.len() + self.pattern.len();
         if ipl > input.len()
             || input[index..ipl] != self.pattern
@@ -317,28 +341,37 @@ impl Rule {
         }
     }
 
-    pub fn left_context(&self) -> &Regex {
-        &self.left_context
-    }
-
-    pub fn right_context(&self) -> &Regex {
-        &self.right_context
-    }
-    pub fn pattern(&self) -> &String {
+    pub(crate) fn pattern(&self) -> &String {
         &self.pattern
     }
 
-    pub fn phoneme(&self) -> &Box<dyn PhonemeExpr> {
+    pub(crate) fn phoneme(&self) -> &Box<dyn PhonemeExpr> {
         &self.phoneme
     }
 }
 
-pub struct Rules {
+impl Display for Rule {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "left context = {}, pattern = {}, right context = {} ({}:{}) - phonemes : {:?}",
+            self.left_context,
+            self.pattern,
+            self.right_context,
+            self.location,
+            self.line,
+            self.phoneme
+        )
+    }
+}
+
+#[derive(Debug)]
+pub(crate) struct Rules {
     rules: BTreeMap<(NameType, PrivateRuleType, String), BTreeMap<char, Vec<Rule>>>,
 }
 
 impl Rules {
-    pub fn get_rules(
+    pub fn rules(
         &self,
         name_type: NameType,
         rule_type: PrivateRuleType,
@@ -348,23 +381,21 @@ impl Rules {
             .get(&(name_type, rule_type, language.to_string()))
     }
 
-    pub fn new(rules_folder: &PathBuf, languages: &Languages) -> Result<Self, BMError> {
+    pub fn new(rules_folder: &Path, languages: &Languages) -> Result<Self, BMError> {
         let resolver = Resolver {
-            path: Some(rules_folder.clone()),
+            path: Some(rules_folder.to_path_buf()),
         };
         build_rules(resolver, languages)
     }
 }
 
-impl Default for Rules {
-    fn default() -> Self {
-        let resolver = Resolver { path: None };
-        build_rules(resolver, &Languages::default()).unwrap()
-    }
-}
-
+/// Module that contains default rules (any and commons) and [Default] implementation
+/// for [Rules] for convenience with features.
+#[cfg(feature = "embedded")]
 mod embedded {
     use std::collections::BTreeMap;
+
+    use super::*;
 
     const ASH_APPROX_ANY: &str = include_str!("../../rules/bm/ash_approx_any.txt");
     const ASH_APPROX_COMMON: &str = include_str!("../../rules/bm/ash_approx_common.txt");
@@ -403,6 +434,13 @@ mod embedded {
             ("sep_rules_any", SEP_RULES_ANY),
         ]);
     }
+
+    impl Default for Rules {
+        fn default() -> Self {
+            let resolver = Resolver { path: None };
+            build_rules(resolver, &Languages::default()).unwrap()
+        }
+    }
 }
 
 #[cfg(test)]
@@ -434,76 +472,79 @@ mod tests {
 
         result
     }
+
     #[test]
+    #[cfg(feature = "embedded")]
     fn test_default() {
         let rules = Rules::default();
 
-        let r = rules.get_rules(NameType::Ashkenazi, PrivateRuleType::Exact, "any");
+        let r = rules.rules(NameType::Ashkenazi, PrivateRuleType::Exact, "any");
         assert!(r.is_some());
         assert!(!r.unwrap().is_empty());
 
-        let r = rules.get_rules(NameType::Ashkenazi, PrivateRuleType::Exact, "common");
+        let r = rules.rules(NameType::Ashkenazi, PrivateRuleType::Exact, "common");
         assert!(r.is_some());
         assert!(!r.unwrap().is_empty());
 
-        let r = rules.get_rules(NameType::Ashkenazi, PrivateRuleType::Approx, "any");
+        let r = rules.rules(NameType::Ashkenazi, PrivateRuleType::Approx, "any");
         assert!(r.is_some());
         assert!(!r.unwrap().is_empty());
 
-        let r = rules.get_rules(NameType::Ashkenazi, PrivateRuleType::Approx, "common");
+        let r = rules.rules(NameType::Ashkenazi, PrivateRuleType::Approx, "common");
         assert!(r.is_some());
         assert!(!r.unwrap().is_empty());
 
-        let r = rules.get_rules(NameType::Ashkenazi, PrivateRuleType::Rules, "any");
+        let r = rules.rules(NameType::Ashkenazi, PrivateRuleType::Rules, "any");
         assert!(r.is_some());
         assert!(!r.unwrap().is_empty());
 
-        let r = rules.get_rules(NameType::Generic, PrivateRuleType::Exact, "any");
+        let r = rules.rules(NameType::Generic, PrivateRuleType::Exact, "any");
         assert!(r.is_some());
         assert!(!r.unwrap().is_empty());
 
-        let r = rules.get_rules(NameType::Generic, PrivateRuleType::Exact, "common");
+        let r = rules.rules(NameType::Generic, PrivateRuleType::Exact, "common");
         assert!(r.is_some());
         assert!(!r.unwrap().is_empty());
 
-        let r = rules.get_rules(NameType::Generic, PrivateRuleType::Approx, "any");
+        let r = rules.rules(NameType::Generic, PrivateRuleType::Approx, "any");
         assert!(r.is_some());
         assert!(!r.unwrap().is_empty());
 
-        let r = rules.get_rules(NameType::Generic, PrivateRuleType::Approx, "common");
+        let r = rules.rules(NameType::Generic, PrivateRuleType::Approx, "common");
         assert!(r.is_some());
         assert!(!r.unwrap().is_empty());
 
-        let r = rules.get_rules(NameType::Generic, PrivateRuleType::Rules, "any");
+        let r = rules.rules(NameType::Generic, PrivateRuleType::Rules, "any");
         assert!(r.is_some());
         assert!(!r.unwrap().is_empty());
 
-        let r = rules.get_rules(NameType::Sephardic, PrivateRuleType::Exact, "any");
+        let r = rules.rules(NameType::Sephardic, PrivateRuleType::Exact, "any");
         assert!(r.is_some());
         assert!(!r.unwrap().is_empty());
 
-        let r = rules.get_rules(NameType::Sephardic, PrivateRuleType::Exact, "common");
+        let r = rules.rules(NameType::Sephardic, PrivateRuleType::Exact, "common");
         assert!(r.is_some());
         assert!(!r.unwrap().is_empty());
 
-        let r = rules.get_rules(NameType::Sephardic, PrivateRuleType::Approx, "any");
+        let r = rules.rules(NameType::Sephardic, PrivateRuleType::Approx, "any");
         assert!(r.is_some());
         assert!(!r.unwrap().is_empty());
 
-        let r = rules.get_rules(NameType::Sephardic, PrivateRuleType::Approx, "common");
+        let r = rules.rules(NameType::Sephardic, PrivateRuleType::Approx, "common");
         assert!(r.is_some());
         assert!(!r.unwrap().is_empty());
 
-        let r = rules.get_rules(NameType::Sephardic, PrivateRuleType::Rules, "any");
+        let r = rules.rules(NameType::Sephardic, PrivateRuleType::Rules, "any");
         assert!(r.is_some());
         assert!(!r.unwrap().is_empty());
     }
 
     #[test]
+    #[cfg(feature = "embedded")]
     fn test_default_unknown_language() {
         let rules = Rules::default();
 
-        let r = rules.get_rules(NameType::Generic, PrivateRuleType::Exact, "english");
+        let r = rules.rules(NameType::Generic, PrivateRuleType::Exact, "english");
         assert!(r.is_none());
     }
 

@@ -17,14 +17,6 @@ pub enum LanguageSet {
 }
 
 impl LanguageSet {
-    pub fn contains(&self, language: &str) -> bool {
-        match self {
-            LanguageSet::Any => true,
-            LanguageSet::NoLanguages => false,
-            LanguageSet::SomeLanguages(languages) => languages.contains(language),
-        }
-    }
-
     pub fn is_empty(&self) -> bool {
         match self {
             LanguageSet::Any => false,
@@ -73,7 +65,7 @@ impl LanguageSet {
         }
     }
 
-    pub fn get_any(&self) -> Option<String> {
+    pub fn any(&self) -> Option<String> {
         match self {
             LanguageSet::Any => None,
             LanguageSet::NoLanguages => None,
@@ -125,6 +117,7 @@ impl Languages {
     }
 }
 
+#[cfg(feature = "embedded")]
 impl Default for Languages {
     fn default() -> Self {
         // As we only provide "any" language there's no need to parse a file or anything
@@ -193,9 +186,9 @@ fn parse_liste(list: String) -> BTreeSet<String> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::path::Path;
 
     #[test]
+    #[cfg(feature = "embedded")]
     fn test_default() {
         let result = Languages::default();
 
