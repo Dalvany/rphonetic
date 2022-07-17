@@ -101,13 +101,13 @@ impl<'a> RulesApplication<'a> {
     fn invoke(mut self) -> Self {
         self.found = false;
         let mut pattern_length: usize = 1;
-        let key = self.input.chars().next().unwrap();
+        let key = self.input[self.i..].chars().next().unwrap();
         let rules = self.rules.get(&key);
         if let Some(rules) = rules {
             for rule in rules {
                 let pattern = rule.pattern();
                 pattern_length = pattern.len();
-                if rule.pattern_and_context_matches(pattern, pattern_length) {
+                if rule.pattern_and_context_matches(self.input, self.i) {
                     self.phoneme_builder.apply(rule.phoneme(), self.max_phoneme);
                     self.found = true;
                     break;
@@ -276,5 +276,113 @@ impl<'a> PhoneticEngine<'a> {
         let phoneme_builder = self.apply_final_rule(phoneme_builder, final_rules2);
 
         phoneme_builder.make_string()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::path::PathBuf;
+
+    use crate::{BMError, ConfigFiles, RuleType};
+
+    use super::*;
+
+    lazy_static! {
+        static ref DATA: [(&'static str, &'static str, NameType, RuleType, bool, usize); 8] = [
+            (
+                "Renault",
+                "rinD|rinDlt|rina|rinalt|rino|rinolt|rinu|rinult",
+                NameType::Generic,
+                RuleType::Approx,
+                true,
+                10
+            ),
+            (
+                "Renault",
+                "rYnDlt|rYnalt|rYnult|rinDlt|rinalt|rinolt|rinult",
+                NameType::Ashkenazi,
+                RuleType::Approx,
+                true,
+                10
+            ),
+            (
+                "Renault",
+                "rinDlt",
+                NameType::Ashkenazi,
+                RuleType::Approx,
+                true,
+                1
+            ),
+            (
+                "Renault",
+                "rinDlt",
+                NameType::Sephardic,
+                RuleType::Approx,
+                true,
+                10
+            ),
+            (
+                "SntJohn-Smith",
+                "sntjonsmit",
+                NameType::Generic,
+                RuleType::Exact,
+                true,
+                10
+            ),
+            (
+                "d'ortley",
+                "(ortlaj|ortlej)-(dortlaj|dortlej)",
+                NameType::Generic,
+                RuleType::Exact,
+                true,
+                10
+            ),
+            (
+                "van helsing",
+                "(elSink|elsink|helSink|helsink|helzink|xelsink)-(banhelsink|fanhelsink|fanhelzink|vanhelsink|vanhelzink|vanjelsink)",
+                NameType::Generic,
+                RuleType::Exact,
+                false,
+                10
+            ),
+            (
+                "Judenburg", "\
+                iudnbYrk|iudnbirk|iudnburk|xudnbirk|xudnburk|zudnbirk|zudnburk",
+                NameType::Generic,
+                RuleType::Approx,
+                true,
+                10
+            ),
+        ];
+    }
+
+    #[test]
+    fn test_encode() -> Result<(), BMError> {
+        let config_files = ConfigFiles::new(&PathBuf::from("./test_assets/"))?;
+
+        for (index, (value, expected, name_type, rule_type, concat, max_phoneme)) in
+            DATA.iter().enumerate()
+        {
+            let engine = PhoneticEngine {
+                rules: &config_files.rules,
+                lang: config_files.langs.get(name_type).unwrap(),
+                name_type: *name_type,
+                rule_type: (*rule_type).into(),
+                concat: *concat,
+                max_phonemes: *max_phoneme,
+            };
+
+            let result = engine.encode(value);
+
+            assert_eq!(
+                result,
+                expected.to_string(),
+                "Wrong get '{}' instead of '{}' for data at index {}",
+                result,
+                expected,
+                index
+            );
+        }
+        Ok(())
     }
 }

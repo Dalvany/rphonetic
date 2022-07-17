@@ -330,7 +330,7 @@ pub(crate) struct Rule {
 
 impl Rule {
     pub(crate) fn pattern_and_context_matches(&self, input: &str, index: usize) -> bool {
-        let ipl = input.len() + self.pattern.len();
+        let ipl = index + self.pattern.len();
         if ipl > input.len()
             || input[index..ipl] != self.pattern
             || !self.right_context.is_match(&input[ipl..])
