@@ -208,7 +208,7 @@ mod tests {
 
     #[test]
     fn test_from_path() -> Result<(), BMError> {
-        let path = PathBuf::from("./test_assets/");
+        let path = PathBuf::from("./test_assets/cc-rules/");
         let result = Languages::try_from(&path)?;
         let languages = BTreeMap::from([
             (

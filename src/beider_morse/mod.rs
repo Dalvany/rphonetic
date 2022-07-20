@@ -27,10 +27,13 @@ const DEFAULT_MAX_PHONEMES: usize = 20;
 /// Beider-Morse errors.
 #[derive(Debug)]
 pub enum BMError {
-    /// This error can be rised when parsing a [NameType] that isn't
-    /// a variant of the enum or when a filename does not contains
+    /// This error can be raised when parsing a [NameType] that isn't
+    /// a variant of the enum or when a filename does not contain
     /// a [NameType] variant.
     UnknownNameType(String),
+    /// This error is raised when parsing a [RuleType] that isn't a
+    /// variant of the enum.
+    UnknownRuleType(String),
     /// This error is raised when a configuration file contains a line
     /// that can't be parsed.
     ParseConfiguration(std::io::Error),
@@ -58,6 +61,7 @@ impl Display for BMError {
             BMError::BadContextRegex(error) => write!(f, "{}", error),
             BMError::NotABoolean(error) => write!(f, "{}", error),
             BMError::BadRule(error) => write!(f, "{}", error),
+            BMError::UnknownRuleType(error) => write!(f, "Unknown RuleType {}", error),
         }
     }
 }
@@ -248,11 +252,54 @@ impl<'a> BeiderMorseBuilder<'a> {
         let engine = PhoneticEngine {
             rules,
             lang,
-            name_type: NameType::Ashkenazi,
+            name_type: self.name_type,
             rule_type: self.rule_type.into(),
             concat: self.concat,
             max_phonemes: self.max_phonemes,
         };
         BeiderMorse { engine }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[ignore]
+    #[test]
+    fn test_all_chars() -> Result<(), BMError> {
+        let config_files = &ConfigFiles::new(&PathBuf::from("./test_assets/cc-rules/"))?;
+
+        let builder = BeiderMorseBuilder::new(config_files);
+        let encoder = builder.build();
+
+        for ch in '\u{0000}'..='\u{FFFF}' {
+            encoder.encode(ch.to_string().as_str());
+        }
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_oom() -> Result<(), BMError> {
+        let config_files = &ConfigFiles::new(&PathBuf::from("./test_assets/cc-rules/"))?;
+
+        let input = "200697900'-->&#1913348150;</  bceaeef >aadaabcf\"aedfbff<!--\'-->?>cae\
+        cfaaa><?&#<!--</script>&lang&fc;aadeaf?>>&bdquo<    cc =\"abff\"    /></   afe  ><script>\
+        <!-- f(';<    cf aefbeef = \"bfabadcf\" ebbfeedd = fccabeb >";
+
+        let builder = BeiderMorseBuilder::new(config_files)
+            .name_type(NameType::Generic)
+            .rule_type(RuleType::Exact)
+            .max_phonemes(10);
+        let encoder = builder.build();
+
+        let result = encoder.encode(input);
+        assert!(!result.is_empty());
+
+        let result: Vec<&str> = result.split('|').collect();
+        assert!(result.len() <= 10);
+
+        Ok(())
     }
 }

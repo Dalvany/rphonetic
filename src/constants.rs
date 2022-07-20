@@ -9,7 +9,7 @@ lazy_static! {
         Regex::new(r"\s*(.+?)\s+(.*?)\s+(.*?)\s*(//.*){0,1}$").unwrap();
     pub static ref DM_LANGUAGE_LINE: Regex = Regex::new(r"^\s*(.+?)\s*(//.*){0,1}$").unwrap();
     pub static ref BM_INCLUDE_LINE: Regex =
-        Regex::new(r"^\s*#include\s+([a-z\\-]+?)\s*(//.*){0,1}$").unwrap();
+        Regex::new(r"^\s*#include\s+([a-z_]+?)\s*(//.*){0,1}$").unwrap();
 }
 
 pub const SINGLE_LINE_COMMENT: &str = "//";

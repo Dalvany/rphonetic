@@ -151,7 +151,7 @@ mod tests {
 
     #[test]
     fn test_langs() -> Result<(), BMError> {
-        let path = &PathBuf::from("./test_assets/");
+        let path = &PathBuf::from("./test_assets/cc-rules/");
         let langs = Langs::new(path, &Languages::try_from(path)?)?;
 
         assert!(!langs.langs.is_empty());
@@ -160,7 +160,7 @@ mod tests {
 
     #[test]
     fn test_language_guessing() -> Result<(), BMError> {
-        let path = &PathBuf::from("./test_assets/");
+        let path = &PathBuf::from("./test_assets/cc-rules/");
         let langs = Langs::new(path, &Languages::try_from(path)?)?;
         let langs = langs.get(&NameType::Generic).unwrap();
 

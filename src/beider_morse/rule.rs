@@ -60,6 +60,19 @@ impl Display for PrivateRuleType {
     }
 }
 
+impl TryFrom<&str> for PrivateRuleType {
+    type Error = BMError;
+
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
+        match value {
+            APPROX => Ok(Self::Approx),
+            EXACT => Ok(Self::Exact),
+            RULES => Ok(Self::Rules),
+            other => Err(BMError::UnknownRuleType(other.to_string())),
+        }
+    }
+}
+
 pub trait PhonemeExpr: Debug {
     fn phonemes(&self) -> Vec<&Phoneme>;
 }
@@ -241,10 +254,10 @@ fn parse_rule(resolver: &Resolver, filename: &str) -> Result<BTreeMap<char, Vec<
         let rules_line_match = RULE_LINE.captures(line);
         if let Some(cap) = rules_line_match {
             let pattern = cap.get(1).unwrap().as_str();
-            let left_context = cap.get(2).unwrap().as_str();
-            let left_context = Regex::new(left_context)?;
-            let right_context = cap.get(3).unwrap().as_str();
-            let right_context = Regex::new(right_context)?;
+            let left_context = format!("{}$", cap.get(2).unwrap().as_str());
+            let left_context = Regex::new(&left_context)?;
+            let right_context = format!("^{}", cap.get(3).unwrap().as_str());
+            let right_context = Regex::new(&right_context)?;
             let phoneme_expr = cap.get(4).unwrap().as_str();
             let phoneme = parse_phoneme_expr(phoneme_expr)?;
             let rule = Rule {
@@ -446,6 +459,7 @@ mod embedded {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::collections::BTreeSet;
 
     fn make_phonemes() -> Vec<Vec<Phoneme>> {
         let mut result = Vec::new();
@@ -550,7 +564,7 @@ mod tests {
 
     #[test]
     fn test_with_path() -> Result<(), BMError> {
-        let path = &PathBuf::from("./test_assets/");
+        let path = &PathBuf::from("./test_assets/cc-rules/");
         let rules = Rules::new(path, &Languages::try_from(path)?)?;
 
         assert!(!rules.rules.is_empty());
@@ -593,5 +607,25 @@ mod tests {
                 );
             }
         }
+    }
+
+    #[test]
+    fn test_parse_rule_include() -> Result<(), BMError> {
+        let resolver = Resolver {
+            path: Some(PathBuf::from("./test_assets/test-include/")),
+        };
+        let tmp = parse_rule(&resolver, "gen_exact_german")?;
+        let mut result: BTreeSet<String> = BTreeSet::new();
+        for (_, v) in tmp.iter() {
+            for r in v {
+                result.insert(r.pattern.clone());
+            }
+        }
+
+        let expected = BTreeSet::from(["included".to_string(), "original".to_string()]);
+
+        assert_eq!(result, expected);
+
+        Ok(())
     }
 }

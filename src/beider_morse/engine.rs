@@ -220,14 +220,17 @@ impl<'a> PhoneticEngine<'a> {
             for prefix in NAME_PREFIXES.get(&self.name_type).unwrap() {
                 let p = format!("{} ", prefix);
                 if let Some(remainder) = input.strip_prefix(p.as_str()) {
-                    let combined = self.encode(format!("{}{}", p, remainder).as_str());
+                    let combined = self.encode(format!("{}{}", prefix, remainder).as_str());
                     return format!("({})-({})", self.encode(remainder), combined);
                 }
             }
         }
 
-        let words: Vec<&str> = input
-            .split_whitespace()
+        let words: Vec<&str> = input.split_whitespace().collect();
+
+        let words2: Vec<&str> = words
+            .clone()
+            .iter()
             .map(|v| {
                 if self.name_type == NameType::Sephardic {
                     v.split('\'').last().unwrap()
@@ -242,7 +245,7 @@ impl<'a> PhoneticEngine<'a> {
             .collect();
 
         let input = if self.concat {
-            words.join(" ")
+            words2.join(" ")
         } else if words.len() == 1 {
             words.first().unwrap().to_string()
         } else {
@@ -283,6 +286,7 @@ impl<'a> PhoneticEngine<'a> {
 mod tests {
     use std::path::PathBuf;
 
+    use crate::beider_morse::DEFAULT_MAX_PHONEMES;
     use crate::{BMError, ConfigFiles, RuleType};
 
     use super::*;
@@ -358,7 +362,7 @@ mod tests {
 
     #[test]
     fn test_encode() -> Result<(), BMError> {
-        let config_files = ConfigFiles::new(&PathBuf::from("./test_assets/"))?;
+        let config_files = ConfigFiles::new(&PathBuf::from("./test_assets/cc-rules/"))?;
 
         for (index, (value, expected, name_type, rule_type, concat, max_phoneme)) in
             DATA.iter().enumerate()
@@ -383,6 +387,441 @@ mod tests {
                 index
             );
         }
+        Ok(())
+    }
+
+    fn encode_helper(
+        config_files: &ConfigFiles,
+        args: &BTreeMap<&str, &str>,
+        concat: bool,
+        input: &str,
+    ) -> String {
+        let name_type: NameType = args
+            .get("nameType")
+            .map_or(NameType::Generic, |v| NameType::try_from(*v).unwrap());
+        let rule_type: PrivateRuleType =
+            args.get("ruleType").map_or(PrivateRuleType::Approx, |v| {
+                PrivateRuleType::try_from(*v).unwrap()
+            });
+
+        let engine = PhoneticEngine {
+            rules: &config_files.rules,
+            lang: &config_files.langs.get(&name_type).unwrap(),
+            name_type,
+            rule_type,
+            concat,
+            max_phonemes: DEFAULT_MAX_PHONEMES,
+        };
+
+        let language_set: Option<LanguageSet> = args.get("languageSet").map_or(None, |v| {
+            if v == &"auto" {
+                None
+            } else {
+                let vec: Vec<&str> = v.split(',').collect();
+                Some(LanguageSet::from(vec))
+            }
+        });
+
+        match language_set {
+            None => engine.encode(input),
+            Some(language_set) => engine.encode_with_language_set(input, &language_set),
+        }
+    }
+
+    #[test]
+    fn test_solr_generic() -> Result<(), BMError> {
+        let config_files = &ConfigFiles::new(&PathBuf::from("./test_assets/cc-rules/"))?;
+
+        //
+        // concat is true, ruleType is EXACT
+        //
+        let args = &mut BTreeMap::new();
+        args.insert("nameType", "gen");
+        assert_eq!(
+            encode_helper(config_files, args, true, "Angelo"), 
+            "YngYlo|Yngilo|agilo|angYlo|angilo|aniilo|anilo|anxilo|anzilo|ogilo|ongYlo|ongilo|oniilo|onilo|onxilo|onzilo"
+        );
+
+        args.insert("ruleType", "exact");
+        assert_eq!(
+            encode_helper(config_files, args, true, "Angelo"),
+            "anZelo|andZelo|angelo|anhelo|anjelo|anxelo"
+        );
+
+        assert_eq!(
+            encode_helper(config_files, args, true, "D'Angelo"),
+            "(anZelo|andZelo|angelo|anhelo|anjelo|anxelo)-(danZelo|dandZelo|dangelo|danhelo|danjelo|danxelo)"
+        );
+
+        args.insert("languageSet", "italian,greek,spanish");
+        assert_eq!(
+            encode_helper(config_files, args, true, "Angelo"),
+            "andZelo|angelo|anxelo"
+        );
+
+        assert_eq!(encode_helper(config_files, args, true, "1234"), "");
+
+        //
+        // concat is false, ruleType is EXACT
+        //
+        let args = &mut BTreeMap::new();
+        assert_eq!(
+            encode_helper(config_files, args, false, "Angelo"), 
+            "YngYlo|Yngilo|agilo|angYlo|angilo|aniilo|anilo|anxilo|anzilo|ogilo|ongYlo|ongilo|oniilo|onilo|onxilo|onzilo"
+        );
+
+        args.insert("ruleType", "exact");
+        assert_eq!(
+            encode_helper(config_files, args, false, "Angelo"),
+            "anZelo|andZelo|angelo|anhelo|anjelo|anxelo"
+        );
+
+        assert_eq!(
+            encode_helper(config_files, args, false, "D'Angelo"),
+            "(anZelo|andZelo|angelo|anhelo|anjelo|anxelo)-(danZelo|dandZelo|dangelo|danhelo|danjelo|danxelo)"
+        );
+
+        args.insert("languageSet", "italian,greek,spanish");
+        assert_eq!(
+            encode_helper(config_files, args, false, "Angelo"),
+            "andZelo|angelo|anxelo"
+        );
+
+        assert_eq!(encode_helper(config_files, args, false, "1234"), "");
+
+        //
+        // concat is true, ruleType is APPROX
+        //
+        let args = &mut BTreeMap::new();
+        assert_eq!(
+            encode_helper(config_files, args, true, "Angelo"),
+            "YngYlo|Yngilo|agilo|angYlo|angilo|aniilo|anilo|anxilo|anzilo|ogilo|ongYlo|ongilo|oniilo|onilo|onxilo|onzilo"
+        );
+
+        args.insert("ruleType", "approx");
+        assert_eq!(
+            encode_helper(config_files, args, true, "Angelo"),
+            "YngYlo|Yngilo|agilo|angYlo|angilo|aniilo|anilo|anxilo|anzilo|ogilo|ongYlo|ongilo|oniilo|onilo|onxilo|onzilo"
+        );
+
+        assert_eq!(
+            encode_helper(config_files, args, true, "D'Angelo"),
+            "(YngYlo|Yngilo|agilo|angYlo|angilo|aniilo|anilo|anxilo|anzilo|ogilo|ongYlo|ongilo|oniilo|onilo|onxilo|onzilo)-(dYngYlo|dYngilo|dagilo|dangYlo|dangilo|daniilo|danilo|danxilo|danzilo|dogilo|dongYlo|dongilo|doniilo|donilo|donxilo|donzilo)"
+        );
+
+        args.insert("languageSet", "italian,greek,spanish");
+        assert_eq!(
+            encode_helper(config_files, args, true, "Angelo"),
+            "angilo|anxilo|anzilo|ongilo|onxilo|onzilo"
+        );
+
+        assert_eq!(encode_helper(config_files, args, true, "1234"), "");
+
+        //
+        // concat is false, ruleType is APPROX
+        //
+        let args = &mut BTreeMap::new();
+        assert_eq!(
+            encode_helper(config_files, args, false, "Angelo"),
+            "YngYlo|Yngilo|agilo|angYlo|angilo|aniilo|anilo|anxilo|anzilo|ogilo|ongYlo|ongilo|oniilo|onilo|onxilo|onzilo"
+        );
+
+        args.insert("ruleType", "approx");
+        assert_eq!(
+            encode_helper(config_files, args, false, "Angelo"),
+            "YngYlo|Yngilo|agilo|angYlo|angilo|aniilo|anilo|anxilo|anzilo|ogilo|ongYlo|ongilo|oniilo|onilo|onxilo|onzilo"
+        );
+
+        assert_eq!(
+            encode_helper(config_files, args, false, "D'Angelo"),
+            "(YngYlo|Yngilo|agilo|angYlo|angilo|aniilo|anilo|anxilo|anzilo|ogilo|ongYlo|ongilo|oniilo|onilo|onxilo|onzilo)-(dYngYlo|dYngilo|dagilo|dangYlo|dangilo|daniilo|danilo|danxilo|danzilo|dogilo|dongYlo|dongilo|doniilo|donilo|donxilo|donzilo)"
+        );
+
+        args.insert("languageSet", "italian,greek,spanish");
+        assert_eq!(
+            encode_helper(config_files, args, false, "Angelo"),
+            "angilo|anxilo|anzilo|ongilo|onxilo|onzilo"
+        );
+
+        assert_eq!(encode_helper(config_files, args, false, "1234"), "");
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_solr_ashkenazi() -> Result<(), BMError> {
+        let config_files = &ConfigFiles::new(&PathBuf::from("./test_assets/cc-rules/"))?;
+
+        //
+        // concat is true, ruleType is EXACT
+        //
+        let args = &mut BTreeMap::new();
+        args.insert("nameType", "ash");
+        assert_eq!(
+            encode_helper(config_files, args, true, "Angelo"),
+            "YngYlo|Yngilo|angYlo|angilo|anilo|anxilo|anzilo|ongYlo|ongilo|onilo|onxilo|onzilo"
+        );
+
+        args.insert("ruleType", "exact");
+        assert_eq!(
+            encode_helper(config_files, args, true, "Angelo"),
+            "andZelo|angelo|anhelo|anxelo"
+        );
+
+        assert_eq!(
+            encode_helper(config_files, args, true, "D'Angelo"),
+            "dandZelo|dangelo|danhelo|danxelo"
+        );
+
+        args.insert("languageSet", "italian,greek,spanish");
+        assert_eq!(
+            encode_helper(config_files, args, true, "Angelo"),
+            "angelo|anxelo"
+        );
+
+        assert_eq!(encode_helper(config_files, args, true, "1234"), "");
+
+        //
+        // concat is false, ruleType is EXACT
+        //
+        let args = &mut BTreeMap::new();
+        args.insert("nameType", "ash");
+        assert_eq!(
+            encode_helper(config_files, args, false, "Angelo"),
+            "YngYlo|Yngilo|angYlo|angilo|anilo|anxilo|anzilo|ongYlo|ongilo|onilo|onxilo|onzilo"
+        );
+
+        args.insert("ruleType", "exact");
+        assert_eq!(
+            encode_helper(config_files, args, false, "Angelo"),
+            "andZelo|angelo|anhelo|anxelo"
+        );
+
+        assert_eq!(
+            encode_helper(config_files, args, false, "D'Angelo"),
+            "dandZelo|dangelo|danhelo|danxelo"
+        );
+
+        args.insert("languageSet", "italian,greek,spanish");
+        assert_eq!(
+            encode_helper(config_files, args, false, "Angelo"),
+            "angelo|anxelo"
+        );
+
+        assert_eq!(encode_helper(config_files, args, false, "1234"), "");
+
+        //
+        // concat is true, ruleType is APPROX
+        //
+        let args = &mut BTreeMap::new();
+        args.insert("nameType", "ash");
+        assert_eq!(
+            encode_helper(config_files, args, true, "Angelo"),
+            "YngYlo|Yngilo|angYlo|angilo|anilo|anxilo|anzilo|ongYlo|ongilo|onilo|onxilo|onzilo"
+        );
+
+        args.insert("ruleType", "approx");
+        assert_eq!(
+            encode_helper(config_files, args, true, "Angelo"),
+            "YngYlo|Yngilo|angYlo|angilo|anilo|anxilo|anzilo|ongYlo|ongilo|onilo|onxilo|onzilo"
+        );
+
+        assert_eq!(
+            encode_helper(config_files, args, true, "D'Angelo"),
+            "dYngYlo|dYngilo|dangYlo|dangilo|danilo|danxilo|danzilo|dongYlo|dongilo|donilo|donxilo|donzilo"
+        );
+
+        args.insert("languageSet", "italian,greek,spanish");
+        assert_eq!(
+            encode_helper(config_files, args, true, "Angelo"),
+            "angilo|anxilo|ongilo|onxilo"
+        );
+
+        assert_eq!(encode_helper(config_files, args, true, "1234"), "");
+
+        //
+        // concat is false, ruleType is APPROX
+        //
+        let args = &mut BTreeMap::new();
+        args.insert("nameType", "ash");
+        assert_eq!(
+            encode_helper(config_files, args, false, "Angelo"),
+            "YngYlo|Yngilo|angYlo|angilo|anilo|anxilo|anzilo|ongYlo|ongilo|onilo|onxilo|onzilo"
+        );
+
+        args.insert("ruleType", "approx");
+        assert_eq!(
+            encode_helper(config_files, args, false, "Angelo"),
+            "YngYlo|Yngilo|angYlo|angilo|anilo|anxilo|anzilo|ongYlo|ongilo|onilo|onxilo|onzilo"
+        );
+
+        assert_eq!(
+            encode_helper(config_files, args, false, "D'Angelo"),
+            "dYngYlo|dYngilo|dangYlo|dangilo|danilo|danxilo|danzilo|dongYlo|dongilo|donilo|donxilo|donzilo"
+        );
+
+        args.insert("languageSet", "italian,greek,spanish");
+        assert_eq!(
+            encode_helper(config_files, args, false, "Angelo"),
+            "angilo|anxilo|ongilo|onxilo"
+        );
+
+        assert_eq!(encode_helper(config_files, args, false, "1234"), "");
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_solr_sephardic() -> Result<(), BMError> {
+        let config_files = &ConfigFiles::new(&PathBuf::from("./test_assets/cc-rules/"))?;
+
+        //
+        // concat is true, ruleType is EXACT
+        //
+        let args = &mut BTreeMap::new();
+        args.insert("nameType", "sep");
+        assert_eq!(
+            encode_helper(config_files, args, true, "Angelo"),
+            "anhila|anhilu|anzila|anzilu|nhila|nhilu|nzila|nzilu"
+        );
+
+        args.insert("ruleType", "exact");
+        assert_eq!(
+            encode_helper(config_files, args, true, "Angelo"),
+            "anZelo|andZelo|anxelo"
+        );
+
+        assert_eq!(
+            encode_helper(config_files, args, true, "D'Angelo"),
+            "anZelo|andZelo|anxelo"
+        );
+
+        args.insert("languageSet", "italian,greek,spanish");
+        assert_eq!(
+            encode_helper(config_files, args, true, "Angelo"),
+            "andZelo|anxelo"
+        );
+
+        assert_eq!(encode_helper(config_files, args, true, "1234"), "");
+
+        //
+        // concat is false, ruleType is EXACT
+        //
+        let args = &mut BTreeMap::new();
+        args.insert("nameType", "sep");
+        assert_eq!(
+            encode_helper(config_files, args, false, "Angelo"),
+            "anhila|anhilu|anzila|anzilu|nhila|nhilu|nzila|nzilu"
+        );
+
+        args.insert("ruleType", "exact");
+        assert_eq!(
+            encode_helper(config_files, args, false, "Angelo"),
+            "anZelo|andZelo|anxelo"
+        );
+
+        assert_eq!(
+            encode_helper(config_files, args, false, "D'Angelo"),
+            "danZelo|dandZelo|danxelo"
+        );
+
+        args.insert("languageSet", "italian,greek,spanish");
+        assert_eq!(
+            encode_helper(config_files, args, false, "Angelo"),
+            "andZelo|anxelo"
+        );
+
+        assert_eq!(encode_helper(config_files, args, false, "1234"), "");
+
+        //
+        // concat is true, ruleType is APPROX
+        //
+        let args = &mut BTreeMap::new();
+        args.insert("nameType", "sep");
+        assert_eq!(
+            encode_helper(config_files, args, true, "Angelo"),
+            "anhila|anhilu|anzila|anzilu|nhila|nhilu|nzila|nzilu"
+        );
+
+        args.insert("ruleType", "approx");
+        assert_eq!(
+            encode_helper(config_files, args, true, "Angelo"),
+            "anhila|anhilu|anzila|anzilu|nhila|nhilu|nzila|nzilu"
+        );
+
+        assert_eq!(
+            encode_helper(config_files, args, true, "D'Angelo"),
+            "anhila|anhilu|anzila|anzilu|nhila|nhilu|nzila|nzilu"
+        );
+
+        args.insert("languageSet", "italian,greek,spanish");
+        assert_eq!(
+            encode_helper(config_files, args, true, "Angelo"),
+            "anhila|anhilu|anzila|anzilu|nhila|nhilu|nzila|nzilu"
+        );
+
+        assert_eq!(encode_helper(config_files, args, true, "1234"), "");
+
+        //
+        // concat is false, ruleType is APPROX
+        //
+        let args = &mut BTreeMap::new();
+        args.insert("nameType", "sep");
+        assert_eq!(
+            encode_helper(config_files, args, false, "Angelo"),
+            "anhila|anhilu|anzila|anzilu|nhila|nhilu|nzila|nzilu"
+        );
+
+        args.insert("ruleType", "approx");
+        assert_eq!(
+            encode_helper(config_files, args, false, "Angelo"),
+            "anhila|anhilu|anzila|anzilu|nhila|nhilu|nzila|nzilu"
+        );
+
+        assert_eq!(
+            encode_helper(config_files, args, false, "D'Angelo"),
+            "danhila|danhilu|danzila|danzilu|nhila|nhilu|nzila|nzilu"
+        );
+
+        args.insert("languageSet", "italian,greek,spanish");
+        assert_eq!(
+            encode_helper(config_files, args, false, "Angelo"),
+            "anhila|anhilu|anzila|anzilu|nhila|nhilu|nzila|nzilu"
+        );
+
+        assert_eq!(encode_helper(config_files, args, false, "1234"), "");
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_compatibility_with_original_version() -> Result<(), BMError> {
+        let config_files = &ConfigFiles::new(&PathBuf::from("./test_assets/cc-rules/"))?;
+
+        let args = &mut BTreeMap::new();
+        args.insert("nameType", "gen");
+        args.insert("ruleType", "approx");
+        assert_eq!(
+            encode_helper(config_files, args, false, "abram"),
+            "Ybram|Ybrom|abram|abran|abrom|abron|avram|avrom|obram|obran|obrom|obron|ovram|ovrom"
+        );
+        assert_eq!(
+            encode_helper(config_files, args, false, "Bendzin"),
+            "bndzn|bntsn|bnzn|vndzn|vntsn"
+        );
+
+        let args = &mut BTreeMap::new();
+        args.insert("nameType", "ash");
+        args.insert("ruleType", "approx");
+        assert_eq!(
+            encode_helper(config_files, args, false, "abram"),
+            "Ybram|Ybrom|abram|abrom|avram|avrom|imbram|imbrom|obram|obrom|ombram|ombrom|ovram|ovrom"
+        );
+        assert_eq!(
+            encode_helper(config_files, args, false, "Halpern"),
+            "YlpYrn|Ylpirn|alpYrn|alpirn|olpYrn|olpirn|xalpirn|xolpirn"
+        );
+
         Ok(())
     }
 }
