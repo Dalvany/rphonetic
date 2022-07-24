@@ -12,6 +12,7 @@ use crate::constants::{
     BM_INCLUDE_LINE, MULTI_LINE_COMMENT_END, MULTI_LINE_COMMENT_START, RULE_LINE,
     SINGLE_LINE_COMMENT,
 };
+use crate::helper::CharSequence;
 use crate::{BMError, NameType};
 
 use super::LanguageSet;
@@ -257,6 +258,7 @@ fn parse_rule(resolver: &Resolver, filename: &str) -> Result<BTreeMap<char, Vec<
         let rules_line_match = RULE_LINE.captures(line);
         if let Some(cap) = rules_line_match {
             let pattern = cap.get(1).unwrap().as_str();
+            let pattern_length_char = pattern.chars().count();
             let left_context = format!("{}$", cap.get(2).unwrap().as_str());
             let left_context = Regex::new(&left_context)?;
             let right_context = format!("^{}", cap.get(3).unwrap().as_str());
@@ -265,9 +267,10 @@ fn parse_rule(resolver: &Resolver, filename: &str) -> Result<BTreeMap<char, Vec<
             let phoneme = parse_phoneme_expr(phoneme_expr)?;
             let rule = Rule {
                 location: filename.to_string(),
-                line: current_line,
+                line: current_line + 1,
                 left_context,
                 pattern: pattern.to_string(),
+                pattern_length_char,
                 right_context,
                 phoneme,
             };
@@ -340,13 +343,18 @@ pub(crate) struct Rule {
     line: usize,
     left_context: Regex,
     pattern: String,
+    pattern_length_char: usize,
     right_context: Regex,
     phoneme: Box<dyn PhonemeExpr>,
 }
 
 impl Rule {
-    pub(crate) fn pattern_and_context_matches(&self, input: &str, index: usize) -> bool {
-        let ipl = index + self.pattern.len();
+    pub(crate) fn pattern_and_context_matches(
+        &self,
+        input: &CharSequence<'_>,
+        index: usize,
+    ) -> bool {
+        let ipl = index + self.pattern_length_char;
         if ipl > input.len()
             || input[index..ipl] != self.pattern
             || !self.right_context.is_match(&input[ipl..])
@@ -357,8 +365,8 @@ impl Rule {
         }
     }
 
-    pub(crate) fn pattern(&self) -> &String {
-        &self.pattern
+    pub(crate) fn pattern_len_char(&self) -> usize {
+        self.pattern_length_char
     }
 
     pub(crate) fn phoneme(&self) -> &Box<dyn PhonemeExpr> {
@@ -461,8 +469,9 @@ mod embedded {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use std::collections::BTreeSet;
+
+    use super::*;
 
     fn make_phonemes() -> Vec<Vec<Phoneme>> {
         let mut result = Vec::new();

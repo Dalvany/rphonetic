@@ -127,11 +127,10 @@ impl<'a> Index<Range<usize>> for CharSequence<'a> {
         let mut iterator = self.inner.char_indices().skip(index.start);
 
         let start: Option<(usize, _)> = iterator.next();
-        // +1 because we call next() in the previous line
-        let skip = if index.end > index.start + 1 {
+        let skip = if index.end > index.start {
             index.end - (index.start + 1)
         } else {
-            0
+            return "";
         };
         let mut iterator = iterator.skip(skip);
         let end: Option<(usize, _)> = iterator.next();
@@ -333,5 +332,13 @@ mod tests {
         assert_eq!(&char_sequence[6..=9], "的作战策");
         assert_eq!(&char_sequence[..9], "每个人都有他的作战");
         assert_eq!(&char_sequence[..=9], "每个人都有他的作战策");
+    }
+
+    #[test]
+    fn test_char_sequence_to_0() {
+        let data = "azerty";
+        let char_sequence = CharSequence::from(data);
+
+        assert_eq!(&char_sequence[..0], "");
     }
 }

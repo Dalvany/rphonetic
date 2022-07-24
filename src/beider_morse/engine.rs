@@ -5,6 +5,7 @@ use serde::{Deserialize, Serialize};
 use crate::beider_morse::lang::Lang;
 use crate::beider_morse::languages::LanguageSet;
 use crate::beider_morse::rule::{Phoneme, PhonemeExpr, PrivateRuleType, Rule, Rules};
+use crate::helper::CharSequence;
 use crate::NameType;
 
 lazy_static! {
@@ -39,10 +40,6 @@ impl PhonemeBuilder {
     fn empty(languages: &LanguageSet) -> Self {
         let phonemes = BTreeSet::from([Phoneme::new("", languages.clone())]);
         Self { phonemes }
-    }
-
-    fn append_char(&mut self, value: char) {
-        self.append(&value.to_string())
     }
 
     fn append(&mut self, text: &str) {
@@ -86,7 +83,7 @@ impl PhonemeBuilder {
 #[derive(Debug)]
 struct RulesApplication<'a> {
     rules: &'a BTreeMap<char, Vec<Rule>>,
-    input: &'a String,
+    input: &'a CharSequence<'a>,
     phoneme_builder: &'a mut PhonemeBuilder,
     i: usize,
     max_phoneme: usize,
@@ -105,8 +102,7 @@ impl<'a> RulesApplication<'a> {
         let rules = self.rules.get(&key);
         if let Some(rules) = rules {
             for rule in rules {
-                let pattern = rule.pattern();
-                pattern_length = pattern.len();
+                pattern_length = rule.pattern_len_char();
                 if rule.pattern_and_context_matches(self.input, self.i) {
                     self.phoneme_builder.apply(rule.phoneme(), self.max_phoneme);
                     self.found = true;
@@ -147,7 +143,8 @@ impl<'a> PhoneticEngine<'a> {
         let mut phonemes: BTreeSet<Phoneme> = BTreeSet::new();
         for phoneme in phoneme_builder.phonemes {
             let mut sub_builder = PhonemeBuilder::empty(phoneme.languages());
-            let phoneme_text = phoneme.phoneme_text();
+            let tmp = phoneme.phoneme_text();
+            let phoneme_text = CharSequence::from(tmp.as_str());
 
             let mut i = 0;
             let len = phoneme_text.len();
@@ -164,8 +161,8 @@ impl<'a> PhoneticEngine<'a> {
                 let new_i = rules_application.i();
 
                 if !rules_application.found {
-                    let txt = phoneme_text.chars().nth(i).unwrap();
-                    sub_builder.append_char(txt);
+                    let txt = &phoneme_text[i..i + 1];
+                    sub_builder.append(txt);
                 }
 
                 i = new_i;
@@ -279,6 +276,7 @@ impl<'a> PhoneticEngine<'a> {
         };
 
         let mut phoneme_builder = &mut PhonemeBuilder::empty(languages);
+        let input = CharSequence::from(input.as_str());
         let mut i = 0;
         let end = input.len();
         while i < end {
@@ -428,14 +426,14 @@ mod tests {
 
         let engine = PhoneticEngine {
             rules: &config_files.rules,
-            lang: &config_files.langs.get(&name_type).unwrap(),
+            lang: config_files.langs.get(&name_type).unwrap(),
             name_type,
             rule_type,
             concat,
             max_phonemes: DEFAULT_MAX_PHONEMES,
         };
 
-        let language_set: Option<LanguageSet> = args.get("languageSet").map_or(None, |v| {
+        let language_set: Option<LanguageSet> = args.get("languageSet").and_then(|v| {
             if v == &"auto" {
                 None
             } else {
