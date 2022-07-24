@@ -10,7 +10,8 @@ pub use rule::RuleType;
 
 use crate::beider_morse::engine::PhoneticEngine;
 use crate::beider_morse::lang::Langs;
-use crate::beider_morse::languages::{LanguageSet, Languages};
+pub use crate::beider_morse::languages::LanguageSet;
+use crate::beider_morse::languages::Languages;
 use crate::beider_morse::rule::Rules;
 use crate::Encoder;
 
@@ -25,7 +26,7 @@ const SEP: &str = "sep";
 const DEFAULT_MAX_PHONEMES: usize = 20;
 
 /// Beider-Morse errors.
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum BMError {
     /// This error can be raised when parsing a [NameType] that isn't
     /// a variant of the enum or when a filename does not contain
@@ -36,7 +37,7 @@ pub enum BMError {
     UnknownRuleType(String),
     /// This error is raised when a configuration file contains a line
     /// that can't be parsed.
-    ParseConfiguration(std::io::Error),
+    ParseConfiguration(String),
     /// This error is raised when a rule file is missing.
     WrongFilename(String),
     /// This error is raised when the parser can't parse a phoneme
@@ -68,7 +69,7 @@ impl Display for BMError {
 
 impl From<std::io::Error> for BMError {
     fn from(error: std::io::Error) -> Self {
-        Self::ParseConfiguration(error)
+        Self::ParseConfiguration(error.to_string())
     }
 }
 
@@ -180,9 +181,83 @@ impl ConfigFiles {
     }
 }
 
+/// This is the Beider-Morse encoder.
+/// It needs rules to work, you can get them
+/// from [commons-codec](https://github.com/apache/commons-codec/tree/rel/commons-codec-1.15/src/main/resources/org/apache/commons/codec/language/bm).
+/// If feature `embedded`, the default rules will be included in binary, it contains only `any` and `common`
+/// rules from commons-codec.
+///
+/// # Encoding result format
+///
+/// From [commons-codec Javadoc](https://javadoc.io/static/commons-codec/commons-codec/1.15/org/apache/commons/codec/language/bm/BeiderMorseEncoder.html) :
+///
+/// Individual phonetic spellings of an input word are represented in upper- and lower-case roman characters. Where there are multiple possible
+/// phonetic representations, these are joined with a pipe (`|`) character. If multiple hyphenated words where found, or if the word may contain a
+/// name prefix, each encoded word is placed in elipses and these blocks are then joined with hyphens. For example, `d'ortley` has a possible prefix.
+/// The form without prefix encodes to `ortlaj|ortlej`, while the form with prefix encodes to `dortlaj|dortlej`. Thus, the full, combined encoding
+/// is `(ortlaj|ortlej)-(dortlaj|dortlej)`.
+///
+/// The encoded forms are often quite a bit longer than the input strings. This is because a single input may have many potential phonetic
+/// interpretations. For example, `Renault` encodes to `rYnDlt|rYnalt|rYnult|rinDlt|rinalt|rinult`. The [APPROX](RuleType::Approx) rules will tend to
+/// produce larger encodings as they consider a wider range of possible, approximate phonetic interpretations of the original word. Down-stream
+/// applications may wish to further process the encoding for indexing or lookup purposes, for example, by splitting on pipe (`|`) and indexing
+/// under each of these alternatives.
+///
+/// # Example
+///
+/// ```rust
+/// # fn main() -> Result<(), rphonetic::PhoneticError> {
+/// use std::path::PathBuf;
+/// use rphonetic::{BeiderMorseBuilder, ConfigFiles, Encoder};
+///
+/// let config_files = ConfigFiles::new(&PathBuf::from("./test_assets/cc-rules/"))?;
+/// let builder = BeiderMorseBuilder::new(&config_files);
+/// let beider_morse = builder.build();
+///
+/// assert_eq!(beider_morse.encode("Van Helsing"),"(Ylznk|ilzn|ilznk|xilzn|xilznk)-(banilznk|bonilznk|fYnYlznk|fYnilznk|fanYlznk|fanilznk|fonYlznk|fonilznk|vYnYlznk|vYnilznk|vanYlznk|vaniilznk|vanilzn|vanilznk|vonYlznk|voniilznk|vonilzn|vonilznk)");
+/// #   Ok(())
+/// # }
+/// ```
+///
+/// If you know the language, you can skip language detection using [encode_with_languages](BeiderMorse::encode_with_languages)
 #[derive(Debug)]
 pub struct BeiderMorse<'a> {
     engine: PhoneticEngine<'a>,
+}
+
+impl<'a> BeiderMorse<'a> {
+    /// Encode a value with the provided [LanguageSet]. Using this method will avoid language detection.
+    ///
+    /// # Parameters
+    ///
+    /// * `value` : value to encode.
+    /// * `languages` : languages to use.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// # fn main() -> Result<(), rphonetic::PhoneticError> {
+    /// use std::path::PathBuf;
+    /// use rphonetic::{BeiderMorseBuilder, ConfigFiles, Encoder, LanguageSet, RuleType};
+    ///
+    /// let config_files = ConfigFiles::new(&PathBuf::from("./test_assets/cc-rules/"))?;
+    /// let builder = BeiderMorseBuilder::new(&config_files).rule_type(RuleType::Exact);
+    /// let beider_morse = builder.build();
+    ///
+    /// assert_eq!(beider_morse.encode("Angelo"),"anZelo|andZelo|angelo|anhelo|anjelo|anxelo");
+    ///
+    /// let language_set = LanguageSet::from(vec!["italian", "greek", "spanish"]);
+    /// assert_eq!(beider_morse.encode_with_languages("Angelo", &language_set),"andZelo|angelo|anxelo");
+    ///
+    /// let language_set = LanguageSet::from(vec!["italian"]);
+    /// assert_eq!(beider_morse.encode_with_languages("Angelo", &language_set),"andZelo");
+    ///
+    /// #   Ok(())
+    /// # }
+    /// ```
+    pub fn encode_with_languages(&self, value: &str, languages: &LanguageSet) -> String {
+        self.engine.encode_with_language_set(value, languages)
+    }
 }
 
 impl<'a> Encoder for BeiderMorse<'a> {
@@ -298,6 +373,137 @@ mod tests {
 
         let result = result.split('|').count();
         assert!(result <= 10);
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_ascii_encode_not_empty_1_letter() -> Result<(), BMError> {
+        let config_files = &ConfigFiles::new(&PathBuf::from("./test_assets/cc-rules/"))?;
+
+        let builder = BeiderMorseBuilder::new(config_files);
+        let encoder = builder.build();
+        for ch in 'a'..'z' {
+            assert_ne!(encoder.encode(&ch.to_string()), "");
+            assert_ne!(encoder.encode(&ch.to_ascii_uppercase().to_string()), "");
+        }
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_ascii_encode_not_empty_2_letters() -> Result<(), BMError> {
+        let config_files = &ConfigFiles::new(&PathBuf::from("./test_assets/cc-rules/"))?;
+
+        let builder = BeiderMorseBuilder::new(config_files);
+        let encoder = builder.build();
+        for ch1 in 'a'..'z' {
+            for ch2 in 'a'..'z' {
+                let mut string = String::with_capacity(2);
+                string.push(ch1);
+                string.push(ch2);
+                assert_ne!(encoder.encode(&string), "");
+                assert_ne!(encoder.encode(&string.to_ascii_uppercase().to_string()), "");
+            }
+        }
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_encode_atz_not_empty() -> Result<(), BMError> {
+        let data = vec![
+            "\u{00e1}cz",
+            "\u{00e1}tz",
+            "Ign\u{00e1}cz",
+            "Ign\u{00e1}tz",
+            "Ign\u{00e1}c",
+        ];
+        let config_files = &ConfigFiles::new(&PathBuf::from("./test_assets/cc-rules/"))?;
+
+        let builder = BeiderMorseBuilder::new(config_files);
+        let encoder = builder.build();
+
+        for d in data {
+            assert_ne!(encoder.encode(d), "");
+        }
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_encode_gna() -> Result<(), BMError> {
+        let config_files = &ConfigFiles::new(&PathBuf::from("./test_assets/cc-rules/"))?;
+
+        let builder = BeiderMorseBuilder::new(config_files);
+        let encoder = builder.build();
+
+        assert_ne!(encoder.encode("gna"), "");
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_longest_english_surname() -> Result<(), BMError> {
+        let config_files = &ConfigFiles::new(&PathBuf::from("./test_assets/cc-rules/"))?;
+
+        let builder = BeiderMorseBuilder::new(config_files);
+        let encoder = builder.build();
+
+        assert_ne!(encoder.encode("MacGhilleseatheanaich"), "");
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_speed_check() -> Result<(), BMError> {
+        let test_chars: Vec<char> = vec!['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'o', 'u'];
+        let config_files = &ConfigFiles::new(&PathBuf::from("./test_assets/cc-rules/"))?;
+
+        let builder = BeiderMorseBuilder::new(config_files);
+        let encoder = builder.build();
+
+        let mut string = String::with_capacity(40);
+
+        for i in 0..40 {
+            string.push(test_chars[i % test_chars.len()]);
+            assert_ne!(encoder.encode(&string), "");
+        }
+
+        assert_ne!(
+            encoder.encode("ItstheendoftheworldasweknowitandIfeelfine"),
+            ""
+        );
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_speed_check_2() -> Result<(), BMError> {
+        let config_files = &ConfigFiles::new(&PathBuf::from("./test_assets/cc-rules/"))?;
+
+        let builder = BeiderMorseBuilder::new(config_files);
+        let encoder = builder.build();
+
+        assert_ne!(
+            encoder.encode("abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz"),
+            ""
+        );
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_speed_check_3() -> Result<(), BMError> {
+        let config_files = &ConfigFiles::new(&PathBuf::from("./test_assets/cc-rules/"))?;
+
+        let builder = BeiderMorseBuilder::new(config_files);
+        let encoder = builder.build();
+
+        assert_ne!(
+            encoder.encode("abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz"),
+            ""
+        );
 
         Ok(())
     }

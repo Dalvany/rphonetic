@@ -80,6 +80,12 @@ pub fn remove_all_nonletter(string: String) -> String {
         .collect::<String>()
 }
 
+/// This struct is a wrapper around an `&str` allowing
+/// to slice by char.
+///
+/// It implements [Index], allowing to slice according to
+/// [char]. Please note that it is not really efficient as
+/// it uses [CharIndices](std::str::CharIndices).
 #[derive(Debug, Clone, Hash, Ord, PartialOrd, Eq, PartialEq, Serialize, Deserialize)]
 pub struct CharSequence<'a> {
     inner: &'a str,
@@ -91,11 +97,20 @@ impl<'a> Display for CharSequence<'a> {
         write!(f, "{}", self.inner)
     }
 }
+
 impl<'a> CharSequence<'a> {
+    /// Return the length of the string in terme of
+    /// [char] instead of byte.
     pub fn len(&self) -> usize {
         self.len_in_char
     }
 
+    /// Return `true` if the string contains no `char`.
+    pub fn is_empty(&self) -> bool {
+        self.len_in_char == 0
+    }
+
+    /// Return the inner string.
     pub fn as_str(&self) -> &str {
         self.inner
     }
@@ -117,12 +132,12 @@ impl<'a> From<CharSequence<'a>> for &'a str {
     }
 }
 
-/// To make this faster at the cost of an increase of memory usage
-/// we could store an array in an array of size chars().count()
-/// the index of each char().
 impl<'a> Index<Range<usize>> for CharSequence<'a> {
     type Output = str;
 
+    // To make this faster at the cost of an increase of memory usage
+    // we could store an array in an array of size chars().count()
+    // the index of each char().
     fn index(&self, index: Range<usize>) -> &'a Self::Output {
         let mut iterator = self.inner.char_indices().skip(index.start);
 

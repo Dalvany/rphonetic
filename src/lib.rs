@@ -29,6 +29,7 @@
 //! * [Nysiis] : see [Wikipedia](https://en.wikipedia.org/wiki/New_York_State_Identification_and_Intelligence_System)
 //! * [RefinedSoundex] : see [Wikipedia](https://en.wikipedia.org/wiki/Soundex)
 //! * [Soundex] : see [Wikipedia](https://en.wikipedia.org/wiki/Soundex)
+//! * [Beider-Morse] : see [Wikipedia](https://en.wikipedia.org/wiki/Daitch%E2%80%93Mokotoff_Soundex#Beider%E2%80%93Morse_Phonetic_Name_Matching_Algorithm)
 #![warn(
     missing_copy_implementations,
     missing_debug_implementations,
@@ -46,13 +47,14 @@ use std::fmt;
 use std::fmt::Formatter;
 
 pub use crate::beider_morse::{
-    BMError, BeiderMorse, BeiderMorseBuilder, ConfigFiles, NameType, RuleType,
+    BMError, BeiderMorse, BeiderMorseBuilder, ConfigFiles, LanguageSet, NameType, RuleType,
 };
 pub use crate::caverphone::Caverphone1;
 pub use crate::caverphone::Caverphone2;
 pub use crate::cologne::Cologne;
 pub use crate::daitch_mokotoff::{DaitchMokotoffSoundex, DaitchMokotoffSoundexBuilder};
 pub use crate::double_metaphone::{DoubleMetaphone, DoubleMetaphoneResult};
+pub use crate::helper::CharSequence;
 pub use crate::match_rating_approach::MatchRatingApproach;
 pub use crate::metaphone::Metaphone;
 pub use crate::nysiis::Nysiis;
@@ -75,17 +77,26 @@ mod refined_soundex;
 mod soundex;
 
 /// Errors
-#[derive(Clone, Debug, Ord, PartialOrd, Eq, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum PhoneticError {
     /// This variant is raised when there is an error in the rule
-    /// file of Daitch Mokotoff soundex or Beider Morse.
+    /// file of Daitch Mokotoff.
     ParseRuleError(String),
+    /// This error contains errors related to Beider Morse.
+    BMError(BMError),
+}
+
+impl From<BMError> for PhoneticError {
+    fn from(error: BMError) -> Self {
+        Self::BMError(error)
+    }
 }
 
 impl fmt::Display for PhoneticError {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         match self {
             Self::ParseRuleError(error) => write!(f, "Error parsing rule file : {}", error),
+            Self::BMError(error) => write!(f, "Error : {}", error),
         }
     }
 }

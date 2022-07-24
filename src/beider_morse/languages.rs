@@ -9,14 +9,19 @@ use crate::constants::{
     DM_LANGUAGE_LINE, MULTI_LINE_COMMENT_END, MULTI_LINE_COMMENT_START, SINGLE_LINE_COMMENT,
 };
 
+/// This represent a set of languages.
 #[derive(Clone, Debug, Ord, PartialOrd, Eq, PartialEq, Hash, Serialize, Deserialize)]
 pub enum LanguageSet {
+    /// This represents `any` language.
     Any,
+    /// No languages.
     NoLanguages,
+    /// Languages provided.
     SomeLanguages(BTreeSet<String>),
 }
 
 impl LanguageSet {
+    /// Return `true` if this [LanguageSet] contains no language.
     pub fn is_empty(&self) -> bool {
         match self {
             LanguageSet::Any => false,
@@ -25,6 +30,7 @@ impl LanguageSet {
         }
     }
 
+    /// Return `true` if this [LanguageSet] contains only one language.
     pub fn is_singleton(&self) -> bool {
         match self {
             LanguageSet::Any => false,
@@ -33,6 +39,7 @@ impl LanguageSet {
         }
     }
 
+    /// Return a new [LanguageSet] that is the intersection between `self` and `other`.
     pub fn restrict_to(&self, other: &Self) -> Self {
         match (self, other) {
             (_, LanguageSet::Any) => self.clone(),
@@ -49,6 +56,7 @@ impl LanguageSet {
         }
     }
 
+    /// Return a new [LanguageSet] that is the union of `self` and `other`.
     pub fn merge(&self, other: &Self) -> Self {
         match (self, other) {
             (_, LanguageSet::Any) => other.clone(),
@@ -65,6 +73,8 @@ impl LanguageSet {
         }
     }
 
+    /// Return the first language of `self` or [None](Option::None) if
+    /// `self` is empty.
     pub fn any(&self) -> Option<String> {
         match self {
             LanguageSet::Any => None,
