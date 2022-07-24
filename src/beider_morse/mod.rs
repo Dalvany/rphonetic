@@ -273,8 +273,8 @@ mod tests {
         let builder = BeiderMorseBuilder::new(config_files);
         let encoder = builder.build();
 
-        for ch in '\u{0000}'..='\u{FFFF}' {
-            encoder.encode(ch.to_string().as_str());
+        for ch in '\u{0000}'..'\u{ffff}' {
+            let _ = encoder.encode(ch.to_string().as_str());
         }
 
         Ok(())
@@ -297,8 +297,8 @@ mod tests {
         let result = encoder.encode(input);
         assert!(!result.is_empty());
 
-        let result: Vec<&str> = result.split('|').collect();
-        assert!(result.len() <= 10);
+        let result = result.split('|').count();
+        assert!(result <= 10);
 
         Ok(())
     }

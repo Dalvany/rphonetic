@@ -126,7 +126,10 @@ impl Phoneme {
     }
 
     pub fn join(phoneme1: &Phoneme, phoneme2: &Phoneme, languages: LanguageSet) -> Self {
-        let phoneme_text = format!("{}{}", phoneme1.phoneme_text, phoneme2.phoneme_text);
+        let mut phoneme_text =
+            String::with_capacity(phoneme1.phoneme_text.len() + phoneme2.phoneme_text.len());
+        phoneme_text.push_str(&phoneme1.phoneme_text);
+        phoneme_text.push_str(&phoneme2.phoneme_text);
         Self {
             phoneme_text,
             languages,

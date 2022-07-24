@@ -214,14 +214,36 @@ impl<'a> PhoneticEngine<'a> {
 
         if self.name_type == NameType::Generic {
             if let Some(remainder) = input.strip_prefix("d'") {
-                let combined = self.encode(format!("d{}", remainder).as_str());
-                return format!("({})-({})", self.encode(remainder), combined);
+                let mut combined = String::with_capacity(remainder.len() + 1);
+                combined.push('d');
+                combined.push_str(remainder);
+                let combined = self.encode(&combined);
+                let remainder = self.encode(remainder);
+                let mut result = String::with_capacity(remainder.len() + combined.len() + 5);
+                result.push('(');
+                result.push_str(&remainder);
+                result.push_str(")-(");
+                result.push_str(&combined);
+                result.push(')');
+                return result;
             }
             for prefix in NAME_PREFIXES.get(&self.name_type).unwrap() {
-                let p = format!("{} ", prefix);
+                let mut p = String::with_capacity(prefix.len() + 1);
+                p.push_str(prefix);
+                p.push(' ');
                 if let Some(remainder) = input.strip_prefix(p.as_str()) {
-                    let combined = self.encode(format!("{}{}", prefix, remainder).as_str());
-                    return format!("({})-({})", self.encode(remainder), combined);
+                    let mut combined = String::with_capacity(prefix.len() + remainder.len());
+                    combined.push_str(prefix);
+                    combined.push_str(remainder);
+                    let combined = self.encode(&combined);
+                    let remainder = self.encode(remainder);
+                    let mut result = String::with_capacity(remainder.len() + combined.len() + 5);
+                    result.push('(');
+                    result.push_str(&remainder);
+                    result.push_str(")-(");
+                    result.push_str(&combined);
+                    result.push(')');
+                    return result;
                 }
             }
         }

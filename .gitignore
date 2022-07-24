@@ -6,3 +6,6 @@
 /Cargo.lock
 /.idea
 lcov.info
+*.svg
+*.data
+*.data.old
