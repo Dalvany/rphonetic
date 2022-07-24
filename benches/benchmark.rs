@@ -1,4 +1,5 @@
 use criterion::{criterion_group, criterion_main, Criterion};
+use std::path::PathBuf;
 
 use rphonetic::*;
 
@@ -89,6 +90,13 @@ pub fn bench_soundex(c: &mut Criterion) {
     bench_encoder(c, "Refined Soundex", Box::new(soundex), "Blotchet-Halls");
 }
 
+pub fn bench_beider_morse(c: &mut Criterion) {
+    let config_files = ConfigFiles::new(&PathBuf::from("./test_assets/cc-rules/")).unwrap();
+    let builder = BeiderMorseBuilder::new(&config_files);
+    let beider_morse = builder.build();
+    c.bench_function("Beider-Morse", |b| b.iter(|| beider_morse.encode("Angelo")));
+}
+
 criterion_group!(
     name = caverphone;
     config = Criterion::default().sample_size(300);
@@ -134,6 +142,11 @@ criterion_group!(
     config = Criterion::default().sample_size(300);
     targets = bench_soundex
 );
+criterion_group!(
+    name = beider_morse;
+    config = Criterion::default().sample_size(300);
+    targets = bench_beider_morse
+);
 
 criterion_main!(
     caverphone,
@@ -145,4 +158,5 @@ criterion_main!(
     nysiis,
     refined_soundex,
     soundex,
+    beider_morse,
 );

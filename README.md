@@ -25,6 +25,7 @@ Currently, there are :
 * [NYSIIS](https://en.wikipedia.org/wiki/New_York_State_Identification_and_Intelligence_System)
 * [Refined Soundex](https://en.wikipedia.org/wiki/Soundex)
 * [Soundex](https://en.wikipedia.org/wiki/Soundex)
+* [Beider-Morse](https://en.wikipedia.org/wiki/Daitch%E2%80%93Mokotoff_Soundex#Beider%E2%80%93Morse_Phonetic_Name_Matching_Algorithm)
 
 Please note that most of these algorithms are design for ASCII, and they are usually design for certain use case (eg.
 english names, ...etc).
