@@ -14,6 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+use std::fmt::{Display, Formatter};
 use std::ops::{Index, Range, RangeFrom, RangeFull, RangeInclusive, RangeTo, RangeToInclusive};
 
 use serde::{Deserialize, Serialize};
@@ -85,9 +86,18 @@ pub struct CharSequence<'a> {
     len_in_char: usize,
 }
 
+impl<'a> Display for CharSequence<'a> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.inner)
+    }
+}
 impl<'a> CharSequence<'a> {
     pub fn len(&self) -> usize {
         self.len_in_char
+    }
+
+    pub fn as_str(&self) -> &str {
+        self.inner
     }
 }
 

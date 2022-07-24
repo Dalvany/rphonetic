@@ -265,7 +265,6 @@ impl<'a> BeiderMorseBuilder<'a> {
 mod tests {
     use super::*;
 
-    #[ignore]
     #[test]
     fn test_all_chars() -> Result<(), BMError> {
         let config_files = &ConfigFiles::new(&PathBuf::from("./test_assets/cc-rules/"))?;
