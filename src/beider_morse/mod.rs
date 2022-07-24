@@ -269,7 +269,7 @@ impl<'a> Encoder for BeiderMorse<'a> {
 /// This is a builder to construct a [BeiderMorse] encoder.
 /// By default, it will use [generic name type](NameType#Generic), [approximate rules](RuleType#Approx),
 /// it won't concatenate multiple phonetic encoding.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct BeiderMorseBuilder<'a> {
     config_files: &'a ConfigFiles,
     name_type: NameType,
@@ -339,12 +339,16 @@ impl<'a> BeiderMorseBuilder<'a> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::beider_morse::rule::PrivateRuleType;
+
+    lazy_static! {
+        static ref CONFIG_FILE: ConfigFiles =
+            ConfigFiles::new(&PathBuf::from("./test_assets/cc-rules/")).unwrap();
+    }
 
     #[test]
     fn test_all_chars() -> Result<(), BMError> {
-        let config_files = &ConfigFiles::new(&PathBuf::from("./test_assets/cc-rules/"))?;
-
-        let builder = BeiderMorseBuilder::new(config_files);
+        let builder = BeiderMorseBuilder::new(&CONFIG_FILE);
         let encoder = builder.build();
 
         for ch in '\u{0000}'..'\u{ffff}' {
@@ -356,13 +360,11 @@ mod tests {
 
     #[test]
     fn test_oom() -> Result<(), BMError> {
-        let config_files = &ConfigFiles::new(&PathBuf::from("./test_assets/cc-rules/"))?;
-
         let input = "200697900'-->&#1913348150;</  bceaeef >aadaabcf\"aedfbff<!--\'-->?>cae\
         cfaaa><?&#<!--</script>&lang&fc;aadeaf?>>&bdquo<    cc =\"abff\"    /></   afe  ><script>\
         <!-- f(';<    cf aefbeef = \"bfabadcf\" ebbfeedd = fccabeb >";
 
-        let builder = BeiderMorseBuilder::new(config_files)
+        let builder = BeiderMorseBuilder::new(&CONFIG_FILE)
             .name_type(NameType::Generic)
             .rule_type(RuleType::Exact)
             .max_phonemes(10);
@@ -379,9 +381,7 @@ mod tests {
 
     #[test]
     fn test_ascii_encode_not_empty_1_letter() -> Result<(), BMError> {
-        let config_files = &ConfigFiles::new(&PathBuf::from("./test_assets/cc-rules/"))?;
-
-        let builder = BeiderMorseBuilder::new(config_files);
+        let builder = BeiderMorseBuilder::new(&CONFIG_FILE);
         let encoder = builder.build();
         for ch in 'a'..'z' {
             assert_ne!(encoder.encode(&ch.to_string()), "");
@@ -393,9 +393,7 @@ mod tests {
 
     #[test]
     fn test_ascii_encode_not_empty_2_letters() -> Result<(), BMError> {
-        let config_files = &ConfigFiles::new(&PathBuf::from("./test_assets/cc-rules/"))?;
-
-        let builder = BeiderMorseBuilder::new(config_files);
+        let builder = BeiderMorseBuilder::new(&CONFIG_FILE);
         let encoder = builder.build();
         for ch1 in 'a'..'z' {
             for ch2 in 'a'..'z' {
@@ -419,9 +417,7 @@ mod tests {
             "Ign\u{00e1}tz",
             "Ign\u{00e1}c",
         ];
-        let config_files = &ConfigFiles::new(&PathBuf::from("./test_assets/cc-rules/"))?;
-
-        let builder = BeiderMorseBuilder::new(config_files);
+        let builder = BeiderMorseBuilder::new(&CONFIG_FILE);
         let encoder = builder.build();
 
         for d in data {
@@ -433,9 +429,7 @@ mod tests {
 
     #[test]
     fn test_encode_gna() -> Result<(), BMError> {
-        let config_files = &ConfigFiles::new(&PathBuf::from("./test_assets/cc-rules/"))?;
-
-        let builder = BeiderMorseBuilder::new(config_files);
+        let builder = BeiderMorseBuilder::new(&CONFIG_FILE);
         let encoder = builder.build();
 
         assert_ne!(encoder.encode("gna"), "");
@@ -445,9 +439,7 @@ mod tests {
 
     #[test]
     fn test_longest_english_surname() -> Result<(), BMError> {
-        let config_files = &ConfigFiles::new(&PathBuf::from("./test_assets/cc-rules/"))?;
-
-        let builder = BeiderMorseBuilder::new(config_files);
+        let builder = BeiderMorseBuilder::new(&CONFIG_FILE);
         let encoder = builder.build();
 
         assert_ne!(encoder.encode("MacGhilleseatheanaich"), "");
@@ -458,9 +450,8 @@ mod tests {
     #[test]
     fn test_speed_check() -> Result<(), BMError> {
         let test_chars: Vec<char> = vec!['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'o', 'u'];
-        let config_files = &ConfigFiles::new(&PathBuf::from("./test_assets/cc-rules/"))?;
 
-        let builder = BeiderMorseBuilder::new(config_files);
+        let builder = BeiderMorseBuilder::new(&CONFIG_FILE);
         let encoder = builder.build();
 
         let mut string = String::with_capacity(40);
@@ -480,9 +471,7 @@ mod tests {
 
     #[test]
     fn test_speed_check_2() -> Result<(), BMError> {
-        let config_files = &ConfigFiles::new(&PathBuf::from("./test_assets/cc-rules/"))?;
-
-        let builder = BeiderMorseBuilder::new(config_files);
+        let builder = BeiderMorseBuilder::new(&CONFIG_FILE);
         let encoder = builder.build();
 
         assert_ne!(
@@ -495,9 +484,7 @@ mod tests {
 
     #[test]
     fn test_speed_check_3() -> Result<(), BMError> {
-        let config_files = &ConfigFiles::new(&PathBuf::from("./test_assets/cc-rules/"))?;
-
-        let builder = BeiderMorseBuilder::new(config_files);
+        let builder = BeiderMorseBuilder::new(&CONFIG_FILE);
         let encoder = builder.build();
 
         assert_ne!(
@@ -506,5 +493,62 @@ mod tests {
         );
 
         Ok(())
+    }
+
+    #[test]
+    #[cfg(feature = "embedded")]
+    /// Basic test checking that it doesn't fail
+    fn test_config_file_default() {
+        let config_file = ConfigFiles::default();
+
+        let rules = config_file
+            .rules
+            .rules(NameType::Generic, PrivateRuleType::Exact, "any");
+        assert!(rules.is_some());
+        assert_eq!(rules.unwrap().len(), 8);
+
+        let rules = config_file
+            .rules
+            .rules(NameType::Generic, PrivateRuleType::Approx, "any");
+        assert!(rules.is_some());
+        assert_eq!(rules.unwrap().len(), 22);
+    }
+
+    #[test]
+    fn test_builder() {
+        let builder = BeiderMorseBuilder::new(&CONFIG_FILE);
+
+        assert_eq!(builder.rule_type, RuleType::Approx);
+        assert_eq!(builder.name_type, NameType::Generic);
+        assert!(builder.concat);
+        assert_eq!(builder.max_phonemes, DEFAULT_MAX_PHONEMES);
+
+        let builder = builder.concat(false);
+
+        assert_eq!(builder.rule_type, RuleType::Approx);
+        assert_eq!(builder.name_type, NameType::Generic);
+        assert!(!builder.concat);
+        assert_eq!(builder.max_phonemes, DEFAULT_MAX_PHONEMES);
+
+        let builder = builder.max_phonemes(5);
+
+        assert_eq!(builder.rule_type, RuleType::Approx);
+        assert_eq!(builder.name_type, NameType::Generic);
+        assert!(!builder.concat);
+        assert_eq!(builder.max_phonemes, 5);
+
+        let builder = builder.name_type(NameType::Ashkenazi);
+
+        assert_eq!(builder.rule_type, RuleType::Approx);
+        assert_eq!(builder.name_type, NameType::Ashkenazi);
+        assert!(!builder.concat);
+        assert_eq!(builder.max_phonemes, 5);
+
+        let builder = builder.rule_type(RuleType::Exact);
+
+        assert_eq!(builder.rule_type, RuleType::Exact);
+        assert_eq!(builder.name_type, NameType::Ashkenazi);
+        assert!(!builder.concat);
+        assert_eq!(builder.max_phonemes, 5);
     }
 }
