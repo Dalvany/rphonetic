@@ -74,10 +74,6 @@ impl TryFrom<&str> for PrivateRuleType {
     }
 }
 
-pub trait PhonemeExpr: Debug {
-    fn phonemes(&self) -> Vec<&Phoneme>;
-}
-
 #[derive(Clone, Debug, Eq, PartialEq, Hash, Serialize, Deserialize)]
 pub struct Phoneme {
     phoneme_text: String,
@@ -103,12 +99,6 @@ impl PartialOrd<Self> for Phoneme {
 impl Ord for Phoneme {
     fn cmp(&self, other: &Self) -> Ordering {
         self.partial_cmp(other).unwrap()
-    }
-}
-
-impl PhonemeExpr for Phoneme {
-    fn phonemes(&self) -> Vec<&Phoneme> {
-        vec![self]
     }
 }
 
@@ -159,12 +149,12 @@ impl Phoneme {
 }
 
 #[derive(Clone, Debug, PartialOrd, Eq, PartialEq, Hash, Serialize, Deserialize)]
-struct PhonemeList {
+pub struct PhonemeList {
     phonemes: Vec<Phoneme>,
 }
 
-impl PhonemeExpr for PhonemeList {
-    fn phonemes(&self) -> Vec<&Phoneme> {
+impl PhonemeList {
+    pub(crate) fn phonemes(&self) -> Vec<&Phoneme> {
         self.phonemes.iter().collect()
     }
 }
@@ -193,7 +183,7 @@ fn parse_phoneme(phoneme: &str) -> Result<Phoneme, BMError> {
     }
 }
 
-fn parse_phoneme_expr(phoneme_rule: &str) -> Result<Box<dyn PhonemeExpr>, BMError> {
+fn parse_phoneme_expr(phoneme_rule: &str) -> Result<PhonemeList, BMError> {
     if phoneme_rule.starts_with('(') {
         if !phoneme_rule.ends_with(')') {
             return Err(BMError::WrongPhoneme(format!(
@@ -212,9 +202,12 @@ fn parse_phoneme_expr(phoneme_rule: &str) -> Result<Box<dyn PhonemeExpr>, BMErro
                 languages: LanguageSet::Any,
             })
         }
-        Ok(Box::new(PhonemeList { phonemes: phs }))
+        Ok(PhonemeList { phonemes: phs })
     } else {
-        Ok(Box::new(parse_phoneme(phoneme_rule)?))
+        let phoneme = parse_phoneme(phoneme_rule)?;
+        Ok(PhonemeList {
+            phonemes: vec![phoneme],
+        })
     }
 }
 
@@ -337,7 +330,7 @@ impl Resolver {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub(crate) struct Rule {
     location: String,
     line: usize,
@@ -345,7 +338,7 @@ pub(crate) struct Rule {
     pattern: String,
     pattern_length_char: usize,
     right_context: Regex,
-    phoneme: Box<dyn PhonemeExpr>,
+    phoneme: PhonemeList,
 }
 
 impl Rule {
@@ -369,7 +362,7 @@ impl Rule {
         self.pattern_length_char
     }
 
-    pub(crate) fn phoneme(&self) -> &Box<dyn PhonemeExpr> {
+    pub(crate) fn phoneme(&self) -> &PhonemeList {
         &self.phoneme
     }
 }
@@ -421,18 +414,24 @@ mod embedded {
 
     use super::*;
 
+    const ASH_EXACT_APPROX_COMMON: &str =
+        include_str!("../../rules/bm/ash_exact_approx_common.txt");
     const ASH_APPROX_ANY: &str = include_str!("../../rules/bm/ash_approx_any.txt");
     const ASH_APPROX_COMMON: &str = include_str!("../../rules/bm/ash_approx_common.txt");
     const ASH_EXACT_ANY: &str = include_str!("../../rules/bm/ash_exact_any.txt");
     const ASH_EXACT_COMMON: &str = include_str!("../../rules/bm/ash_exact_common.txt");
     const ASH_RULES_ANY: &str = include_str!("../../rules/bm/ash_rules_any.txt");
 
+    const GEN_EXACT_APPROX_COMMON: &str =
+        include_str!("../../rules/bm/gen_exact_approx_common.txt");
     const GEN_APPROX_ANY: &str = include_str!("../../rules/bm/gen_approx_any.txt");
     const GEN_APPROX_COMMON: &str = include_str!("../../rules/bm/gen_approx_common.txt");
     const GEN_EXACT_ANY: &str = include_str!("../../rules/bm/gen_exact_any.txt");
     const GEN_EXACT_COMMON: &str = include_str!("../../rules/bm/gen_exact_common.txt");
     const GEN_RULES_ANY: &str = include_str!("../../rules/bm/gen_rules_any.txt");
 
+    const SEP_EXACT_APPROX_COMMON: &str =
+        include_str!("../../rules/bm/sep_exact_approx_common.txt");
     const SEP_APPROX_ANY: &str = include_str!("../../rules/bm/sep_approx_any.txt");
     const SEP_APPROX_COMMON: &str = include_str!("../../rules/bm/sep_approx_common.txt");
     const SEP_EXACT_ANY: &str = include_str!("../../rules/bm/sep_exact_any.txt");
@@ -441,16 +440,19 @@ mod embedded {
 
     lazy_static! {
         pub static ref EMBEDDED_RULES: BTreeMap<&'static str, &'static str> = BTreeMap::from([
+            ("ash_exact_approx_common", ASH_EXACT_APPROX_COMMON),
             ("ash_approx_any", ASH_APPROX_ANY),
             ("ash_approx_common", ASH_APPROX_COMMON),
             ("ash_exact_any", ASH_EXACT_ANY),
             ("ash_exact_common", ASH_EXACT_COMMON),
             ("ash_rules_any", ASH_RULES_ANY),
+            ("gen_exact_approx_common", GEN_EXACT_APPROX_COMMON),
             ("gen_approx_any", GEN_APPROX_ANY),
             ("gen_approx_common", GEN_APPROX_COMMON),
             ("gen_exact_any", GEN_EXACT_ANY),
             ("gen_exact_common", GEN_EXACT_COMMON),
             ("gen_rules_any", GEN_RULES_ANY),
+            ("sep_exact_approx_common", SEP_EXACT_APPROX_COMMON),
             ("sep_approx_any", SEP_APPROX_ANY),
             ("sep_approx_common", SEP_APPROX_COMMON),
             ("sep_exact_any", SEP_EXACT_ANY),

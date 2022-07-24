@@ -17,7 +17,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Run tests
-        run: cargo test
+        run: cargo test --all-features
       - uses: taiki-e/install-action@cargo-hack
       - name: Test features
         run: cargo hack check --all --each-feature --clean-per-run --no-dev-deps
