@@ -29,7 +29,20 @@
 //! * [Nysiis] : see [Wikipedia](https://en.wikipedia.org/wiki/New_York_State_Identification_and_Intelligence_System)
 //! * [RefinedSoundex] : see [Wikipedia](https://en.wikipedia.org/wiki/Soundex)
 //! * [Soundex] : see [Wikipedia](https://en.wikipedia.org/wiki/Soundex)
-//! * [Beider-Morse] : see [Wikipedia](https://en.wikipedia.org/wiki/Daitch%E2%80%93Mokotoff_Soundex#Beider%E2%80%93Morse_Phonetic_Name_Matching_Algorithm)
+//! * [BeiderMorse] : see [Wikipedia](https://en.wikipedia.org/wiki/Daitch%E2%80%93Mokotoff_Soundex#Beider%E2%80%93Morse_Phonetic_Name_Matching_Algorithm)
+//!
+//! Please note that most of these algorithms are design for ASCII, and they are usually design for certain use case (eg.
+//! english names, ...etc).
+//!
+//! # Features
+//!
+//! There is two features that provide default rules and [Default] implementation for some struct. They are not enabled
+//! by default as files are embedded into code, so it might increase binary size. It's best to provide rules by your own.
+//!
+//! * `embedded` : shorthand for `embedded_bm` and `embedded_dm`.
+//!   * `embedded_bm` : Beider-Morse rules. It includes only `any` language and other files that are required. All file can be found in
+//! [commons-codec repository](https://github.com/apache/commons-codec/tree/rel/commons-codec-1.15/src/main/resources/org/apache/commons/codec/language/bm)
+//!   * `embedded_dm` : Daitch-Mokotoff rules. They can be also found in [commons-codec repository](https://github.com/apache/commons-codec/blob/rel/commons-codec-1.15/src/main/resources/org/apache/commons/codec/language/dmrules.txt)
 #![warn(
     missing_copy_implementations,
     missing_debug_implementations,

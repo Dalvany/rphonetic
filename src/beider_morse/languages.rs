@@ -127,7 +127,7 @@ impl Languages {
     }
 }
 
-#[cfg(feature = "embedded")]
+#[cfg(feature = "embedded_bm")]
 impl Default for Languages {
     fn default() -> Self {
         // As we only provide "any" language there's no need to parse a file or anything
@@ -198,7 +198,7 @@ mod tests {
     use super::*;
 
     #[test]
-    #[cfg(feature = "embedded")]
+    #[cfg(feature = "embedded_bm")]
     fn test_default() {
         let result = Languages::default();
 

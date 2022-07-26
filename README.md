@@ -30,6 +30,141 @@ Currently, there are :
 Please note that most of these algorithms are design for ASCII, and they are usually design for certain use case (eg.
 english names, ...etc).
 
+## Examples
+
+### Beider-Morse
+
+```rust
+fn main() -> Result<(), rphonetic::PhoneticError> {
+    use std::path::PathBuf;
+    use rphonetic::{BeiderMorseBuilder, ConfigFiles, Encoder};
+
+    let config_files = ConfigFiles::new(&PathBuf::from("./test_assets/cc-rules/"))?;
+    let builder = BeiderMorseBuilder::new(&config_files);
+    let beider_morse = builder.build();
+
+    assert_eq!(beider_morse.encode("Van Helsing"),"(Ylznk|ilzn|ilznk|xilzn|xilznk)-(banilznk|bonilznk|fYnYlznk|fYnilznk|fanYlznk|fanilznk|fonYlznk|fonilznk|vYnYlznk|vYnilznk|vanYlznk|vaniilznk|vanilzn|vanilznk|vonYlznk|voniilznk|vonilzn|vonilznk)");
+    Ok(())
+}
+```
+
+### Caverphone 1 & 2
+
+```rust
+fn main() {
+    use rphonetic::{Caverphone1, Encoder};
+
+    let caverphone = Caverphone1;
+    assert_eq!(caverphone.encode("Thompson"), "TMPSN1");
+}
+```
+
+```rust
+fn main() {
+    use rphonetic::{Caverphone2, Encoder};
+
+    let caverphone = Caverphone2;
+    assert_eq!(caverphone.encode("Thompson"), "TMPSN11111");
+}
+```
+
+### Cologne
+
+```rust
+fn main() {
+    use rphonetic::{Cologne, Encoder};
+
+    let cologne = Cologne;
+    assert_eq!(cologne.encode("m\u{00FC}ller"), "657");
+}
+```
+
+### Daitch-Mokotoff
+
+```rust
+fn main() -> Result<(), rphonetic::PhoneticError> {
+    use rphonetic::{DaitchMokotoffSoundex, DaitchMokotoffSoundexBuilder, Encoder};
+
+    const COMMONS_CODEC_RULES: &str = include_str!("./rules/dmrules.txt");
+
+    let encoder = DaitchMokotoffSoundexBuilder::with_rules(COMMONS_CODEC_RULES).build()?;
+    assert_eq!(encoder.soundex("Rosochowaciec"), "944744|944745|944754|944755|945744|945745|945754|945755");
+    Ok(())
+}
+```
+
+### Double Metaphone
+
+```rust
+fn main() {
+    use rphonetic::{DoubleMetaphone, Encoder};
+
+    let double_metaphone = DoubleMetaphone::default();
+    assert_eq!(double_metaphone.encode("jumped"), "JMPT");
+    ssert_eq!(double_metaphone.encode_alternate("jumped"), "AMPT");
+}
+```
+
+### Match Rating Approach
+
+```rust
+fn main() {
+    use rphonetic::{Encoder, MatchRatingApproach};
+    
+    let match_rating = MatchRatingApproach;
+    assert_eq!(match_rating.encode("Smith"), "SMTH");
+}
+```
+
+### Metaphone
+
+```rust
+fn main() {
+    use rphonetic::{Encoder, Metaphone};
+    
+    let metaphone = Metaphone::default();
+    assert_eq!(metaphone.encode("Joanne"), "JN");
+}
+```
+
+### Nysiis
+
+```rust
+fn main() {
+    use rphonetic::{Nysiis, Encoder};
+
+    // Strict
+    let nysiis = Nysiis::default();
+    assert_eq!(nysiis.encode("WESTERLUND"),"WASTAR");
+
+    // Not strict
+    let nysiis = Nysiis::new(false);
+    assert_eq!(nysiis.encode("WESTERLUND"),"WASTARLAD");
+}
+```
+
+### Refined Soundex
+
+```rust
+fn main() {
+    use rphonetic::{Encoder, RefinedSoundex};
+    
+    let refined_soundex = RefinedSoundex::default();
+    assert_eq!(refined_soundex.encode("jumped"), "J408106");
+}
+```
+
+### Soundex
+
+```rust
+fn main() {
+    use rphonetic::{Encoder, Soundex};
+
+    let soundex = Soundex::default();
+    assert_eq!(soundex.encode("jumped"), "J513");
+}
+```
+
 ## Benchmarking
 
 Benchmarking use [criterion](https://bheisler.github.io/criterion.rs/book/criterion_rs.html).
