@@ -53,7 +53,7 @@ impl CologneOutput {
 
 /// This a [Cologne](https://en.wikipedia.org/wiki/Cologne_phonetics) encoder.
 ///
-/// # Example
+/// # Example :
 ///
 /// ```rust
 /// use rphonetic::{Cologne, Encoder};

@@ -22,6 +22,7 @@ use crate::constants::{
 use crate::helper::is_vowel;
 use crate::{Encoder, PhoneticError};
 
+#[cfg(feature = "embedded_dm")]
 const DEFAULT_RULES: &str = include_str!("../rules/dmrules.txt");
 
 /// Max length of a DM soundex value.
@@ -133,7 +134,8 @@ impl<'a> TryFrom<&'a str> for Rule<'a> {
 
 /// This the [Daitch Mokotoff soundex](https://en.wikipedia.org/wiki/Daitch%E2%80%93Mokotoff_Soundex) implementation.
 ///
-/// [Default] implementation use [commons-codec rules](https://github.com/apache/commons-codec/blob/master/src/main/resources/org/apache/commons/codec/language/dmrules.txt).
+/// When `embedded_dm` feature is enable then there is a [Default] implementation
+/// that use [commons-codec rules](https://github.com/apache/commons-codec/blob/master/src/main/resources/org/apache/commons/codec/language/dmrules.txt).
 ///
 /// It can be constructed with custom rules using [TryFrom].
 ///
@@ -221,7 +223,9 @@ impl<'a> TryFrom<&'a str> for Rule<'a> {
 /// # fn main() -> Result<(), rphonetic::PhoneticError> {
 /// use rphonetic::{DaitchMokotoffSoundex, DaitchMokotoffSoundexBuilder, Encoder};
 ///
-/// let encoder = DaitchMokotoffSoundexBuilder::default().build()?;
+/// const COMMONS_CODEC_RULES: &str = include_str!("../rules/dmrules.txt");
+///
+/// let encoder = DaitchMokotoffSoundexBuilder::with_rules(COMMONS_CODEC_RULES).build()?;
 ///
 /// assert_eq!(encoder.encode("Rosochowaciec"), "944744");
 /// #   Ok(())
@@ -234,7 +238,9 @@ impl<'a> TryFrom<&'a str> for Rule<'a> {
 /// # fn main() -> Result<(), rphonetic::PhoneticError> {
 /// use rphonetic::{DaitchMokotoffSoundex, DaitchMokotoffSoundexBuilder, Encoder};
 ///
-/// let encoder = DaitchMokotoffSoundexBuilder::default().build()?;
+/// const COMMONS_CODEC_RULES: &str = include_str!("../rules/dmrules.txt");
+///
+/// let encoder = DaitchMokotoffSoundexBuilder::with_rules(COMMONS_CODEC_RULES).build()?;
 ///
 /// assert_eq!(encoder.soundex("Rosochowaciec"), "944744|944745|944754|944755|945744|945745|945754|945755");
 /// #   Ok(())
@@ -352,6 +358,7 @@ pub struct DaitchMokotoffSoundexBuilder<'a> {
 /// Create a [DaitchMokotoffSoundexBuilder] with
 /// [commons-codec](https://github.com/apache/commons-codec/blob/master/src/main/resources/org/apache/commons/codec/language/dmrules.txt)
 /// rules and `ascii_folding` enable.
+#[cfg(feature = "embedded_dm")]
 impl<'a> Default for DaitchMokotoffSoundexBuilder<'a> {
     fn default() -> Self {
         Self {
@@ -440,10 +447,11 @@ impl<'a> DaitchMokotoffSoundexBuilder<'a> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    const COMMONS_CODEC_RULES: &str = include_str!("../rules/dmrules.txt");
 
     #[test]
     fn test_default_rules() -> Result<(), PhoneticError> {
-        let result = DaitchMokotoffSoundexBuilder::default().build()?;
+        let result = DaitchMokotoffSoundexBuilder::with_rules(COMMONS_CODEC_RULES).build()?;
 
         let mut ascii_folding_rules: BTreeMap<char, char> = BTreeMap::new();
         ascii_folding_rules.insert('ß', 's');
@@ -1474,7 +1482,8 @@ This rule convert the substring `sh` into
 
     #[test]
     fn test_accented_character_folding() -> Result<(), PhoneticError> {
-        let daitch_mokotoff = DaitchMokotoffSoundexBuilder::default().build()?;
+        let daitch_mokotoff =
+            DaitchMokotoffSoundexBuilder::with_rules(COMMONS_CODEC_RULES).build()?;
 
         assert_eq!(daitch_mokotoff.soundex("Straßburg"), "294795");
         assert_eq!(daitch_mokotoff.soundex("Strasburg"), "294795");
@@ -1487,7 +1496,8 @@ This rule convert the substring `sh` into
 
     #[test]
     fn test_adjacent_codes() -> Result<(), PhoneticError> {
-        let daitch_mokotoff = DaitchMokotoffSoundexBuilder::default().build()?;
+        let daitch_mokotoff =
+            DaitchMokotoffSoundexBuilder::with_rules(COMMONS_CODEC_RULES).build()?;
 
         // AKSSOL
         // A-KS-S-O-L
@@ -1509,7 +1519,8 @@ This rule convert the substring `sh` into
 
     #[test]
     fn test_encode_basic() -> Result<(), PhoneticError> {
-        let daitch_mokotoff = DaitchMokotoffSoundexBuilder::default().build()?;
+        let daitch_mokotoff =
+            DaitchMokotoffSoundexBuilder::with_rules(COMMONS_CODEC_RULES).build()?;
 
         assert_eq!(daitch_mokotoff.encode("AUERBACH"), "097400");
         assert_eq!(daitch_mokotoff.encode("OHRBACH"), "097400");
@@ -1525,7 +1536,8 @@ This rule convert the substring `sh` into
 
     #[test]
     fn test_encode_ignore_apostrophes() -> Result<(), PhoneticError> {
-        let daitch_mokotoff = DaitchMokotoffSoundexBuilder::default().build()?;
+        let daitch_mokotoff =
+            DaitchMokotoffSoundexBuilder::with_rules(COMMONS_CODEC_RULES).build()?;
 
         for v in vec![
             "OBrien", "'OBrien", "O'Brien", "OB'rien", "OBr'ien", "OBri'en", "OBrie'n", "OBrien'",
@@ -1540,7 +1552,8 @@ This rule convert the substring `sh` into
 
     #[test]
     fn test_encode_ignore_hyphens() -> Result<(), PhoneticError> {
-        let daitch_mokotoff = DaitchMokotoffSoundexBuilder::default().build()?;
+        let daitch_mokotoff =
+            DaitchMokotoffSoundexBuilder::with_rules(COMMONS_CODEC_RULES).build()?;
 
         for v in vec![
             "KINGSMITH",
@@ -1565,7 +1578,8 @@ This rule convert the substring `sh` into
 
     #[test]
     fn test_encode_ignore_trimmable() -> Result<(), PhoneticError> {
-        let daitch_mokotoff = DaitchMokotoffSoundexBuilder::default().build()?;
+        let daitch_mokotoff =
+            DaitchMokotoffSoundexBuilder::with_rules(COMMONS_CODEC_RULES).build()?;
 
         assert_eq!(
             daitch_mokotoff.encode(" \t\n\r Washington \t\n\r "),
@@ -1578,7 +1592,8 @@ This rule convert the substring `sh` into
 
     #[test]
     fn test_soundex_basic() -> Result<(), PhoneticError> {
-        let daitch_mokotoff = DaitchMokotoffSoundexBuilder::default().build()?;
+        let daitch_mokotoff =
+            DaitchMokotoffSoundexBuilder::with_rules(COMMONS_CODEC_RULES).build()?;
 
         assert_eq!(daitch_mokotoff.soundex("GOLDEN"), "583600");
         assert_eq!(daitch_mokotoff.soundex("Alpert"), "087930");
@@ -1604,7 +1619,8 @@ This rule convert the substring `sh` into
 
     #[test]
     fn test_soundex_basic2() -> Result<(), PhoneticError> {
-        let daitch_mokotoff = DaitchMokotoffSoundexBuilder::default().build()?;
+        let daitch_mokotoff =
+            DaitchMokotoffSoundexBuilder::with_rules(COMMONS_CODEC_RULES).build()?;
 
         assert_eq!(daitch_mokotoff.soundex("Ceniow"), "467000|567000");
         assert_eq!(daitch_mokotoff.soundex("Tsenyuv"), "467000");
@@ -1623,7 +1639,8 @@ This rule convert the substring `sh` into
 
     #[test]
     fn test_soundex_basic3() -> Result<(), PhoneticError> {
-        let daitch_mokotoff = DaitchMokotoffSoundexBuilder::default().build()?;
+        let daitch_mokotoff =
+            DaitchMokotoffSoundexBuilder::with_rules(COMMONS_CODEC_RULES).build()?;
 
         assert_eq!(daitch_mokotoff.soundex("Peters"), "734000|739400");
         assert_eq!(daitch_mokotoff.soundex("Peterson"), "734600|739460");
@@ -1643,6 +1660,18 @@ This rule convert the substring `sh` into
 
     #[test]
     fn test_special_romanian_characters() -> Result<(), PhoneticError> {
+        let daitch_mokotoff =
+            DaitchMokotoffSoundexBuilder::with_rules(COMMONS_CODEC_RULES).build()?;
+
+        assert_eq!(daitch_mokotoff.soundex("ţamas"), "364000|464000");
+        assert_eq!(daitch_mokotoff.soundex("țamas"), "364000|464000");
+
+        Ok(())
+    }
+
+    #[test]
+    #[cfg(feature = "embedded_dm")]
+    fn test_embedded_dm() -> Result<(), PhoneticError> {
         let daitch_mokotoff = DaitchMokotoffSoundexBuilder::default().build()?;
 
         assert_eq!(daitch_mokotoff.soundex("ţamas"), "364000|464000");

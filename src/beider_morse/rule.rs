@@ -315,14 +315,14 @@ impl Resolver {
                     BMError::WrongFilename(format!("Can't find file for {} rules", filename))
                 })
             }
-            #[cfg(feature = "embedded")]
+            #[cfg(feature = "embedded_bm")]
             None => embedded::EMBEDDED_RULES
                 .get(filename)
                 .map(|v| v.to_string())
                 .ok_or_else(|| {
                     BMError::WrongFilename(format!("Missing embedded rule {}", filename))
                 }),
-            #[cfg(not(feature = "embedded"))]
+            #[cfg(not(feature = "embedded_bm"))]
             None => Err(BMError::WrongFilename(
                 "Missing embedded configuration. Use corresponding feature".to_string(),
             )),
@@ -408,7 +408,7 @@ impl Rules {
 
 /// Module that contains default rules (any and commons) and [Default] implementation
 /// for [Rules] for convenience with features.
-#[cfg(feature = "embedded")]
+#[cfg(feature = "embedded_bm")]
 mod embedded {
     use std::collections::BTreeMap;
 
@@ -502,7 +502,7 @@ mod tests {
     }
 
     #[test]
-    #[cfg(feature = "embedded")]
+    #[cfg(feature = "embedded_bm")]
     fn test_default() {
         let rules = Rules::default();
 
@@ -568,7 +568,7 @@ mod tests {
     }
 
     #[test]
-    #[cfg(feature = "embedded")]
+    #[cfg(feature = "embedded_bm")]
     fn test_default_unknown_language() {
         let rules = Rules::default();
 

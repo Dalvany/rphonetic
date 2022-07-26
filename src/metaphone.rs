@@ -34,6 +34,7 @@ const VARSON: &str = "CSPTG";
 /// let metaphone = Metaphone::default();
 ///
 /// assert_eq!(metaphone.encode("Joanne"), "JN");
+/// ```
 #[derive(Copy, Clone, Debug, Ord, PartialOrd, Eq, PartialEq, Hash, Serialize, Deserialize)]
 pub struct Metaphone {
     max_code_length: usize,

@@ -25,7 +25,7 @@ impl LangRule {
 }
 
 #[derive(Clone, Debug)]
-#[cfg_attr(feature = "embedded", derive(Default))]
+#[cfg_attr(feature = "embedded_bm", derive(Default))]
 pub struct Lang {
     languages: BTreeSet<String>,
     rules: Vec<LangRule>,
@@ -59,7 +59,7 @@ pub struct Langs {
     langs: BTreeMap<NameType, Lang>,
 }
 
-#[cfg(feature = "embedded")]
+#[cfg(feature = "embedded_bm")]
 impl Default for Langs {
     fn default() -> Self {
         let mut langs: BTreeMap<NameType, Lang> = BTreeMap::new();

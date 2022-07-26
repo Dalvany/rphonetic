@@ -150,13 +150,13 @@ impl TryFrom<OsString> for NameType {
 /// This structures contains languages set, rules and language guessing rules.
 /// It avoids parsing files multiple time and should be thread-safe.
 ///
-/// If `embedded` feature is enable, then there is a [Default] implementation
+/// If `embedded_bm` feature is enable, then there is a [Default] implementation
 /// that only support `any` and `common` languages rules for each variant of
 /// [NameType]. It is provided as a convenience but as files are embedded into
 /// code, it can result in a significant increase of binary size. The preferred
 /// way is to construct a new [ConfigFiles] with a [path to files](ConfigFiles#new).
 #[derive(Debug)]
-#[cfg_attr(feature = "embedded", derive(Default))]
+#[cfg_attr(feature = "embedded_bm", derive(Default))]
 pub struct ConfigFiles {
     langs: Langs,
     rules: Rules,
@@ -184,7 +184,7 @@ impl ConfigFiles {
 /// This is the Beider-Morse encoder.
 /// It needs rules to work, you can get them
 /// from [commons-codec](https://github.com/apache/commons-codec/tree/rel/commons-codec-1.15/src/main/resources/org/apache/commons/codec/language/bm).
-/// If feature `embedded`, the default rules will be included in binary, it contains only `any` and `common`
+/// If feature `embedded_bm`, the default rules will be included in binary, it contains only `any` and `common`
 /// rules from commons-codec.
 ///
 /// # Encoding result format
@@ -339,6 +339,7 @@ impl<'a> BeiderMorseBuilder<'a> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[cfg(feature = "embedded_bm")]
     use crate::beider_morse::rule::PrivateRuleType;
 
     lazy_static! {
@@ -496,7 +497,7 @@ mod tests {
     }
 
     #[test]
-    #[cfg(feature = "embedded")]
+    #[cfg(feature = "embedded_bm")]
     /// Basic test checking that it doesn't fail
     fn test_config_file_default() {
         let config_file = ConfigFiles::default();

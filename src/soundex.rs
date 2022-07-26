@@ -60,6 +60,15 @@ fn has_silent_in_mapping(mapping: [char; 26]) -> bool {
 /// The code will have a constant length of 4.
 ///
 /// Although it was primary done for names, [Soundex] can be used for general words.
+///
+/// # Example :
+///
+/// ```rust
+/// use rphonetic::{Encoder, Soundex};
+///
+/// let soundex = Soundex::default();
+/// assert_eq!(soundex.encode("jumped"), "J513");
+/// ```
 #[derive(Copy, Clone, Debug, Ord, PartialOrd, Eq, PartialEq, Hash, Serialize, Deserialize)]
 pub struct Soundex {
     mapping: [char; 26],
