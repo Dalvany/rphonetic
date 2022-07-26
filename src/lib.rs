@@ -128,7 +128,7 @@ pub trait Encoder {
     ///
     /// # Example
     ///
-    /// Example using [Caverphone 1] algorithm.
+    /// Example using [Caverphone1] algorithm.
     ///
     /// ```rust
     /// use rphonetic::{Caverphone1, Encoder};
