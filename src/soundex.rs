@@ -109,15 +109,13 @@ impl Default for Soundex {
     }
 }
 
-impl TryFrom<[char; 26]> for Soundex {
-    type Error = Vec<char>;
-
-    fn try_from(mapping: [char; 26]) -> Result<Self, Self::Error> {
+impl From<[char; 26]> for Soundex {
+    fn from(mapping: [char; 26]) -> Self {
         let special_case_h_w = !has_silent_in_mapping(mapping);
-        Ok(Self {
+        Self {
             mapping,
             special_case_h_w,
-        })
+        }
     }
 }
 
@@ -149,7 +147,7 @@ impl TryFrom<&str> for Soundex {
     /// ```
     fn try_from(mapping: &str) -> Result<Self, Self::Error> {
         let mapping: [char; 26] = mapping.chars().collect::<Vec<char>>().try_into()?;
-        Self::try_from(mapping)
+        Ok(Self::from(mapping))
     }
 }
 
@@ -457,8 +455,8 @@ mod tests {
     }
 
     #[test]
-    fn test_genealogy() -> Result<(), Vec<char>> {
-        let soundex = Soundex::try_from(DEFAULT_US_ENGLISH_GENEALOGY_MAPPING_SOUNDEX)?;
+    fn test_genealogy() {
+        let soundex = Soundex::from(DEFAULT_US_ENGLISH_GENEALOGY_MAPPING_SOUNDEX);
 
         assert_eq!(soundex.encode("Heggenburger"), "H251");
         assert_eq!(soundex.encode("Blackman"), "B425");
@@ -467,8 +465,6 @@ mod tests {
         assert_eq!(soundex.encode("Dodds"), "D200");
         assert_eq!(soundex.encode("Dhdds"), "D200");
         assert_eq!(soundex.encode("Dwdds"), "D200");
-
-        Ok(())
     }
 
     #[test]
