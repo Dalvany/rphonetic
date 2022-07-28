@@ -246,11 +246,21 @@ impl<'a> TryFrom<&'a str> for Rule<'a> {
 /// #   Ok(())
 /// # }
 /// ```
+///
+/// A [Default] implementation, with default rules is provided when feature `embedded_dm` is enable.
 #[derive(Clone, Debug, Ord, PartialOrd, Eq, PartialEq)]
 pub struct DaitchMokotoffSoundex<'a> {
     ascii_folding: bool,
     rules: BTreeMap<char, Vec<Rule<'a>>>,
     ascii_folding_rules: BTreeMap<char, char>,
+}
+
+#[cfg(feature = "embedded_dm")]
+impl<'a> Default for DaitchMokotoffSoundex<'a> {
+    fn default() -> Self {
+        let builder = DaitchMokotoffSoundexBuilder::default().build().unwrap();
+        builder
+    }
 }
 
 impl<'a> DaitchMokotoffSoundex<'a> {
@@ -1678,5 +1688,14 @@ This rule convert the substring `sh` into
         assert_eq!(daitch_mokotoff.soundex("țamas"), "364000|464000");
 
         Ok(())
+    }
+
+    #[test]
+    #[cfg(feature = "embedded_dm")]
+    fn test_default_daitch_mokotoff() {
+        let daitch_mokotoff = DaitchMokotoffSoundex::default();
+
+        assert_eq!(daitch_mokotoff.soundex("ţamas"), "364000|464000");
+        assert_eq!(daitch_mokotoff.soundex("țamas"), "364000|464000");
     }
 }
