@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::beider_morse::lang::Lang;
 use crate::beider_morse::languages::LanguageSet;
-use crate::beider_morse::rule::{Phoneme,PhonemeList, PrivateRuleType, Rule, Rules};
+use crate::beider_morse::rule::{Phoneme, PhonemeList, PrivateRuleType, Rule, Rules};
 use crate::helper::CharSequence;
 use crate::NameType;
 

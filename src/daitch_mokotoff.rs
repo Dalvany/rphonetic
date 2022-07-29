@@ -215,6 +215,9 @@ impl TryFrom<&str> for Rule {
 /// * [DaitchMokotoffSoundex](#encode) that encode without branching. Only one code is returned
 /// * [DaitchMokotoffSoundex](#soundex) that encode with branching. Multiple code, separated by a `|` are returned.
 ///
+/// There is a [helper function](DaitchMokotoffSoundex#method.inner_soundex) that returns code(s) in the form
+/// of a vec, avoiding parsing the output.
+///
 /// # Exemples
 ///
 /// ## Encode methode
@@ -263,12 +266,59 @@ impl Default for DaitchMokotoffSoundex {
 }
 
 impl DaitchMokotoffSoundex {
-    /// Encode the string with branching.
+    /// Encode the string with branching. Multiple codes might be generated, seperated by a pipe.
+    ///
+    /// # Example :
+    ///
+    /// ```rust
+    /// # fn main() -> Result<(), rphonetic::PhoneticError> {
+    /// use rphonetic::{DaitchMokotoffSoundex, DaitchMokotoffSoundexBuilder, Encoder};
+    ///
+    /// const COMMONS_CODEC_RULES: &str = include_str!("../rules/dmrules.txt");
+    ///
+    /// let encoder = DaitchMokotoffSoundexBuilder::with_rules(COMMONS_CODEC_RULES).build()?;
+    ///
+    /// // With branching
+    /// assert_eq!(encoder.soundex("Rosochowaciec"), "944744|944745|944754|944755|945744|945745|945754|945755");
+    /// #   Ok(())
+    /// # }
+    /// ```
     pub fn soundex(&self, value: &str) -> String {
         self.inner_soundex(value, true).join("|")
     }
 
-    fn inner_soundex(&self, value: &str, branching: bool) -> Vec<String> {
+    /// Encode a string and return vector of codes avoiding parsing result
+    ///
+    /// # Parameters :
+    ///
+    /// * `value` : value to encode
+    /// * `branching` : if `true` branching will be enabled and multiple code can
+    /// be generated, otherwise the result will contain only one code.
+    ///
+    /// # Result :
+    ///
+    /// A list of code. If branching is disabled, result will contain only one code,
+    /// otherwise it might contain multiple codes.
+    ///
+    /// # Example :
+    ///
+    /// ```rust
+    /// # fn main() -> Result<(), rphonetic::PhoneticError> {
+    /// use rphonetic::{DaitchMokotoffSoundex, DaitchMokotoffSoundexBuilder, Encoder};
+    ///
+    /// const COMMONS_CODEC_RULES: &str = include_str!("../rules/dmrules.txt");
+    ///
+    /// let encoder = DaitchMokotoffSoundexBuilder::with_rules(COMMONS_CODEC_RULES).build()?;
+    ///
+    /// // With branching
+    /// assert_eq!(encoder.inner_soundex("Rosochowaciec", true), vec!["944744","944745","944754","944755","945744","945745","945754","945755"]);
+    ///
+    /// // Without branching
+    /// assert_eq!(encoder.inner_soundex("Rosochowaciec", false), vec!["944744"]);
+    /// #   Ok(())
+    /// # }
+    /// ```
+    pub fn inner_soundex(&self, value: &str, branching: bool) -> Vec<String> {
         let source = value
             .chars()
             .filter(|ch| !ch.is_whitespace())
@@ -348,7 +398,24 @@ impl DaitchMokotoffSoundex {
 }
 
 impl Encoder for DaitchMokotoffSoundex {
-    /// Encode a string without branching.
+    /// Encode a string without branching, only one code will be generated
+    ///
+    /// # Example :
+    ///
+    /// ```rust
+    /// # fn main() -> Result<(), rphonetic::PhoneticError> {
+    /// use rphonetic::{DaitchMokotoffSoundex, DaitchMokotoffSoundexBuilder, Encoder};
+    ///
+    /// const COMMONS_CODEC_RULES: &str = include_str!("../rules/dmrules.txt");
+    ///
+    /// let encoder = DaitchMokotoffSoundexBuilder::with_rules(COMMONS_CODEC_RULES).build()?;
+    ///
+    ///
+    /// // Without branching
+    /// assert_eq!(encoder.encode("Rosochowaciec"), "944744");
+    /// #   Ok(())
+    /// # }
+    /// ```
     fn encode(&self, s: &str) -> String {
         self.inner_soundex(s, false)
             .get(0)
