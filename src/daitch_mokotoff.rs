@@ -69,16 +69,16 @@ impl<'a> Branch<'a> {
 }
 
 #[derive(Clone, Debug, Ord, PartialOrd, Eq, PartialEq)]
-struct Rule<'a> {
-    pattern: &'a str,
-    replacement_at_start: Vec<&'a str>,
-    replacement_before_vowel: Vec<&'a str>,
-    replacement_default: Vec<&'a str>,
+struct Rule {
+    pattern: String,
+    replacement_at_start: Vec<String>,
+    replacement_before_vowel: Vec<String>,
+    replacement_default: Vec<String>,
 }
 
-impl<'a> Rule<'a> {
-    fn parse_branch(part: &'a str) -> Vec<&'a str> {
-        part.split('|').collect()
+impl Rule {
+    fn parse_branch(part: &str) -> Vec<String> {
+        part.split('|').map(|v| v.to_string()).collect()
     }
 
     fn get_pattern_length(&self) -> usize {
@@ -86,10 +86,10 @@ impl<'a> Rule<'a> {
     }
 
     fn matches(&self, context: &str) -> bool {
-        context.starts_with(self.pattern)
+        context.starts_with(&self.pattern)
     }
 
-    fn get_replacements(&self, context: &str, at_start: bool) -> &Vec<&'a str> {
+    fn get_replacements(&self, context: &str, at_start: bool) -> &Vec<String> {
         if at_start {
             return &self.replacement_at_start;
         }
@@ -105,10 +105,10 @@ impl<'a> Rule<'a> {
     }
 }
 
-impl<'a> TryFrom<&'a str> for Rule<'a> {
+impl TryFrom<&str> for Rule {
     type Error = PhoneticError;
 
-    fn try_from(value: &'a str) -> Result<Self, Self::Error> {
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
         let cap_opt = RULE_LINE.captures(value);
 
         match cap_opt {
@@ -117,10 +117,10 @@ impl<'a> TryFrom<&'a str> for Rule<'a> {
                 value
             ))),
             Some(cap) => {
-                let pattern = cap.get(1).unwrap().as_str();
-                let replacement_at_start: Vec<&str> = Rule::parse_branch(cap.get(2).unwrap().as_str());
-                let replacement_before_vowel: Vec<&str> = Rule::parse_branch(cap.get(3).unwrap().as_str());
-                let replacement_default: Vec<&str> = Rule::parse_branch(cap.get(4).unwrap().as_str());
+                let pattern = cap.get(1).unwrap().as_str().to_string();
+                let replacement_at_start: Vec<String> = Rule::parse_branch(cap.get(2).unwrap().as_str());
+                let replacement_before_vowel: Vec<String> = Rule::parse_branch(cap.get(3).unwrap().as_str());
+                let replacement_default: Vec<String> = Rule::parse_branch(cap.get(4).unwrap().as_str());
                 Ok(Self {
                     pattern,
                     replacement_at_start,
@@ -249,27 +249,26 @@ impl<'a> TryFrom<&'a str> for Rule<'a> {
 ///
 /// A [Default] implementation, with default rules is provided when feature `embedded_dm` is enable.
 #[derive(Clone, Debug, Ord, PartialOrd, Eq, PartialEq)]
-pub struct DaitchMokotoffSoundex<'a> {
+pub struct DaitchMokotoffSoundex {
     ascii_folding: bool,
-    rules: BTreeMap<char, Vec<Rule<'a>>>,
+    rules: BTreeMap<char, Vec<Rule>>,
     ascii_folding_rules: BTreeMap<char, char>,
 }
 
 #[cfg(feature = "embedded_dm")]
-impl<'a> Default for DaitchMokotoffSoundex<'a> {
+impl Default for DaitchMokotoffSoundex {
     fn default() -> Self {
-        let builder = DaitchMokotoffSoundexBuilder::default().build().unwrap();
-        builder
+        DaitchMokotoffSoundexBuilder::default().build().unwrap()
     }
 }
 
-impl<'a> DaitchMokotoffSoundex<'a> {
+impl DaitchMokotoffSoundex {
     /// Encode the string with branching.
-    pub fn soundex(&self, value: &'a str) -> String {
+    pub fn soundex(&self, value: &str) -> String {
         self.inner_soundex(value, true).join("|")
     }
 
-    fn inner_soundex(&self, value: &'a str, branching: bool) -> Vec<String> {
+    fn inner_soundex(&self, value: &str, branching: bool) -> Vec<String> {
         let source = value
             .chars()
             .filter(|ch| !ch.is_whitespace())
@@ -348,7 +347,7 @@ impl<'a> DaitchMokotoffSoundex<'a> {
     }
 }
 
-impl<'a> Encoder for DaitchMokotoffSoundex<'a> {
+impl Encoder for DaitchMokotoffSoundex {
     /// Encode a string without branching.
     fn encode(&self, s: &str) -> String {
         self.inner_soundex(s, false)
@@ -399,8 +398,8 @@ impl<'a> DaitchMokotoffSoundexBuilder<'a> {
     /// # Error
     ///
     /// This method return an error in case it can't parse the rules.
-    pub fn build(self) -> Result<DaitchMokotoffSoundex<'a>, PhoneticError> {
-        let mut rules: BTreeMap<char, Vec<Rule<'a>>> = BTreeMap::new();
+    pub fn build(self) -> Result<DaitchMokotoffSoundex, PhoneticError> {
+        let mut rules: BTreeMap<char, Vec<Rule>> = BTreeMap::new();
         let mut ascii_folding_rules: BTreeMap<char, char> = BTreeMap::new();
         let mut multiline_comment = false;
         for mut line in self.rules.split('\n') {
@@ -506,198 +505,198 @@ mod tests {
         rules.insert(
             'ą',
             vec![Rule {
-                pattern: "ą",
-                replacement_at_start: vec![""],
-                replacement_before_vowel: vec![""],
-                replacement_default: vec!["", "6"],
+                pattern: "ą".to_string(),
+                replacement_at_start: vec!["".to_string()],
+                replacement_before_vowel: vec!["".to_string()],
+                replacement_default: vec!["".to_string(), "6".to_string()],
             }],
         );
         rules.insert(
             'ę',
             vec![Rule {
-                pattern: "ę",
-                replacement_at_start: vec![""],
-                replacement_before_vowel: vec![""],
-                replacement_default: vec!["", "6"],
+                pattern: "ę".to_string(),
+                replacement_at_start: vec!["".to_string()],
+                replacement_before_vowel: vec!["".to_string()],
+                replacement_default: vec!["".to_string(), "6".to_string()],
             }],
         );
         rules.insert(
             'ț',
             vec![Rule {
-                pattern: "ț",
-                replacement_at_start: vec!["3", "4"],
-                replacement_before_vowel: vec!["3", "4"],
-                replacement_default: vec!["3", "4"],
+                pattern: "ț".to_string(),
+                replacement_at_start: vec!["3".to_string(), "4".to_string()],
+                replacement_before_vowel: vec!["3".to_string(), "4".to_string()],
+                replacement_default: vec!["3".to_string(), "4".to_string()],
             }],
         );
         rules.insert(
             'a',
             vec![
                 Rule {
-                    pattern: "ai",
-                    replacement_at_start: vec!["0"],
-                    replacement_before_vowel: vec!["1"],
-                    replacement_default: vec![""],
+                    pattern: "ai".to_string(),
+                    replacement_at_start: vec!["0".to_string()],
+                    replacement_before_vowel: vec!["1".to_string()],
+                    replacement_default: vec!["".to_string()],
                 },
                 Rule {
-                    pattern: "aj",
-                    replacement_at_start: vec!["0"],
-                    replacement_before_vowel: vec!["1"],
-                    replacement_default: vec![""],
+                    pattern: "aj".to_string(),
+                    replacement_at_start: vec!["0".to_string()],
+                    replacement_before_vowel: vec!["1".to_string()],
+                    replacement_default: vec!["".to_string()],
                 },
                 Rule {
-                    pattern: "ay",
-                    replacement_at_start: vec!["0"],
-                    replacement_before_vowel: vec!["1"],
-                    replacement_default: vec![""],
+                    pattern: "ay".to_string(),
+                    replacement_at_start: vec!["0".to_string()],
+                    replacement_before_vowel: vec!["1".to_string()],
+                    replacement_default: vec!["".to_string()],
                 },
                 Rule {
-                    pattern: "au",
-                    replacement_at_start: vec!["0"],
-                    replacement_before_vowel: vec!["7"],
-                    replacement_default: vec![""],
+                    pattern: "au".to_string(),
+                    replacement_at_start: vec!["0".to_string()],
+                    replacement_before_vowel: vec!["7".to_string()],
+                    replacement_default: vec!["".to_string()],
                 },
                 Rule {
-                    pattern: "a",
-                    replacement_at_start: vec!["0"],
-                    replacement_before_vowel: vec![""],
-                    replacement_default: vec![""],
+                    pattern: "a".to_string(),
+                    replacement_at_start: vec!["0".to_string()],
+                    replacement_before_vowel: vec!["".to_string()],
+                    replacement_default: vec!["".to_string()],
                 },
             ],
         );
         rules.insert(
             'b',
             vec![Rule {
-                pattern: "b",
-                replacement_at_start: vec!["7"],
-                replacement_before_vowel: vec!["7"],
-                replacement_default: vec!["7"],
+                pattern: "b".to_string(),
+                replacement_at_start: vec!["7".to_string()],
+                replacement_before_vowel: vec!["7".to_string()],
+                replacement_default: vec!["7".to_string()],
             }],
         );
         rules.insert(
             'c',
             vec![
                 Rule {
-                    pattern: "chs",
-                    replacement_at_start: vec!["5"],
-                    replacement_before_vowel: vec!["54"],
-                    replacement_default: vec!["54"],
+                    pattern: "chs".to_string(),
+                    replacement_at_start: vec!["5".to_string()],
+                    replacement_before_vowel: vec!["54".to_string()],
+                    replacement_default: vec!["54".to_string()],
                 },
                 Rule {
-                    pattern: "csz",
-                    replacement_at_start: vec!["4"],
-                    replacement_before_vowel: vec!["4"],
-                    replacement_default: vec!["4"],
+                    pattern: "csz".to_string(),
+                    replacement_at_start: vec!["4".to_string()],
+                    replacement_before_vowel: vec!["4".to_string()],
+                    replacement_default: vec!["4".to_string()],
                 },
                 Rule {
-                    pattern: "czs",
-                    replacement_at_start: vec!["4"],
-                    replacement_before_vowel: vec!["4"],
-                    replacement_default: vec!["4"],
+                    pattern: "czs".to_string(),
+                    replacement_at_start: vec!["4".to_string()],
+                    replacement_before_vowel: vec!["4".to_string()],
+                    replacement_default: vec!["4".to_string()],
                 },
                 Rule {
-                    pattern: "cz",
-                    replacement_at_start: vec!["4"],
-                    replacement_before_vowel: vec!["4"],
-                    replacement_default: vec!["4"],
+                    pattern: "cz".to_string(),
+                    replacement_at_start: vec!["4".to_string()],
+                    replacement_before_vowel: vec!["4".to_string()],
+                    replacement_default: vec!["4".to_string()],
                 },
                 Rule {
-                    pattern: "cs",
-                    replacement_at_start: vec!["4"],
-                    replacement_before_vowel: vec!["4"],
-                    replacement_default: vec!["4"],
+                    pattern: "cs".to_string(),
+                    replacement_at_start: vec!["4".to_string()],
+                    replacement_before_vowel: vec!["4".to_string()],
+                    replacement_default: vec!["4".to_string()],
                 },
                 Rule {
-                    pattern: "ch",
-                    replacement_at_start: vec!["4", "5"],
-                    replacement_before_vowel: vec!["4", "5"],
-                    replacement_default: vec!["4", "5"],
+                    pattern: "ch".to_string(),
+                    replacement_at_start: vec!["4".to_string(), "5".to_string()],
+                    replacement_before_vowel: vec!["4".to_string(), "5".to_string()],
+                    replacement_default: vec!["4".to_string(), "5".to_string()],
                 },
                 Rule {
-                    pattern: "ck",
-                    replacement_at_start: vec!["5", "45"],
-                    replacement_before_vowel: vec!["5", "45"],
-                    replacement_default: vec!["5", "45"],
+                    pattern: "ck".to_string(),
+                    replacement_at_start: vec!["5".to_string(), "45".to_string()],
+                    replacement_before_vowel: vec!["5".to_string(), "45".to_string()],
+                    replacement_default: vec!["5".to_string(), "45".to_string()],
                 },
                 Rule {
-                    pattern: "c",
-                    replacement_at_start: vec!["4", "5"],
-                    replacement_before_vowel: vec!["4", "5"],
-                    replacement_default: vec!["4", "5"],
+                    pattern: "c".to_string(),
+                    replacement_at_start: vec!["4".to_string(), "5".to_string()],
+                    replacement_before_vowel: vec!["4".to_string(), "5".to_string()],
+                    replacement_default: vec!["4".to_string(), "5".to_string()],
                 },
             ],
         );
         rules.insert(
             'ţ',
             vec![Rule {
-                pattern: "ţ",
-                replacement_at_start: vec!["3", "4"],
-                replacement_before_vowel: vec!["3", "4"],
-                replacement_default: vec!["3", "4"],
+                pattern: "ţ".to_string(),
+                replacement_at_start: vec!["3".to_string(), "4".to_string()],
+                replacement_before_vowel: vec!["3".to_string(), "4".to_string()],
+                replacement_default: vec!["3".to_string(), "4".to_string()],
             }],
         );
         rules.insert(
             'd',
             vec![
                 Rule {
-                    pattern: "drz",
-                    replacement_at_start: vec!["4"],
-                    replacement_before_vowel: vec!["4"],
-                    replacement_default: vec!["4"],
+                    pattern: "drz".to_string(),
+                    replacement_at_start: vec!["4".to_string()],
+                    replacement_before_vowel: vec!["4".to_string()],
+                    replacement_default: vec!["4".to_string()],
                 },
                 Rule {
-                    pattern: "drs",
-                    replacement_at_start: vec!["4"],
-                    replacement_before_vowel: vec!["4"],
-                    replacement_default: vec!["4"],
+                    pattern: "drs".to_string(),
+                    replacement_at_start: vec!["4".to_string()],
+                    replacement_before_vowel: vec!["4".to_string()],
+                    replacement_default: vec!["4".to_string()],
                 },
                 Rule {
-                    pattern: "dsh",
-                    replacement_at_start: vec!["4"],
-                    replacement_before_vowel: vec!["4"],
-                    replacement_default: vec!["4"],
+                    pattern: "dsh".to_string(),
+                    replacement_at_start: vec!["4".to_string()],
+                    replacement_before_vowel: vec!["4".to_string()],
+                    replacement_default: vec!["4".to_string()],
                 },
                 Rule {
-                    pattern: "dsz",
-                    replacement_at_start: vec!["4"],
-                    replacement_before_vowel: vec!["4"],
-                    replacement_default: vec!["4"],
+                    pattern: "dsz".to_string(),
+                    replacement_at_start: vec!["4".to_string()],
+                    replacement_before_vowel: vec!["4".to_string()],
+                    replacement_default: vec!["4".to_string()],
                 },
                 Rule {
-                    pattern: "dzh",
-                    replacement_at_start: vec!["4"],
-                    replacement_before_vowel: vec!["4"],
-                    replacement_default: vec!["4"],
+                    pattern: "dzh".to_string(),
+                    replacement_at_start: vec!["4".to_string()],
+                    replacement_before_vowel: vec!["4".to_string()],
+                    replacement_default: vec!["4".to_string()],
                 },
                 Rule {
-                    pattern: "dzs",
-                    replacement_at_start: vec!["4"],
-                    replacement_before_vowel: vec!["4"],
-                    replacement_default: vec!["4"],
+                    pattern: "dzs".to_string(),
+                    replacement_at_start: vec!["4".to_string()],
+                    replacement_before_vowel: vec!["4".to_string()],
+                    replacement_default: vec!["4".to_string()],
                 },
                 Rule {
-                    pattern: "ds",
-                    replacement_at_start: vec!["4"],
-                    replacement_before_vowel: vec!["4"],
-                    replacement_default: vec!["4"],
+                    pattern: "ds".to_string(),
+                    replacement_at_start: vec!["4".to_string()],
+                    replacement_before_vowel: vec!["4".to_string()],
+                    replacement_default: vec!["4".to_string()],
                 },
                 Rule {
-                    pattern: "dz",
-                    replacement_at_start: vec!["4"],
-                    replacement_before_vowel: vec!["4"],
-                    replacement_default: vec!["4"],
+                    pattern: "dz".to_string(),
+                    replacement_at_start: vec!["4".to_string()],
+                    replacement_before_vowel: vec!["4".to_string()],
+                    replacement_default: vec!["4".to_string()],
                 },
                 Rule {
-                    pattern: "dt",
-                    replacement_at_start: vec!["3"],
-                    replacement_before_vowel: vec!["3"],
-                    replacement_default: vec!["3"],
+                    pattern: "dt".to_string(),
+                    replacement_at_start: vec!["3".to_string()],
+                    replacement_before_vowel: vec!["3".to_string()],
+                    replacement_default: vec!["3".to_string()],
                 },
                 Rule {
-                    pattern: "d",
-                    replacement_at_start: vec!["3"],
-                    replacement_before_vowel: vec!["3"],
-                    replacement_default: vec!["3"],
+                    pattern: "d".to_string(),
+                    replacement_at_start: vec!["3".to_string()],
+                    replacement_before_vowel: vec!["3".to_string()],
+                    replacement_default: vec!["3".to_string()],
                 },
             ],
         );
@@ -705,34 +704,34 @@ mod tests {
             'e',
             vec![
                 Rule {
-                    pattern: "ei",
-                    replacement_at_start: vec!["0"],
-                    replacement_before_vowel: vec!["1"],
-                    replacement_default: vec![""],
+                    pattern: "ei".to_string(),
+                    replacement_at_start: vec!["0".to_string()],
+                    replacement_before_vowel: vec!["1".to_string()],
+                    replacement_default: vec!["".to_string()],
                 },
                 Rule {
-                    pattern: "ej",
-                    replacement_at_start: vec!["0"],
-                    replacement_before_vowel: vec!["1"],
-                    replacement_default: vec![""],
+                    pattern: "ej".to_string(),
+                    replacement_at_start: vec!["0".to_string()],
+                    replacement_before_vowel: vec!["1".to_string()],
+                    replacement_default: vec!["".to_string()],
                 },
                 Rule {
-                    pattern: "ey",
-                    replacement_at_start: vec!["0"],
-                    replacement_before_vowel: vec!["1"],
-                    replacement_default: vec![""],
+                    pattern: "ey".to_string(),
+                    replacement_at_start: vec!["0".to_string()],
+                    replacement_before_vowel: vec!["1".to_string()],
+                    replacement_default: vec!["".to_string()],
                 },
                 Rule {
-                    pattern: "eu",
-                    replacement_at_start: vec!["1"],
-                    replacement_before_vowel: vec!["1"],
-                    replacement_default: vec![""],
+                    pattern: "eu".to_string(),
+                    replacement_at_start: vec!["1".to_string()],
+                    replacement_before_vowel: vec!["1".to_string()],
+                    replacement_default: vec!["".to_string()],
                 },
                 Rule {
-                    pattern: "e",
-                    replacement_at_start: vec!["0"],
-                    replacement_before_vowel: vec![""],
-                    replacement_default: vec![""],
+                    pattern: "e".to_string(),
+                    replacement_at_start: vec!["0".to_string()],
+                    replacement_before_vowel: vec!["".to_string()],
+                    replacement_default: vec!["".to_string()],
                 },
             ],
         );
@@ -740,127 +739,127 @@ mod tests {
             'f',
             vec![
                 Rule {
-                    pattern: "fb",
-                    replacement_at_start: vec!["7"],
-                    replacement_before_vowel: vec!["7"],
-                    replacement_default: vec!["7"],
+                    pattern: "fb".to_string(),
+                    replacement_at_start: vec!["7".to_string()],
+                    replacement_before_vowel: vec!["7".to_string()],
+                    replacement_default: vec!["7".to_string()],
                 },
                 Rule {
-                    pattern: "f",
-                    replacement_at_start: vec!["7"],
-                    replacement_before_vowel: vec!["7"],
-                    replacement_default: vec!["7"],
+                    pattern: "f".to_string(),
+                    replacement_at_start: vec!["7".to_string()],
+                    replacement_before_vowel: vec!["7".to_string()],
+                    replacement_default: vec!["7".to_string()],
                 },
             ],
         );
         rules.insert(
             'g',
             vec![Rule {
-                pattern: "g",
-                replacement_at_start: vec!["5"],
-                replacement_before_vowel: vec!["5"],
-                replacement_default: vec!["5"],
+                pattern: "g".to_string(),
+                replacement_at_start: vec!["5".to_string()],
+                replacement_before_vowel: vec!["5".to_string()],
+                replacement_default: vec!["5".to_string()],
             }],
         );
         rules.insert(
             'h',
             vec![Rule {
-                pattern: "h",
-                replacement_at_start: vec!["5"],
-                replacement_before_vowel: vec!["5"],
-                replacement_default: vec![""],
+                pattern: "h".to_string(),
+                replacement_at_start: vec!["5".to_string()],
+                replacement_before_vowel: vec!["5".to_string()],
+                replacement_default: vec!["".to_string()],
             }],
         );
         rules.insert(
             'i',
             vec![
                 Rule {
-                    pattern: "ia",
-                    replacement_at_start: vec!["1"],
-                    replacement_before_vowel: vec![""],
-                    replacement_default: vec![""],
+                    pattern: "ia".to_string(),
+                    replacement_at_start: vec!["1".to_string()],
+                    replacement_before_vowel: vec!["".to_string()],
+                    replacement_default: vec!["".to_string()],
                 },
                 Rule {
-                    pattern: "ie",
-                    replacement_at_start: vec!["1"],
-                    replacement_before_vowel: vec![""],
-                    replacement_default: vec![""],
+                    pattern: "ie".to_string(),
+                    replacement_at_start: vec!["1".to_string()],
+                    replacement_before_vowel: vec!["".to_string()],
+                    replacement_default: vec!["".to_string()],
                 },
                 Rule {
-                    pattern: "io",
-                    replacement_at_start: vec!["1"],
-                    replacement_before_vowel: vec![""],
-                    replacement_default: vec![""],
+                    pattern: "io".to_string(),
+                    replacement_at_start: vec!["1".to_string()],
+                    replacement_before_vowel: vec!["".to_string()],
+                    replacement_default: vec!["".to_string()],
                 },
                 Rule {
-                    pattern: "iu",
-                    replacement_at_start: vec!["1"],
-                    replacement_before_vowel: vec![""],
-                    replacement_default: vec![""],
+                    pattern: "iu".to_string(),
+                    replacement_at_start: vec!["1".to_string()],
+                    replacement_before_vowel: vec!["".to_string()],
+                    replacement_default: vec!["".to_string()],
                 },
                 Rule {
-                    pattern: "i",
-                    replacement_at_start: vec!["0"],
-                    replacement_before_vowel: vec![""],
-                    replacement_default: vec![""],
+                    pattern: "i".to_string(),
+                    replacement_at_start: vec!["0".to_string()],
+                    replacement_before_vowel: vec!["".to_string()],
+                    replacement_default: vec!["".to_string()],
                 },
             ],
         );
         rules.insert(
             'j',
             vec![Rule {
-                pattern: "j",
-                replacement_at_start: vec!["1", "4"],
-                replacement_before_vowel: vec!["", "4"],
-                replacement_default: vec!["", "4"],
+                pattern: "j".to_string(),
+                replacement_at_start: vec!["1".to_string(), "4".to_string()],
+                replacement_before_vowel: vec!["".to_string(), "4".to_string()],
+                replacement_default: vec!["".to_string(), "4".to_string()],
             }],
         );
         rules.insert(
             'k',
             vec![
                 Rule {
-                    pattern: "ks",
-                    replacement_at_start: vec!["5"],
-                    replacement_before_vowel: vec!["54"],
-                    replacement_default: vec!["54"],
+                    pattern: "ks".to_string(),
+                    replacement_at_start: vec!["5".to_string()],
+                    replacement_before_vowel: vec!["54".to_string()],
+                    replacement_default: vec!["54".to_string()],
                 },
                 Rule {
-                    pattern: "kh",
-                    replacement_at_start: vec!["5"],
-                    replacement_before_vowel: vec!["5"],
-                    replacement_default: vec!["5"],
+                    pattern: "kh".to_string(),
+                    replacement_at_start: vec!["5".to_string()],
+                    replacement_before_vowel: vec!["5".to_string()],
+                    replacement_default: vec!["5".to_string()],
                 },
                 Rule {
-                    pattern: "k",
-                    replacement_at_start: vec!["5"],
-                    replacement_before_vowel: vec!["5"],
-                    replacement_default: vec!["5"],
+                    pattern: "k".to_string(),
+                    replacement_at_start: vec!["5".to_string()],
+                    replacement_before_vowel: vec!["5".to_string()],
+                    replacement_default: vec!["5".to_string()],
                 },
             ],
         );
         rules.insert(
             'l',
             vec![Rule {
-                pattern: "l",
-                replacement_at_start: vec!["8"],
-                replacement_before_vowel: vec!["8"],
-                replacement_default: vec!["8"],
+                pattern: "l".to_string(),
+                replacement_at_start: vec!["8".to_string()],
+                replacement_before_vowel: vec!["8".to_string()],
+                replacement_default: vec!["8".to_string()],
             }],
         );
         rules.insert(
             'm',
             vec![
                 Rule {
-                    pattern: "mn",
-                    replacement_at_start: vec!["66"],
-                    replacement_before_vowel: vec!["66"],
-                    replacement_default: vec!["66"],
+                    pattern: "mn".to_string(),
+                    replacement_at_start: vec!["66".to_string()],
+                    replacement_before_vowel: vec!["66".to_string()],
+                    replacement_default: vec!["66".to_string()],
                 },
                 Rule {
-                    pattern: "m",
-                    replacement_at_start: vec!["6"],
-                    replacement_before_vowel: vec!["6"],
-                    replacement_default: vec!["6"],
+                    pattern: "m".to_string(),
+                    replacement_at_start: vec!["6".to_string()],
+                    replacement_before_vowel: vec!["6".to_string()],
+                    replacement_default: vec!["6".to_string()],
                 },
             ],
         );
@@ -868,16 +867,16 @@ mod tests {
             'n',
             vec![
                 Rule {
-                    pattern: "nm",
-                    replacement_at_start: vec!["66"],
-                    replacement_before_vowel: vec!["66"],
-                    replacement_default: vec!["66"],
+                    pattern: "nm".to_string(),
+                    replacement_at_start: vec!["66".to_string()],
+                    replacement_before_vowel: vec!["66".to_string()],
+                    replacement_default: vec!["66".to_string()],
                 },
                 Rule {
-                    pattern: "n",
-                    replacement_at_start: vec!["6"],
-                    replacement_before_vowel: vec!["6"],
-                    replacement_default: vec!["6"],
+                    pattern: "n".to_string(),
+                    replacement_at_start: vec!["6".to_string()],
+                    replacement_before_vowel: vec!["6".to_string()],
+                    replacement_default: vec!["6".to_string()],
                 },
             ],
         );
@@ -885,28 +884,28 @@ mod tests {
             'o',
             vec![
                 Rule {
-                    pattern: "oi",
-                    replacement_at_start: vec!["0"],
-                    replacement_before_vowel: vec!["1"],
-                    replacement_default: vec![""],
+                    pattern: "oi".to_string(),
+                    replacement_at_start: vec!["0".to_string()],
+                    replacement_before_vowel: vec!["1".to_string()],
+                    replacement_default: vec!["".to_string()],
                 },
                 Rule {
-                    pattern: "oj",
-                    replacement_at_start: vec!["0"],
-                    replacement_before_vowel: vec!["1"],
-                    replacement_default: vec![""],
+                    pattern: "oj".to_string(),
+                    replacement_at_start: vec!["0".to_string()],
+                    replacement_before_vowel: vec!["1".to_string()],
+                    replacement_default: vec!["".to_string()],
                 },
                 Rule {
-                    pattern: "oy",
-                    replacement_at_start: vec!["0"],
-                    replacement_before_vowel: vec!["1"],
-                    replacement_default: vec![""],
+                    pattern: "oy".to_string(),
+                    replacement_at_start: vec!["0".to_string()],
+                    replacement_before_vowel: vec!["1".to_string()],
+                    replacement_default: vec!["".to_string()],
                 },
                 Rule {
-                    pattern: "o",
-                    replacement_at_start: vec!["0"],
-                    replacement_before_vowel: vec![""],
-                    replacement_default: vec![""],
+                    pattern: "o".to_string(),
+                    replacement_at_start: vec!["0".to_string()],
+                    replacement_before_vowel: vec!["".to_string()],
+                    replacement_default: vec!["".to_string()],
                 },
             ],
         );
@@ -914,54 +913,54 @@ mod tests {
             'p',
             vec![
                 Rule {
-                    pattern: "pf",
-                    replacement_at_start: vec!["7"],
-                    replacement_before_vowel: vec!["7"],
-                    replacement_default: vec!["7"],
+                    pattern: "pf".to_string(),
+                    replacement_at_start: vec!["7".to_string()],
+                    replacement_before_vowel: vec!["7".to_string()],
+                    replacement_default: vec!["7".to_string()],
                 },
                 Rule {
-                    pattern: "ph",
-                    replacement_at_start: vec!["7"],
-                    replacement_before_vowel: vec!["7"],
-                    replacement_default: vec!["7"],
+                    pattern: "ph".to_string(),
+                    replacement_at_start: vec!["7".to_string()],
+                    replacement_before_vowel: vec!["7".to_string()],
+                    replacement_default: vec!["7".to_string()],
                 },
                 Rule {
-                    pattern: "p",
-                    replacement_at_start: vec!["7"],
-                    replacement_before_vowel: vec!["7"],
-                    replacement_default: vec!["7"],
+                    pattern: "p".to_string(),
+                    replacement_at_start: vec!["7".to_string()],
+                    replacement_before_vowel: vec!["7".to_string()],
+                    replacement_default: vec!["7".to_string()],
                 },
             ],
         );
         rules.insert(
             'q',
             vec![Rule {
-                pattern: "q",
-                replacement_at_start: vec!["5"],
-                replacement_before_vowel: vec!["5"],
-                replacement_default: vec!["5"],
+                pattern: "q".to_string(),
+                replacement_at_start: vec!["5".to_string()],
+                replacement_before_vowel: vec!["5".to_string()],
+                replacement_default: vec!["5".to_string()],
             }],
         );
         rules.insert(
             'r',
             vec![
                 Rule {
-                    pattern: "rs",
-                    replacement_at_start: vec!["4", "94"],
-                    replacement_before_vowel: vec!["4", "94"],
-                    replacement_default: vec!["4", "94"],
+                    pattern: "rs".to_string(),
+                    replacement_at_start: vec!["4".to_string(), "94".to_string()],
+                    replacement_before_vowel: vec!["4".to_string(), "94".to_string()],
+                    replacement_default: vec!["4".to_string(), "94".to_string()],
                 },
                 Rule {
-                    pattern: "rz",
-                    replacement_at_start: vec!["4", "94"],
-                    replacement_before_vowel: vec!["4", "94"],
-                    replacement_default: vec!["4", "94"],
+                    pattern: "rz".to_string(),
+                    replacement_at_start: vec!["4".to_string(), "94".to_string()],
+                    replacement_before_vowel: vec!["4".to_string(), "94".to_string()],
+                    replacement_default: vec!["4".to_string(), "94".to_string()],
                 },
                 Rule {
-                    pattern: "r",
-                    replacement_at_start: vec!["9"],
-                    replacement_before_vowel: vec!["9"],
-                    replacement_default: vec!["9"],
+                    pattern: "r".to_string(),
+                    replacement_at_start: vec!["9".to_string()],
+                    replacement_before_vowel: vec!["9".to_string()],
+                    replacement_default: vec!["9".to_string()],
                 },
             ],
         );
@@ -969,160 +968,160 @@ mod tests {
             's',
             vec![
                 Rule {
-                    pattern: "schtsch",
-                    replacement_at_start: vec!["2"],
-                    replacement_before_vowel: vec!["4"],
-                    replacement_default: vec!["4"],
+                    pattern: "schtsch".to_string(),
+                    replacement_at_start: vec!["2".to_string()],
+                    replacement_before_vowel: vec!["4".to_string()],
+                    replacement_default: vec!["4".to_string()],
                 },
                 Rule {
-                    pattern: "schtsh",
-                    replacement_at_start: vec!["2"],
-                    replacement_before_vowel: vec!["4"],
-                    replacement_default: vec!["4"],
+                    pattern: "schtsh".to_string(),
+                    replacement_at_start: vec!["2".to_string()],
+                    replacement_before_vowel: vec!["4".to_string()],
+                    replacement_default: vec!["4".to_string()],
                 },
                 Rule {
-                    pattern: "schtch",
-                    replacement_at_start: vec!["2"],
-                    replacement_before_vowel: vec!["4"],
-                    replacement_default: vec!["4"],
+                    pattern: "schtch".to_string(),
+                    replacement_at_start: vec!["2".to_string()],
+                    replacement_before_vowel: vec!["4".to_string()],
+                    replacement_default: vec!["4".to_string()],
                 },
                 Rule {
-                    pattern: "shtch",
-                    replacement_at_start: vec!["2"],
-                    replacement_before_vowel: vec!["4"],
-                    replacement_default: vec!["4"],
+                    pattern: "shtch".to_string(),
+                    replacement_at_start: vec!["2".to_string()],
+                    replacement_before_vowel: vec!["4".to_string()],
+                    replacement_default: vec!["4".to_string()],
                 },
                 Rule {
-                    pattern: "shtsh",
-                    replacement_at_start: vec!["2"],
-                    replacement_before_vowel: vec!["4"],
-                    replacement_default: vec!["4"],
+                    pattern: "shtsh".to_string(),
+                    replacement_at_start: vec!["2".to_string()],
+                    replacement_before_vowel: vec!["4".to_string()],
+                    replacement_default: vec!["4".to_string()],
                 },
                 Rule {
-                    pattern: "stsch",
-                    replacement_at_start: vec!["2"],
-                    replacement_before_vowel: vec!["4"],
-                    replacement_default: vec!["4"],
+                    pattern: "stsch".to_string(),
+                    replacement_at_start: vec!["2".to_string()],
+                    replacement_before_vowel: vec!["4".to_string()],
+                    replacement_default: vec!["4".to_string()],
                 },
                 Rule {
-                    pattern: "shch",
-                    replacement_at_start: vec!["2"],
-                    replacement_before_vowel: vec!["4"],
-                    replacement_default: vec!["4"],
+                    pattern: "shch".to_string(),
+                    replacement_at_start: vec!["2".to_string()],
+                    replacement_before_vowel: vec!["4".to_string()],
+                    replacement_default: vec!["4".to_string()],
                 },
                 Rule {
-                    pattern: "scht",
-                    replacement_at_start: vec!["2"],
-                    replacement_before_vowel: vec!["43"],
-                    replacement_default: vec!["43"],
+                    pattern: "scht".to_string(),
+                    replacement_at_start: vec!["2".to_string()],
+                    replacement_before_vowel: vec!["43".to_string()],
+                    replacement_default: vec!["43".to_string()],
                 },
                 Rule {
-                    pattern: "schd",
-                    replacement_at_start: vec!["2"],
-                    replacement_before_vowel: vec!["43"],
-                    replacement_default: vec!["43"],
+                    pattern: "schd".to_string(),
+                    replacement_at_start: vec!["2".to_string()],
+                    replacement_before_vowel: vec!["43".to_string()],
+                    replacement_default: vec!["43".to_string()],
                 },
                 Rule {
-                    pattern: "stch",
-                    replacement_at_start: vec!["2"],
-                    replacement_before_vowel: vec!["4"],
-                    replacement_default: vec!["4"],
+                    pattern: "stch".to_string(),
+                    replacement_at_start: vec!["2".to_string()],
+                    replacement_before_vowel: vec!["4".to_string()],
+                    replacement_default: vec!["4".to_string()],
                 },
                 Rule {
-                    pattern: "strz",
-                    replacement_at_start: vec!["2"],
-                    replacement_before_vowel: vec!["4"],
-                    replacement_default: vec!["4"],
+                    pattern: "strz".to_string(),
+                    replacement_at_start: vec!["2".to_string()],
+                    replacement_before_vowel: vec!["4".to_string()],
+                    replacement_default: vec!["4".to_string()],
                 },
                 Rule {
-                    pattern: "strs",
-                    replacement_at_start: vec!["2"],
-                    replacement_before_vowel: vec!["4"],
-                    replacement_default: vec!["4"],
+                    pattern: "strs".to_string(),
+                    replacement_at_start: vec!["2".to_string()],
+                    replacement_before_vowel: vec!["4".to_string()],
+                    replacement_default: vec!["4".to_string()],
                 },
                 Rule {
-                    pattern: "stsh",
-                    replacement_at_start: vec!["2"],
-                    replacement_before_vowel: vec!["4"],
-                    replacement_default: vec!["4"],
+                    pattern: "stsh".to_string(),
+                    replacement_at_start: vec!["2".to_string()],
+                    replacement_before_vowel: vec!["4".to_string()],
+                    replacement_default: vec!["4".to_string()],
                 },
                 Rule {
-                    pattern: "szcz",
-                    replacement_at_start: vec!["2"],
-                    replacement_before_vowel: vec!["4"],
-                    replacement_default: vec!["4"],
+                    pattern: "szcz".to_string(),
+                    replacement_at_start: vec!["2".to_string()],
+                    replacement_before_vowel: vec!["4".to_string()],
+                    replacement_default: vec!["4".to_string()],
                 },
                 Rule {
-                    pattern: "szcs",
-                    replacement_at_start: vec!["2"],
-                    replacement_before_vowel: vec!["4"],
-                    replacement_default: vec!["4"],
+                    pattern: "szcs".to_string(),
+                    replacement_at_start: vec!["2".to_string()],
+                    replacement_before_vowel: vec!["4".to_string()],
+                    replacement_default: vec!["4".to_string()],
                 },
                 Rule {
-                    pattern: "sch",
-                    replacement_at_start: vec!["4"],
-                    replacement_before_vowel: vec!["4"],
-                    replacement_default: vec!["4"],
+                    pattern: "sch".to_string(),
+                    replacement_at_start: vec!["4".to_string()],
+                    replacement_before_vowel: vec!["4".to_string()],
+                    replacement_default: vec!["4".to_string()],
                 },
                 Rule {
-                    pattern: "sht",
-                    replacement_at_start: vec!["2"],
-                    replacement_before_vowel: vec!["43"],
-                    replacement_default: vec!["43"],
+                    pattern: "sht".to_string(),
+                    replacement_at_start: vec!["2".to_string()],
+                    replacement_before_vowel: vec!["43".to_string()],
+                    replacement_default: vec!["43".to_string()],
                 },
                 Rule {
-                    pattern: "szt",
-                    replacement_at_start: vec!["2"],
-                    replacement_before_vowel: vec!["43"],
-                    replacement_default: vec!["43"],
+                    pattern: "szt".to_string(),
+                    replacement_at_start: vec!["2".to_string()],
+                    replacement_before_vowel: vec!["43".to_string()],
+                    replacement_default: vec!["43".to_string()],
                 },
                 Rule {
-                    pattern: "shd",
-                    replacement_at_start: vec!["2"],
-                    replacement_before_vowel: vec!["43"],
-                    replacement_default: vec!["43"],
+                    pattern: "shd".to_string(),
+                    replacement_at_start: vec!["2".to_string()],
+                    replacement_before_vowel: vec!["43".to_string()],
+                    replacement_default: vec!["43".to_string()],
                 },
                 Rule {
-                    pattern: "szd",
-                    replacement_at_start: vec!["2"],
-                    replacement_before_vowel: vec!["43"],
-                    replacement_default: vec!["43"],
+                    pattern: "szd".to_string(),
+                    replacement_at_start: vec!["2".to_string()],
+                    replacement_before_vowel: vec!["43".to_string()],
+                    replacement_default: vec!["43".to_string()],
                 },
                 Rule {
-                    pattern: "sh",
-                    replacement_at_start: vec!["4"],
-                    replacement_before_vowel: vec!["4"],
-                    replacement_default: vec!["4"],
+                    pattern: "sh".to_string(),
+                    replacement_at_start: vec!["4".to_string()],
+                    replacement_before_vowel: vec!["4".to_string()],
+                    replacement_default: vec!["4".to_string()],
                 },
                 Rule {
-                    pattern: "sc",
-                    replacement_at_start: vec!["2"],
-                    replacement_before_vowel: vec!["4"],
-                    replacement_default: vec!["4"],
+                    pattern: "sc".to_string(),
+                    replacement_at_start: vec!["2".to_string()],
+                    replacement_before_vowel: vec!["4".to_string()],
+                    replacement_default: vec!["4".to_string()],
                 },
                 Rule {
-                    pattern: "st",
-                    replacement_at_start: vec!["2"],
-                    replacement_before_vowel: vec!["43"],
-                    replacement_default: vec!["43"],
+                    pattern: "st".to_string(),
+                    replacement_at_start: vec!["2".to_string()],
+                    replacement_before_vowel: vec!["43".to_string()],
+                    replacement_default: vec!["43".to_string()],
                 },
                 Rule {
-                    pattern: "sd",
-                    replacement_at_start: vec!["2"],
-                    replacement_before_vowel: vec!["43"],
-                    replacement_default: vec!["43"],
+                    pattern: "sd".to_string(),
+                    replacement_at_start: vec!["2".to_string()],
+                    replacement_before_vowel: vec!["43".to_string()],
+                    replacement_default: vec!["43".to_string()],
                 },
                 Rule {
-                    pattern: "sz",
-                    replacement_at_start: vec!["4"],
-                    replacement_before_vowel: vec!["4"],
-                    replacement_default: vec!["4"],
+                    pattern: "sz".to_string(),
+                    replacement_at_start: vec!["4".to_string()],
+                    replacement_before_vowel: vec!["4".to_string()],
+                    replacement_default: vec!["4".to_string()],
                 },
                 Rule {
-                    pattern: "s",
-                    replacement_at_start: vec!["4"],
-                    replacement_before_vowel: vec!["4"],
-                    replacement_default: vec!["4"],
+                    pattern: "s".to_string(),
+                    replacement_at_start: vec!["4".to_string()],
+                    replacement_before_vowel: vec!["4".to_string()],
+                    replacement_default: vec!["4".to_string()],
                 },
             ],
         );
@@ -1130,106 +1129,106 @@ mod tests {
             't',
             vec![
                 Rule {
-                    pattern: "ttsch",
-                    replacement_at_start: vec!["4"],
-                    replacement_before_vowel: vec!["4"],
-                    replacement_default: vec!["4"],
+                    pattern: "ttsch".to_string(),
+                    replacement_at_start: vec!["4".to_string()],
+                    replacement_before_vowel: vec!["4".to_string()],
+                    replacement_default: vec!["4".to_string()],
                 },
                 Rule {
-                    pattern: "ttch",
-                    replacement_at_start: vec!["4"],
-                    replacement_before_vowel: vec!["4"],
-                    replacement_default: vec!["4"],
+                    pattern: "ttch".to_string(),
+                    replacement_at_start: vec!["4".to_string()],
+                    replacement_before_vowel: vec!["4".to_string()],
+                    replacement_default: vec!["4".to_string()],
                 },
                 Rule {
-                    pattern: "tsch",
-                    replacement_at_start: vec!["4"],
-                    replacement_before_vowel: vec!["4"],
-                    replacement_default: vec!["4"],
+                    pattern: "tsch".to_string(),
+                    replacement_at_start: vec!["4".to_string()],
+                    replacement_before_vowel: vec!["4".to_string()],
+                    replacement_default: vec!["4".to_string()],
                 },
                 Rule {
-                    pattern: "ttsz",
-                    replacement_at_start: vec!["4"],
-                    replacement_before_vowel: vec!["4"],
-                    replacement_default: vec!["4"],
+                    pattern: "ttsz".to_string(),
+                    replacement_at_start: vec!["4".to_string()],
+                    replacement_before_vowel: vec!["4".to_string()],
+                    replacement_default: vec!["4".to_string()],
                 },
                 Rule {
-                    pattern: "tch",
-                    replacement_at_start: vec!["4"],
-                    replacement_before_vowel: vec!["4"],
-                    replacement_default: vec!["4"],
+                    pattern: "tch".to_string(),
+                    replacement_at_start: vec!["4".to_string()],
+                    replacement_before_vowel: vec!["4".to_string()],
+                    replacement_default: vec!["4".to_string()],
                 },
                 Rule {
-                    pattern: "trz",
-                    replacement_at_start: vec!["4"],
-                    replacement_before_vowel: vec!["4"],
-                    replacement_default: vec!["4"],
+                    pattern: "trz".to_string(),
+                    replacement_at_start: vec!["4".to_string()],
+                    replacement_before_vowel: vec!["4".to_string()],
+                    replacement_default: vec!["4".to_string()],
                 },
                 Rule {
-                    pattern: "trs",
-                    replacement_at_start: vec!["4"],
-                    replacement_before_vowel: vec!["4"],
-                    replacement_default: vec!["4"],
+                    pattern: "trs".to_string(),
+                    replacement_at_start: vec!["4".to_string()],
+                    replacement_before_vowel: vec!["4".to_string()],
+                    replacement_default: vec!["4".to_string()],
                 },
                 Rule {
-                    pattern: "tsh",
-                    replacement_at_start: vec!["4"],
-                    replacement_before_vowel: vec!["4"],
-                    replacement_default: vec!["4"],
+                    pattern: "tsh".to_string(),
+                    replacement_at_start: vec!["4".to_string()],
+                    replacement_before_vowel: vec!["4".to_string()],
+                    replacement_default: vec!["4".to_string()],
                 },
                 Rule {
-                    pattern: "tts",
-                    replacement_at_start: vec!["4"],
-                    replacement_before_vowel: vec!["4"],
-                    replacement_default: vec!["4"],
+                    pattern: "tts".to_string(),
+                    replacement_at_start: vec!["4".to_string()],
+                    replacement_before_vowel: vec!["4".to_string()],
+                    replacement_default: vec!["4".to_string()],
                 },
                 Rule {
-                    pattern: "ttz",
-                    replacement_at_start: vec!["4"],
-                    replacement_before_vowel: vec!["4"],
-                    replacement_default: vec!["4"],
+                    pattern: "ttz".to_string(),
+                    replacement_at_start: vec!["4".to_string()],
+                    replacement_before_vowel: vec!["4".to_string()],
+                    replacement_default: vec!["4".to_string()],
                 },
                 Rule {
-                    pattern: "tzs",
-                    replacement_at_start: vec!["4"],
-                    replacement_before_vowel: vec!["4"],
-                    replacement_default: vec!["4"],
+                    pattern: "tzs".to_string(),
+                    replacement_at_start: vec!["4".to_string()],
+                    replacement_before_vowel: vec!["4".to_string()],
+                    replacement_default: vec!["4".to_string()],
                 },
                 Rule {
-                    pattern: "tsz",
-                    replacement_at_start: vec!["4"],
-                    replacement_before_vowel: vec!["4"],
-                    replacement_default: vec!["4"],
+                    pattern: "tsz".to_string(),
+                    replacement_at_start: vec!["4".to_string()],
+                    replacement_before_vowel: vec!["4".to_string()],
+                    replacement_default: vec!["4".to_string()],
                 },
                 Rule {
-                    pattern: "th",
-                    replacement_at_start: vec!["3"],
-                    replacement_before_vowel: vec!["3"],
-                    replacement_default: vec!["3"],
+                    pattern: "th".to_string(),
+                    replacement_at_start: vec!["3".to_string()],
+                    replacement_before_vowel: vec!["3".to_string()],
+                    replacement_default: vec!["3".to_string()],
                 },
                 Rule {
-                    pattern: "ts",
-                    replacement_at_start: vec!["4"],
-                    replacement_before_vowel: vec!["4"],
-                    replacement_default: vec!["4"],
+                    pattern: "ts".to_string(),
+                    replacement_at_start: vec!["4".to_string()],
+                    replacement_before_vowel: vec!["4".to_string()],
+                    replacement_default: vec!["4".to_string()],
                 },
                 Rule {
-                    pattern: "tc",
-                    replacement_at_start: vec!["4"],
-                    replacement_before_vowel: vec!["4"],
-                    replacement_default: vec!["4"],
+                    pattern: "tc".to_string(),
+                    replacement_at_start: vec!["4".to_string()],
+                    replacement_before_vowel: vec!["4".to_string()],
+                    replacement_default: vec!["4".to_string()],
                 },
                 Rule {
-                    pattern: "tz",
-                    replacement_at_start: vec!["4"],
-                    replacement_before_vowel: vec!["4"],
-                    replacement_default: vec!["4"],
+                    pattern: "tz".to_string(),
+                    replacement_at_start: vec!["4".to_string()],
+                    replacement_before_vowel: vec!["4".to_string()],
+                    replacement_default: vec!["4".to_string()],
                 },
                 Rule {
-                    pattern: "t",
-                    replacement_at_start: vec!["3"],
-                    replacement_before_vowel: vec!["3"],
-                    replacement_default: vec!["3"],
+                    pattern: "t".to_string(),
+                    replacement_at_start: vec!["3".to_string()],
+                    replacement_before_vowel: vec!["3".to_string()],
+                    replacement_default: vec!["3".to_string()],
                 },
             ],
         );
@@ -1237,135 +1236,135 @@ mod tests {
             'u',
             vec![
                 Rule {
-                    pattern: "ui",
-                    replacement_at_start: vec!["0"],
-                    replacement_before_vowel: vec!["1"],
-                    replacement_default: vec![""],
+                    pattern: "ui".to_string(),
+                    replacement_at_start: vec!["0".to_string()],
+                    replacement_before_vowel: vec!["1".to_string()],
+                    replacement_default: vec!["".to_string()],
                 },
                 Rule {
-                    pattern: "uj",
-                    replacement_at_start: vec!["0"],
-                    replacement_before_vowel: vec!["1"],
-                    replacement_default: vec![""],
+                    pattern: "uj".to_string(),
+                    replacement_at_start: vec!["0".to_string()],
+                    replacement_before_vowel: vec!["1".to_string()],
+                    replacement_default: vec!["".to_string()],
                 },
                 Rule {
-                    pattern: "uy",
-                    replacement_at_start: vec!["0"],
-                    replacement_before_vowel: vec!["1"],
-                    replacement_default: vec![""],
+                    pattern: "uy".to_string(),
+                    replacement_at_start: vec!["0".to_string()],
+                    replacement_before_vowel: vec!["1".to_string()],
+                    replacement_default: vec!["".to_string()],
                 },
                 Rule {
-                    pattern: "ue",
-                    replacement_at_start: vec!["0"],
-                    replacement_before_vowel: vec!["1"],
-                    replacement_default: vec![""],
+                    pattern: "ue".to_string(),
+                    replacement_at_start: vec!["0".to_string()],
+                    replacement_before_vowel: vec!["1".to_string()],
+                    replacement_default: vec!["".to_string()],
                 },
                 Rule {
-                    pattern: "u",
-                    replacement_at_start: vec!["0"],
-                    replacement_before_vowel: vec![""],
-                    replacement_default: vec![""],
+                    pattern: "u".to_string(),
+                    replacement_at_start: vec!["0".to_string()],
+                    replacement_before_vowel: vec!["".to_string()],
+                    replacement_default: vec!["".to_string()],
                 },
             ],
         );
         rules.insert(
             'v',
             vec![Rule {
-                pattern: "v",
-                replacement_at_start: vec!["7"],
-                replacement_before_vowel: vec!["7"],
-                replacement_default: vec!["7"],
+                pattern: "v".to_string(),
+                replacement_at_start: vec!["7".to_string()],
+                replacement_before_vowel: vec!["7".to_string()],
+                replacement_default: vec!["7".to_string()],
             }],
         );
         rules.insert(
             'w',
             vec![Rule {
-                pattern: "w",
-                replacement_at_start: vec!["7"],
-                replacement_before_vowel: vec!["7"],
-                replacement_default: vec!["7"],
+                pattern: "w".to_string(),
+                replacement_at_start: vec!["7".to_string()],
+                replacement_before_vowel: vec!["7".to_string()],
+                replacement_default: vec!["7".to_string()],
             }],
         );
         rules.insert(
             'x',
             vec![Rule {
-                pattern: "x",
-                replacement_at_start: vec!["5"],
-                replacement_before_vowel: vec!["54"],
-                replacement_default: vec!["54"],
+                pattern: "x".to_string(),
+                replacement_at_start: vec!["5".to_string()],
+                replacement_before_vowel: vec!["54".to_string()],
+                replacement_default: vec!["54".to_string()],
             }],
         );
         rules.insert(
             'y',
             vec![Rule {
-                pattern: "y",
-                replacement_at_start: vec!["1"],
-                replacement_before_vowel: vec![""],
-                replacement_default: vec![""],
+                pattern: "y".to_string(),
+                replacement_at_start: vec!["1".to_string()],
+                replacement_before_vowel: vec!["".to_string()],
+                replacement_default: vec!["".to_string()],
             }],
         );
         rules.insert(
             'z',
             vec![
                 Rule {
-                    pattern: "zhdzh",
-                    replacement_at_start: vec!["2"],
-                    replacement_before_vowel: vec!["4"],
-                    replacement_default: vec!["4"],
+                    pattern: "zhdzh".to_string(),
+                    replacement_at_start: vec!["2".to_string()],
+                    replacement_before_vowel: vec!["4".to_string()],
+                    replacement_default: vec!["4".to_string()],
                 },
                 Rule {
-                    pattern: "zdzh",
-                    replacement_at_start: vec!["2"],
-                    replacement_before_vowel: vec!["4"],
-                    replacement_default: vec!["4"],
+                    pattern: "zdzh".to_string(),
+                    replacement_at_start: vec!["2".to_string()],
+                    replacement_before_vowel: vec!["4".to_string()],
+                    replacement_default: vec!["4".to_string()],
                 },
                 Rule {
-                    pattern: "zsch",
-                    replacement_at_start: vec!["4"],
-                    replacement_before_vowel: vec!["4"],
-                    replacement_default: vec!["4"],
+                    pattern: "zsch".to_string(),
+                    replacement_at_start: vec!["4".to_string()],
+                    replacement_before_vowel: vec!["4".to_string()],
+                    replacement_default: vec!["4".to_string()],
                 },
                 Rule {
-                    pattern: "zdz",
-                    replacement_at_start: vec!["2"],
-                    replacement_before_vowel: vec!["4"],
-                    replacement_default: vec!["4"],
+                    pattern: "zdz".to_string(),
+                    replacement_at_start: vec!["2".to_string()],
+                    replacement_before_vowel: vec!["4".to_string()],
+                    replacement_default: vec!["4".to_string()],
                 },
                 Rule {
-                    pattern: "zhd",
-                    replacement_at_start: vec!["2"],
-                    replacement_before_vowel: vec!["43"],
-                    replacement_default: vec!["43"],
+                    pattern: "zhd".to_string(),
+                    replacement_at_start: vec!["2".to_string()],
+                    replacement_before_vowel: vec!["43".to_string()],
+                    replacement_default: vec!["43".to_string()],
                 },
                 Rule {
-                    pattern: "zsh",
-                    replacement_at_start: vec!["4"],
-                    replacement_before_vowel: vec!["4"],
-                    replacement_default: vec!["4"],
+                    pattern: "zsh".to_string(),
+                    replacement_at_start: vec!["4".to_string()],
+                    replacement_before_vowel: vec!["4".to_string()],
+                    replacement_default: vec!["4".to_string()],
                 },
                 Rule {
-                    pattern: "zd",
-                    replacement_at_start: vec!["2"],
-                    replacement_before_vowel: vec!["43"],
-                    replacement_default: vec!["43"],
+                    pattern: "zd".to_string(),
+                    replacement_at_start: vec!["2".to_string()],
+                    replacement_before_vowel: vec!["43".to_string()],
+                    replacement_default: vec!["43".to_string()],
                 },
                 Rule {
-                    pattern: "zh",
-                    replacement_at_start: vec!["4"],
-                    replacement_before_vowel: vec!["4"],
-                    replacement_default: vec!["4"],
+                    pattern: "zh".to_string(),
+                    replacement_at_start: vec!["4".to_string()],
+                    replacement_before_vowel: vec!["4".to_string()],
+                    replacement_default: vec!["4".to_string()],
                 },
                 Rule {
-                    pattern: "zs",
-                    replacement_at_start: vec!["4"],
-                    replacement_before_vowel: vec!["4"],
-                    replacement_default: vec!["4"],
+                    pattern: "zs".to_string(),
+                    replacement_at_start: vec!["4".to_string()],
+                    replacement_before_vowel: vec!["4".to_string()],
+                    replacement_default: vec!["4".to_string()],
                 },
                 Rule {
-                    pattern: "z",
-                    replacement_at_start: vec!["4"],
-                    replacement_before_vowel: vec!["4"],
-                    replacement_default: vec!["4"],
+                    pattern: "z".to_string(),
+                    replacement_at_start: vec!["4".to_string()],
+                    replacement_before_vowel: vec!["4".to_string()],
+                    replacement_default: vec!["4".to_string()],
                 },
             ],
         );
@@ -1419,10 +1418,10 @@ This rule convert the substring `sh` into
         rules.insert(
             's',
             vec![Rule {
-                pattern: "sh",
-                replacement_at_start: vec!["0"],
-                replacement_before_vowel: vec![""],
-                replacement_default: vec!["0", "1"],
+                pattern: "sh".to_string(),
+                replacement_at_start: vec!["0".to_string()],
+                replacement_before_vowel: vec!["".to_string()],
+                replacement_default: vec!["0".to_string(), "1".to_string()],
             }],
         );
         let expected = DaitchMokotoffSoundex {
@@ -1467,10 +1466,10 @@ This rule convert the substring `sh` into
         rules.insert(
             's',
             vec![Rule {
-                pattern: "sh",
-                replacement_at_start: vec!["0"],
-                replacement_before_vowel: vec![""],
-                replacement_default: vec!["0", "1"],
+                pattern: "sh".to_string(),
+                replacement_at_start: vec!["0".to_string()],
+                replacement_before_vowel: vec!["".to_string()],
+                replacement_default: vec!["0".to_string(), "1".to_string()],
             }],
         );
         let expected = DaitchMokotoffSoundex {
