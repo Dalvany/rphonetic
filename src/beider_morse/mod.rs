@@ -270,23 +270,23 @@ impl<'a> Encoder for BeiderMorse<'a> {
 /// By default, it will use [generic name type](NameType#Generic), [approximate rules](RuleType#Approx),
 /// it won't concatenate multiple phonetic encoding.
 #[derive(Debug, Clone)]
-pub struct BeiderMorseBuilder<'a> {
-    config_files: &'a ConfigFiles,
+pub struct BeiderMorseBuilder {
+    config_files: ConfigFiles,
     name_type: NameType,
     rule_type: RuleType,
     concat: bool,
     max_phonemes: usize,
 }
 
-impl<'a> BeiderMorseBuilder<'a> {
+impl BeiderMorseBuilder {
     /// this will instantiate a new builder with the rules provided.
     ///
     /// # Parameter :
     ///
     /// * `config_files` : rules.
-    pub fn new(config_files: &'a ConfigFiles) -> Self {
+    pub fn new(config_files: &ConfigFiles) -> Self {
         Self {
-            config_files,
+            config_files: config_files.clone(),
             name_type: NameType::Generic,
             rule_type: RuleType::Approx,
             concat: true,
