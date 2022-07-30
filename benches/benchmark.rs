@@ -23,7 +23,10 @@ pub fn bench_cologne(c: &mut Criterion) {
 }
 
 pub fn bench_daitch_mokotoff_soundex_soundex(c: &mut Criterion) {
-    let daitch_mokotoff = DaitchMokotoffSoundexBuilder::default().build().unwrap();
+    let rules = include_str!("../rules/dmrules.txt");
+    let daitch_mokotoff = DaitchMokotoffSoundexBuilder::with_rules(rules)
+        .build()
+        .unwrap();
     // Do not use `bench_encoder` function as it will call `encode` and we want to bench also soundex (ie. with branching)
     c.bench_function("Daitch Mokotoff Soundex (soundex)", |b| {
         b.iter(|| daitch_mokotoff.soundex("Rosochowaciec"))
@@ -31,7 +34,10 @@ pub fn bench_daitch_mokotoff_soundex_soundex(c: &mut Criterion) {
 }
 
 pub fn bench_daitch_mokotoff_soundex_encode(c: &mut Criterion) {
-    let daitch_mokotoff = DaitchMokotoffSoundexBuilder::default().build().unwrap();
+    let rules = include_str!("../rules/dmrules.txt");
+    let daitch_mokotoff = DaitchMokotoffSoundexBuilder::with_rules(rules)
+        .build()
+        .unwrap();
     bench_encoder(
         c,
         "Daitch Mokotoff Soundex (encode)",
@@ -87,7 +93,7 @@ pub fn bench_refined_soundex(c: &mut Criterion) {
 
 pub fn bench_soundex(c: &mut Criterion) {
     let soundex = Soundex::default();
-    bench_encoder(c, "Refined Soundex", Box::new(soundex), "Blotchet-Halls");
+    bench_encoder(c, "Soundex", Box::new(soundex), "Blotchet-Halls");
 }
 
 pub fn bench_beider_morse(c: &mut Criterion) {
