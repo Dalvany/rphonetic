@@ -120,7 +120,7 @@ impl<'a> RulesApplication<'a> {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub(crate) struct PhoneticEngine<'a> {
     pub(crate) rules: &'a Rules,
     pub(crate) lang: &'a Lang,

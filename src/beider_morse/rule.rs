@@ -382,7 +382,7 @@ impl Display for Rule {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub(crate) struct Rules {
     rules: BTreeMap<(NameType, PrivateRuleType, String), BTreeMap<char, Vec<Rule>>>,
 }

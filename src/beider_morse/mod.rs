@@ -155,7 +155,7 @@ impl TryFrom<OsString> for NameType {
 /// [NameType]. It is provided as a convenience but as files are embedded into
 /// code, it can result in a significant increase of binary size. The preferred
 /// way is to construct a new [ConfigFiles] with a [path to files](ConfigFiles#new).
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 #[cfg_attr(feature = "embedded_bm", derive(Default))]
 pub struct ConfigFiles {
     langs: Langs,
@@ -220,7 +220,7 @@ impl ConfigFiles {
 /// ```
 ///
 /// If you know the language, you can skip language detection using [encode_with_languages](BeiderMorse::encode_with_languages)
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct BeiderMorse<'a> {
     engine: PhoneticEngine<'a>,
 }
