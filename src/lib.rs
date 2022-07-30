@@ -56,6 +56,7 @@
 #[macro_use]
 extern crate lazy_static;
 
+use std::error::Error;
 use std::fmt;
 use std::fmt::Formatter;
 
@@ -113,6 +114,8 @@ impl fmt::Display for PhoneticError {
         }
     }
 }
+
+impl Error for PhoneticError {}
 
 /// This trait represents a phonetic algorithm.
 pub trait Encoder {
