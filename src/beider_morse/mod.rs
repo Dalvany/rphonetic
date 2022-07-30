@@ -155,7 +155,7 @@ impl TryFrom<OsString> for NameType {
 /// [NameType]. It is provided as a convenience but as files are embedded into
 /// code, it can result in a significant increase of binary size. The preferred
 /// way is to construct a new [ConfigFiles] with a [path to files](ConfigFiles#new).
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 #[cfg_attr(feature = "embedded_bm", derive(Default))]
 pub struct ConfigFiles {
     langs: Langs,
@@ -220,12 +220,12 @@ impl ConfigFiles {
 /// ```
 ///
 /// If you know the language, you can skip language detection using [encode_with_languages](BeiderMorse::encode_with_languages)
-#[derive(Debug)]
-pub struct BeiderMorse<'a> {
-    engine: PhoneticEngine<'a>,
+#[derive(Debug, Clone)]
+pub struct BeiderMorse {
+    engine: PhoneticEngine,
 }
 
-impl<'a> BeiderMorse<'a> {
+impl BeiderMorse {
     /// Encode a value with the provided [LanguageSet]. Using this method will avoid language detection.
     ///
     /// # Parameters
@@ -260,7 +260,7 @@ impl<'a> BeiderMorse<'a> {
     }
 }
 
-impl<'a> Encoder for BeiderMorse<'a> {
+impl Encoder for BeiderMorse {
     fn encode(&self, value: &str) -> String {
         self.engine.encode(value)
     }
@@ -270,23 +270,23 @@ impl<'a> Encoder for BeiderMorse<'a> {
 /// By default, it will use [generic name type](NameType#Generic), [approximate rules](RuleType#Approx),
 /// it won't concatenate multiple phonetic encoding.
 #[derive(Debug, Clone)]
-pub struct BeiderMorseBuilder<'a> {
-    config_files: &'a ConfigFiles,
+pub struct BeiderMorseBuilder {
+    config_files: ConfigFiles,
     name_type: NameType,
     rule_type: RuleType,
     concat: bool,
     max_phonemes: usize,
 }
 
-impl<'a> BeiderMorseBuilder<'a> {
+impl BeiderMorseBuilder {
     /// this will instantiate a new builder with the rules provided.
     ///
     /// # Parameter :
     ///
     /// * `config_files` : rules.
-    pub fn new(config_files: &'a ConfigFiles) -> Self {
+    pub fn new(config_files: &ConfigFiles) -> Self {
         Self {
-            config_files,
+            config_files: config_files.clone(),
             name_type: NameType::Generic,
             rule_type: RuleType::Approx,
             concat: true,
@@ -322,8 +322,13 @@ impl<'a> BeiderMorseBuilder<'a> {
 
     /// Build a new [BeiderMorse] encoder.
     pub fn build(&self) -> BeiderMorse {
-        let lang = self.config_files.langs.get(&self.name_type).unwrap();
-        let rules = &self.config_files.rules;
+        let lang = self
+            .config_files
+            .langs
+            .get(&self.name_type)
+            .unwrap()
+            .clone();
+        let rules = self.config_files.rules.clone();
         let engine = PhoneticEngine {
             rules,
             lang,

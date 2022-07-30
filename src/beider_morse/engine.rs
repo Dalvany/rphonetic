@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::beider_morse::lang::Lang;
 use crate::beider_morse::languages::LanguageSet;
-use crate::beider_morse::rule::{Phoneme,PhonemeList, PrivateRuleType, Rule, Rules};
+use crate::beider_morse::rule::{Phoneme, PhonemeList, PrivateRuleType, Rule, Rules};
 use crate::helper::CharSequence;
 use crate::NameType;
 
@@ -120,17 +120,17 @@ impl<'a> RulesApplication<'a> {
     }
 }
 
-#[derive(Debug)]
-pub(crate) struct PhoneticEngine<'a> {
-    pub(crate) rules: &'a Rules,
-    pub(crate) lang: &'a Lang,
+#[derive(Debug, Clone)]
+pub(crate) struct PhoneticEngine {
+    pub(crate) rules: Rules,
+    pub(crate) lang: Lang,
     pub(crate) name_type: NameType,
     pub(crate) rule_type: PrivateRuleType,
     pub(crate) concat: bool,
     pub(crate) max_phonemes: usize,
 }
 
-impl<'a> PhoneticEngine<'a> {
+impl PhoneticEngine {
     fn apply_final_rule(
         &self,
         phoneme_builder: PhonemeBuilder,
@@ -388,8 +388,8 @@ mod tests {
             DATA.iter().enumerate()
         {
             let engine = PhoneticEngine {
-                rules: &config_files.rules,
-                lang: config_files.langs.get(name_type).unwrap(),
+                rules: config_files.rules.clone(),
+                lang: config_files.langs.get(name_type).unwrap().clone(),
                 name_type: *name_type,
                 rule_type: (*rule_type).into(),
                 concat: *concat,
@@ -425,8 +425,8 @@ mod tests {
             });
 
         let engine = PhoneticEngine {
-            rules: &config_files.rules,
-            lang: config_files.langs.get(&name_type).unwrap(),
+            rules: config_files.rules.clone(),
+            lang: config_files.langs.get(&name_type).unwrap().clone(),
             name_type,
             rule_type,
             concat,
