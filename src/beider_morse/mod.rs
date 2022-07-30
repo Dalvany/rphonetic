@@ -221,11 +221,11 @@ impl ConfigFiles {
 ///
 /// If you know the language, you can skip language detection using [encode_with_languages](BeiderMorse::encode_with_languages)
 #[derive(Debug, Clone)]
-pub struct BeiderMorse<'a> {
-    engine: PhoneticEngine<'a>,
+pub struct BeiderMorse {
+    engine: PhoneticEngine,
 }
 
-impl<'a> BeiderMorse<'a> {
+impl BeiderMorse {
     /// Encode a value with the provided [LanguageSet]. Using this method will avoid language detection.
     ///
     /// # Parameters
@@ -260,7 +260,7 @@ impl<'a> BeiderMorse<'a> {
     }
 }
 
-impl<'a> Encoder for BeiderMorse<'a> {
+impl Encoder for BeiderMorse {
     fn encode(&self, value: &str) -> String {
         self.engine.encode(value)
     }
@@ -322,8 +322,13 @@ impl BeiderMorseBuilder {
 
     /// Build a new [BeiderMorse] encoder.
     pub fn build(&self) -> BeiderMorse {
-        let lang = self.config_files.langs.get(&self.name_type).unwrap();
-        let rules = &self.config_files.rules;
+        let lang = self
+            .config_files
+            .langs
+            .get(&self.name_type)
+            .unwrap()
+            .clone();
+        let rules = self.config_files.rules.clone();
         let engine = PhoneticEngine {
             rules,
             lang,
