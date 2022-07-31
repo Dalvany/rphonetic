@@ -306,8 +306,8 @@ impl<'a> BeiderMorseBuilder<'a> {
         self
     }
 
-    /// Set if multiple phoneme are combined. If `true` then multiple
-    /// phonemes will be concatenated if a `|`.
+    /// Indicate if all words of the text should be considered. If `true` they will be
+    /// combined with a `|` otherwise only the first word will be considered.
     pub fn concat(mut self, concat: bool) -> Self {
         self.concat = concat;
         self
