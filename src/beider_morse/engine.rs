@@ -121,16 +121,16 @@ impl<'a> RulesApplication<'a> {
 }
 
 #[derive(Debug, Clone)]
-pub(crate) struct PhoneticEngine {
-    pub(crate) rules: Rules,
-    pub(crate) lang: Lang,
+pub(crate) struct PhoneticEngine<'a> {
+    pub(crate) rules: &'a Rules,
+    pub(crate) lang: &'a Lang,
     pub(crate) name_type: NameType,
     pub(crate) rule_type: PrivateRuleType,
     pub(crate) concat: bool,
     pub(crate) max_phonemes: usize,
 }
 
-impl PhoneticEngine {
+impl<'a> PhoneticEngine<'a> {
     fn apply_final_rule(
         &self,
         phoneme_builder: PhonemeBuilder,
@@ -388,8 +388,8 @@ mod tests {
             DATA.iter().enumerate()
         {
             let engine = PhoneticEngine {
-                rules: config_files.rules.clone(),
-                lang: config_files.langs.get(name_type).unwrap().clone(),
+                rules: &config_files.rules,
+                lang: config_files.langs.get(name_type).unwrap(),
                 name_type: *name_type,
                 rule_type: (*rule_type).into(),
                 concat: *concat,
@@ -425,8 +425,8 @@ mod tests {
             });
 
         let engine = PhoneticEngine {
-            rules: config_files.rules.clone(),
-            lang: config_files.langs.get(&name_type).unwrap().clone(),
+            rules: &config_files.rules,
+            lang: config_files.langs.get(&name_type).unwrap(),
             name_type,
             rule_type,
             concat,

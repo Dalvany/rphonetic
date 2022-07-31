@@ -221,11 +221,11 @@ impl ConfigFiles {
 ///
 /// If you know the language, you can skip language detection using [encode_with_languages](BeiderMorse::encode_with_languages)
 #[derive(Debug, Clone)]
-pub struct BeiderMorse {
-    engine: PhoneticEngine,
+pub struct BeiderMorse<'a> {
+    engine: PhoneticEngine<'a>,
 }
 
-impl BeiderMorse {
+impl<'a> BeiderMorse<'a> {
     /// Encode a value with the provided [LanguageSet]. Using this method will avoid language detection.
     ///
     /// # Parameters
@@ -260,7 +260,7 @@ impl BeiderMorse {
     }
 }
 
-impl Encoder for BeiderMorse {
+impl<'a> Encoder for BeiderMorse<'a> {
     fn encode(&self, value: &str) -> String {
         self.engine.encode(value)
     }
@@ -270,23 +270,23 @@ impl Encoder for BeiderMorse {
 /// By default, it will use [generic name type](NameType#Generic), [approximate rules](RuleType#Approx),
 /// it won't concatenate multiple phonetic encoding.
 #[derive(Debug, Clone)]
-pub struct BeiderMorseBuilder {
-    config_files: ConfigFiles,
+pub struct BeiderMorseBuilder<'a> {
+    config_files: &'a ConfigFiles,
     name_type: NameType,
     rule_type: RuleType,
     concat: bool,
     max_phonemes: usize,
 }
 
-impl BeiderMorseBuilder {
+impl<'a> BeiderMorseBuilder<'a> {
     /// this will instantiate a new builder with the rules provided.
     ///
     /// # Parameter :
     ///
     /// * `config_files` : rules.
-    pub fn new(config_files: &ConfigFiles) -> Self {
+    pub fn new(config_files: &'a ConfigFiles) -> Self {
         Self {
-            config_files: config_files.clone(),
+            config_files,
             name_type: NameType::Generic,
             rule_type: RuleType::Approx,
             concat: true,
@@ -321,14 +321,9 @@ impl BeiderMorseBuilder {
     }
 
     /// Build a new [BeiderMorse] encoder.
-    pub fn build(&self) -> BeiderMorse {
-        let lang = self
-            .config_files
-            .langs
-            .get(&self.name_type)
-            .unwrap()
-            .clone();
-        let rules = self.config_files.rules.clone();
+    pub fn build(&self) -> BeiderMorse<'a> {
+        let lang = self.config_files.langs.get(&self.name_type).unwrap();
+        let rules = &self.config_files.rules;
         let engine = PhoneticEngine {
             rules,
             lang,
