@@ -88,6 +88,7 @@ mod match_rating_approach;
 mod metaphone;
 mod nysiis;
 mod refined_soundex;
+mod rules_parser;
 mod soundex;
 
 /// Errors
