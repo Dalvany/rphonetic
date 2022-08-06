@@ -418,10 +418,10 @@ mod tests {
     ) -> String {
         let name_type: NameType = args
             .get("nameType")
-            .map_or(NameType::Generic, |v| NameType::try_from(*v).unwrap());
+            .map_or(NameType::Generic, |v| v.parse::<NameType>().unwrap());
         let rule_type: PrivateRuleType =
             args.get("ruleType").map_or(PrivateRuleType::Approx, |v| {
-                PrivateRuleType::try_from(*v).unwrap()
+                v.parse::<PrivateRuleType>().unwrap()
             });
 
         let engine = PhoneticEngine {

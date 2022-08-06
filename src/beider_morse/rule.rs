@@ -2,11 +2,14 @@ use std::cmp::Ordering;
 use std::collections::btree_map::BTreeMap;
 use std::fmt::{Debug, Display, Formatter};
 use std::path::{Path, PathBuf};
+use std::str::FromStr;
 
+use either::Either;
 use enum_iterator::{all, Sequence};
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 
+use crate::beider_morse::regex_optim::OptimizedRegex;
 use crate::beider_morse::Languages;
 use crate::helper::CharSequence;
 use crate::{
@@ -14,6 +17,7 @@ use crate::{
     PhoneticError,
 };
 
+use super::IsMatch;
 use super::LanguageSet;
 
 const APPROX: &str = "approx";
@@ -60,10 +64,10 @@ impl Display for PrivateRuleType {
     }
 }
 
-impl TryFrom<&str> for PrivateRuleType {
-    type Error = BMError;
+impl FromStr for PrivateRuleType {
+    type Err = BMError;
 
-    fn try_from(value: &str) -> Result<Self, Self::Error> {
+    fn from_str(value: &str) -> Result<Self, Self::Err> {
         match value {
             APPROX => Ok(Self::Approx),
             EXACT => Ok(Self::Exact),
@@ -230,23 +234,17 @@ fn parse_rule(
             remains = rm;
             let pattern_length_char = pattern.chars().count();
             let left_context = format!("{}$", left_context);
-            let left_context = Regex::new(&left_context).map_err(|error| {
-                build_error(
-                    line_number,
-                    Some(filename.to_string()),
-                    remains,
-                    error.to_string(),
-                )
-            })?;
+            let left_context: Either<Regex, OptimizedRegex> =
+                match &left_context.parse::<OptimizedRegex>() {
+                    Ok(optimized) => Either::Right(optimized.clone()),
+                    Err(_) => Either::Left(Regex::new(&left_context)?),
+                };
             let right_context = format!("^{}", right_context);
-            let right_context = Regex::new(&right_context).map_err(|error| {
-                build_error(
-                    line_number,
-                    Some(filename.to_string()),
-                    remains,
-                    error.to_string(),
-                )
-            })?;
+            let right_context: Either<Regex, OptimizedRegex> =
+                match &right_context.parse::<OptimizedRegex>() {
+                    Ok(optimized) => Either::Right(optimized.clone()),
+                    Err(_) => Either::Left(Regex::new(&right_context)?),
+                };
             let phoneme = parse_phoneme_expr(phoneme_expr)?;
             let rule = Rule {
                 location: filename.to_string(),
@@ -365,10 +363,10 @@ impl Resolver {
 pub(crate) struct Rule {
     location: String,
     line: usize,
-    left_context: Regex,
+    left_context: Either<Regex, OptimizedRegex>,
     pattern: String,
     pattern_length_char: usize,
-    right_context: Regex,
+    right_context: Either<Regex, OptimizedRegex>,
     phoneme: PhonemeList,
 }
 
