@@ -14,6 +14,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+use std::str::FromStr;
+
 use serde::{Deserialize, Serialize};
 
 use crate::{Encoder, SoundexCommons, SoundexUtils};
@@ -55,6 +57,36 @@ impl RefinedSoundex {
 
     fn get_mapping_code(&self, ch: char) -> char {
         self.mapping[ch as usize - 65]
+    }
+}
+
+impl FromStr for RefinedSoundex {
+    type Err = Vec<char>;
+
+    /// Construct a [RefinedSoundex] from the mapping in parameter. This [str] will
+    /// be converted into an array of 26 chars, so `mapping`'s length must be 26.
+    ///
+    /// # Parameters
+    ///
+    /// * `mapping` : str that contains the corresponding code for each character.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// # fn main() -> Result<(), Vec<char>> {
+    /// use rphonetic::{Encoder, RefinedSoundex};
+    ///
+    /// // Construct an encoder with 'A' coded into '0', 'B' into '1', 'C' into '3', 'D' into '6', 'E' into '0', ...etc
+    /// // (this is the default mapping)
+    /// let refined_soundex = "01360240043788015936020505".parse::<RefinedSoundex>()?;
+    ///
+    /// assert_eq!(refined_soundex.encode("jumped"), "J408106");
+    /// #    Ok(())
+    /// # }
+    /// ```
+    fn from_str(mapping: &str) -> Result<Self, Self::Err> {
+        let mapping: [char; 26] = mapping.chars().collect::<Vec<char>>().try_into()?;
+        Ok(Self { mapping })
     }
 }
 
@@ -106,14 +138,14 @@ impl TryFrom<String> for RefinedSoundex {
     ///
     /// // Construct an encoder with 'A' coded into '0', 'B' into '1', 'C' into '3', 'D' into '6', 'E' into '0', ...etc
     /// // (this is the default mapping)
-    /// let refined_soundex = RefinedSoundex::try_from("01360240043788015936020505")?;
+    /// let refined_soundex = RefinedSoundex::try_from("01360240043788015936020505".to_string())?;
     ///
     /// assert_eq!(refined_soundex.encode("jumped"), "J408106");
     /// #    Ok(())
     /// # }
     /// ```
     fn try_from(mapping: String) -> Result<Self, Self::Error> {
-        RefinedSoundex::try_from(mapping.as_str())
+        mapping.as_str().parse::<RefinedSoundex>()
     }
 }
 

@@ -2,10 +2,14 @@ use std::error::Error;
 use std::ffi::OsString;
 use std::fmt::{Display, Formatter};
 use std::path::PathBuf;
+use std::str::FromStr;
 
+use either::Either;
 use enum_iterator::Sequence;
+use regex::Regex;
 use serde::{Deserialize, Serialize};
 
+use regex_optim::OptimizedRegex;
 pub use rule::RuleType;
 
 use crate::beider_morse::engine::PhoneticEngine;
@@ -13,11 +17,12 @@ use crate::beider_morse::lang::Langs;
 pub use crate::beider_morse::languages::LanguageSet;
 use crate::beider_morse::languages::Languages;
 use crate::beider_morse::rule::Rules;
-use crate::Encoder;
+use crate::{Encoder, PhoneticError};
 
 mod engine;
 mod lang;
 mod languages;
+mod regex_optim;
 mod rule;
 
 const ASH: &str = "ash";
@@ -81,6 +86,19 @@ impl From<regex::Error> for BMError {
 
 impl Error for BMError {}
 
+trait IsMatch {
+    fn is_match(&self, input: &str) -> bool;
+}
+
+impl IsMatch for Either<Regex, OptimizedRegex> {
+    fn is_match(&self, input: &str) -> bool {
+        match self {
+            Either::Left(regex) => regex.is_match(input),
+            Either::Right(optimized) => optimized.is_match(input),
+        }
+    }
+}
+
 /// Supported type of names. Unless you are matching particular family name, use [generic variant](NameType#Generic)
 /// as it should work reasonably well for non-name words. The other variant are specifically tune for family name
 /// and may not work well for general text.
@@ -88,7 +106,7 @@ impl Error for BMError {}
     Copy, Clone, Debug, Ord, PartialOrd, Eq, PartialEq, Hash, Serialize, Deserialize, Sequence,
 )]
 pub enum NameType {
-    /// Ashkenazi family name.
+    /// Ashkenazi's family name.
     #[serde(rename = "ash")]
     Ashkenazi,
     /// Generic names and words.
@@ -116,10 +134,10 @@ impl Display for NameType {
     }
 }
 
-impl TryFrom<&str> for NameType {
-    type Error = BMError;
+impl FromStr for NameType {
+    type Err = BMError;
 
-    fn try_from(value: &str) -> Result<Self, Self::Error> {
+    fn from_str(value: &str) -> Result<Self, Self::Err> {
         match value {
             ASH => Ok(Self::Ashkenazi),
             GEN => Ok(Self::Generic),
@@ -172,7 +190,7 @@ impl ConfigFiles {
     ///
     /// # Errors :
     /// Returns a [BMError] if it misses some files or some rules are not well-formed.
-    pub fn new(directory: &PathBuf) -> Result<Self, BMError> {
+    pub fn new(directory: &PathBuf) -> Result<Self, PhoneticError> {
         let languages = Languages::try_from(directory)?;
         let langs = Langs::new(directory, &languages)?;
         let rules = Rules::new(directory, &languages)?;
@@ -338,9 +356,10 @@ impl<'a> BeiderMorseBuilder<'a> {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     #[cfg(feature = "embedded_bm")]
     use crate::beider_morse::rule::PrivateRuleType;
+
+    use super::*;
 
     lazy_static! {
         static ref CONFIG_FILE: ConfigFiles =

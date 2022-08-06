@@ -58,7 +58,11 @@ extern crate lazy_static;
 
 use std::error::Error;
 use std::fmt;
-use std::fmt::Formatter;
+use std::fmt::{Display, Formatter};
+
+use serde::{Deserialize, Serialize};
+
+use rules_parser::*;
 
 pub use crate::beider_morse::{
     BMError, BeiderMorse, BeiderMorseBuilder, ConfigFiles, LanguageSet, NameType, RuleType,
@@ -80,7 +84,6 @@ pub use crate::soundex::{
 mod beider_morse;
 mod caverphone;
 mod cologne;
-mod constants;
 mod daitch_mokotoff;
 mod double_metaphone;
 mod helper;
@@ -88,16 +91,59 @@ mod match_rating_approach;
 mod metaphone;
 mod nysiis;
 mod refined_soundex;
+mod rules_parser;
 mod soundex;
+
+/// This represents a parsing error. It contains the
+/// line number, the line, and if possible the filename.
+#[derive(Debug, Clone, Ord, PartialOrd, Eq, PartialEq, Serialize, Deserialize)]
+pub struct ParseError {
+    /// Line number
+    pub line_number: usize,
+    /// Filename
+    pub filename: Option<String>,
+    /// Wrong line
+    pub line_content: String,
+    /// Description
+    pub description: String,
+}
+
+impl Display for ParseError {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{}:{} {} : {}",
+            self.filename
+                .clone()
+                .unwrap_or_else(|| "Unknown".to_string()),
+            self.line_number,
+            self.description,
+            self.line_content,
+        )
+    }
+}
+
+impl Error for ParseError {}
 
 /// Errors
 #[derive(Debug, Clone, PartialEq)]
 pub enum PhoneticError {
-    /// This variant is raised when there is an error in the rule
-    /// file of Daitch Mokotoff.
-    ParseRuleError(String),
+    /// This variant contains parsing errors.
+    ParseRuleError(ParseError),
     /// This error contains errors related to Beider Morse.
     BMError(BMError),
+}
+
+impl From<std::io::Error> for PhoneticError {
+    fn from(error: std::io::Error) -> Self {
+        Self::BMError(BMError::from(error))
+    }
+}
+
+impl From<regex::Error> for PhoneticError {
+    fn from(error: regex::Error) -> Self {
+        Self::BMError(BMError::from(error))
+    }
 }
 
 impl From<BMError> for PhoneticError {
@@ -106,16 +152,37 @@ impl From<BMError> for PhoneticError {
     }
 }
 
-impl fmt::Display for PhoneticError {
+impl Display for PhoneticError {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         match self {
-            Self::ParseRuleError(error) => write!(f, "Error parsing rule file : {}", error),
+            Self::ParseRuleError(error) => write!(f, "Error parsing rule file {}", error),
             Self::BMError(error) => write!(f, "Error : {}", error),
         }
     }
 }
 
 impl Error for PhoneticError {}
+
+fn build_error(
+    line_number: usize,
+    filename: Option<String>,
+    remains: &str,
+    description: String,
+) -> PhoneticError {
+    let eol = remains.find('\n');
+    let line_content = match eol {
+        None => remains,
+        Some(index) => &remains[..index],
+    }
+    .to_string();
+
+    PhoneticError::ParseRuleError(ParseError {
+        line_number,
+        filename,
+        line_content,
+        description,
+    })
+}
 
 /// This trait represents a phonetic algorithm.
 pub trait Encoder {

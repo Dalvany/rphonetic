@@ -21,9 +21,11 @@ embedded_dm = []
 
 [dependencies]
 regex = "1.6"
+nom = "7.1"
 lazy_static = "1.4"
 serde = { version = "1.0", features = ["derive"] }
 enum-iterator = "1.1"
+either = "1.7"
 
 [dev-dependencies]
 criterion = { version = "0.3", features = ["html_reports"] }

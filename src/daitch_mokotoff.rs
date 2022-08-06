@@ -16,11 +16,10 @@
  */
 use std::collections::BTreeMap;
 
-use crate::constants::{
-    MULTI_LINE_COMMENT_END, MULTI_LINE_COMMENT_START, RULE_LINE, SINGLE_LINE_COMMENT,
-};
 use crate::helper::is_vowel;
-use crate::{Encoder, PhoneticError};
+use crate::{
+    build_error, end_of_line, folding, multiline_comment, quadruplet, Encoder, PhoneticError,
+};
 
 #[cfg(feature = "embedded_dm")]
 const DEFAULT_RULES: &str = include_str!("../rules/dmrules.txt");
@@ -105,30 +104,22 @@ impl Rule {
     }
 }
 
-impl TryFrom<&str> for Rule {
+impl TryFrom<(&str, &str, &str, &str)> for Rule {
     type Error = PhoneticError;
 
-    fn try_from(value: &str) -> Result<Self, Self::Error> {
-        let cap_opt = RULE_LINE.captures(value);
-
-        match cap_opt {
-            None => Err(PhoneticError::ParseRuleError(format!(
-                "Rule doesn't follow format \"pattern\" \"replacement at start\" \"replacement before vowel\" \"default replacement\" or char=char. Got : {}",
-                value
-            ))),
-            Some(cap) => {
-                let pattern = cap.get(1).unwrap().as_str().to_string();
-                let replacement_at_start: Vec<String> = Rule::parse_branch(cap.get(2).unwrap().as_str());
-                let replacement_before_vowel: Vec<String> = Rule::parse_branch(cap.get(3).unwrap().as_str());
-                let replacement_default: Vec<String> = Rule::parse_branch(cap.get(4).unwrap().as_str());
-                Ok(Self {
-                    pattern,
-                    replacement_at_start,
-                    replacement_before_vowel,
-                    replacement_default,
-                })
-            }
-        }
+    fn try_from(
+        (part1, part2, part3, part4): (&str, &str, &str, &str),
+    ) -> Result<Self, Self::Error> {
+        let pattern = part1.to_string();
+        let replacement_at_start: Vec<String> = Rule::parse_branch(part2);
+        let replacement_before_vowel: Vec<String> = Rule::parse_branch(part3);
+        let replacement_default: Vec<String> = Rule::parse_branch(part4);
+        Ok(Self {
+            pattern,
+            replacement_at_start,
+            replacement_before_vowel,
+            replacement_default,
+        })
     }
 }
 
@@ -468,43 +459,50 @@ impl<'a> DaitchMokotoffSoundexBuilder<'a> {
     pub fn build(self) -> Result<DaitchMokotoffSoundex, PhoneticError> {
         let mut rules: BTreeMap<char, Vec<Rule>> = BTreeMap::new();
         let mut ascii_folding_rules: BTreeMap<char, char> = BTreeMap::new();
-        let mut multiline_comment = false;
-        for mut line in self.rules.split('\n') {
-            line = line.trim();
+        let mut remains = self.rules;
+        let mut line_number: usize = 0;
+        while !remains.is_empty() {
+            line_number += 1;
 
-            // Start to test multiline comment ends, thus we can collapse some 'if'.
-            if line.ends_with(MULTI_LINE_COMMENT_END) {
-                multiline_comment = false;
-                continue;
-            } else if line.is_empty() || line.starts_with(SINGLE_LINE_COMMENT) || multiline_comment
-            {
-                continue;
-            } else if line.starts_with(MULTI_LINE_COMMENT_START) {
-                multiline_comment = true;
-                continue;
-            }
+            // Parrsing test from more probable to less probable.
 
-            if let Some(index) = line.find('=') {
-                let ch = line[0..index].chars().next();
-                let replacement = line[index + 1..index + 2].chars().next();
-
-                let _ = match (ch, replacement) {
-                    (Some(pattern), Some(replace_by)) => {
-                        ascii_folding_rules.insert(pattern, replace_by)
-                    }
-                    (_, _) => {
-                        return Err(PhoneticError::ParseRuleError(format!(
-                            "Line contains an '=' but is not a char replacement. Got : {}",
-                            line
-                        )));
-                    }
-                };
-            } else {
-                let rule = Rule::try_from(line)?;
+            // Try quadruplet rule
+            if let Ok((rm, quadruplet)) = quadruplet()(remains) {
+                let rule = Rule::try_from(quadruplet)?;
                 // There's always at least one char, the regex ensures that.
                 let ch = rule.pattern.chars().next().unwrap();
                 rules.entry(ch).or_insert_with(Vec::new).push(rule);
+                remains = rm;
+                continue;
             }
+
+            // Try folding rule
+            if let Ok((rm, (pattern, replacement))) = folding()(remains) {
+                ascii_folding_rules.insert(pattern, replacement);
+                remains = rm;
+                continue;
+            }
+
+            // Try single line comment
+            if let Ok((rm, _)) = end_of_line()(remains) {
+                remains = rm;
+                continue;
+            }
+
+            // Try multiline comment
+            if let Ok((rm, ln)) = multiline_comment()(remains) {
+                line_number += ln;
+                remains = rm;
+                continue;
+            }
+
+            // Everything fails, then return an error...
+            return Err(build_error(
+                line_number,
+                None,
+                remains,
+                "Can't recognize line".to_string(),
+            ));
         }
 
         // Ordering by pattern length decreasing.
@@ -523,6 +521,8 @@ impl<'a> DaitchMokotoffSoundexBuilder<'a> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::ParseError;
+
     const COMMONS_CODEC_RULES: &str = include_str!("../rules/dmrules.txt");
 
     #[test]
@@ -1553,7 +1553,15 @@ This rule convert the substring `sh` into
     #[test]
     fn test_malformed_custom_rule() {
         let result = DaitchMokotoffSoundexBuilder::with_rules("This is wrong.").build();
-        assert_eq!(result, Err(PhoneticError::ParseRuleError("Rule doesn't follow format \"pattern\" \"replacement at start\" \"replacement before vowel\" \"default replacement\" or char=char. Got : This is wrong.".to_string())));
+        assert_eq!(
+            result,
+            Err(PhoneticError::ParseRuleError(ParseError {
+                line_number: 1,
+                filename: None,
+                line_content: "This is wrong.".to_string(),
+                description: "Can't recognize line".to_string(),
+            }))
+        );
     }
 
     #[test]

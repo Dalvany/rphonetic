@@ -2,19 +2,22 @@ use std::cmp::Ordering;
 use std::collections::btree_map::BTreeMap;
 use std::fmt::{Debug, Display, Formatter};
 use std::path::{Path, PathBuf};
+use std::str::FromStr;
 
+use either::Either;
 use enum_iterator::{all, Sequence};
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 
+use crate::beider_morse::regex_optim::OptimizedRegex;
 use crate::beider_morse::Languages;
-use crate::constants::{
-    BM_INCLUDE_LINE, MULTI_LINE_COMMENT_END, MULTI_LINE_COMMENT_START, RULE_LINE,
-    SINGLE_LINE_COMMENT,
-};
 use crate::helper::CharSequence;
-use crate::{BMError, NameType};
+use crate::{
+    build_error, end_of_line, include, multiline_comment, quadruplet, BMError, NameType,
+    PhoneticError,
+};
 
+use super::IsMatch;
 use super::LanguageSet;
 
 const APPROX: &str = "approx";
@@ -61,10 +64,10 @@ impl Display for PrivateRuleType {
     }
 }
 
-impl TryFrom<&str> for PrivateRuleType {
-    type Error = BMError;
+impl FromStr for PrivateRuleType {
+    type Err = BMError;
 
-    fn try_from(value: &str) -> Result<Self, Self::Error> {
+    fn from_str(value: &str) -> Result<Self, Self::Err> {
         match value {
             APPROX => Ok(Self::Approx),
             EXACT => Ok(Self::Exact),
@@ -211,56 +214,41 @@ fn parse_phoneme_expr(phoneme_rule: &str) -> Result<PhonemeList, BMError> {
     }
 }
 
-fn parse_rule(resolver: &Resolver, filename: &str) -> Result<BTreeMap<char, Vec<Rule>>, BMError> {
+fn parse_rule(
+    resolver: &Resolver,
+    filename: &str,
+) -> Result<BTreeMap<char, Vec<Rule>>, PhoneticError> {
     let content = resolver.resolve(filename)?;
-    let mut multiline_comment = false;
-
     let mut result: BTreeMap<char, Vec<Rule>> = BTreeMap::new();
+    let mut remains = content.as_str();
+    let mut line_number: usize = 0;
 
-    for (current_line, mut line) in content.split('\n').enumerate() {
-        line = line.trim();
+    while !remains.is_empty() {
+        line_number += 1;
 
-        // Start to test multiline comment ends, thus we can collapse some 'if'.
-        if line.ends_with(MULTI_LINE_COMMENT_END) {
-            multiline_comment = false;
-            continue;
-        } else if line.is_empty() || line.starts_with(SINGLE_LINE_COMMENT) || multiline_comment {
-            continue;
-        } else if line.starts_with(MULTI_LINE_COMMENT_START) {
-            multiline_comment = true;
-            continue;
-        }
-
-        let include_match = BM_INCLUDE_LINE.captures(line);
-        if let Some(include) = include_match {
-            let include_file = include.get(1);
-            let included_file = include_file.unwrap().as_str();
-            let include_rule = parse_rule(resolver, included_file);
-            match include_rule {
-                Ok(rules) => {
-                    result.extend(rules);
-                }
-                Err(error) => {
-                    return Err(BMError::WrongFilename(format!(
-                        "Can't include file {} in {:?} at line {} : {}",
-                        included_file, filename, current_line, error
-                    )));
-                }
-            }
-        }
-        let rules_line_match = RULE_LINE.captures(line);
-        if let Some(cap) = rules_line_match {
-            let pattern = cap.get(1).unwrap().as_str();
+        // Parrsing test from more probable to less probable.
+        // Try quadruplet rule
+        if let Ok((rm, (pattern, left_context, right_context, phoneme_expr))) =
+            quadruplet()(remains)
+        {
+            remains = rm;
             let pattern_length_char = pattern.chars().count();
-            let left_context = format!("{}$", cap.get(2).unwrap().as_str());
-            let left_context = Regex::new(&left_context)?;
-            let right_context = format!("^{}", cap.get(3).unwrap().as_str());
-            let right_context = Regex::new(&right_context)?;
-            let phoneme_expr = cap.get(4).unwrap().as_str();
+            let left_context = format!("{}$", left_context);
+            let left_context: Either<Regex, OptimizedRegex> =
+                match &left_context.parse::<OptimizedRegex>() {
+                    Ok(optimized) => Either::Right(optimized.clone()),
+                    Err(_) => Either::Left(Regex::new(&left_context)?),
+                };
+            let right_context = format!("^{}", right_context);
+            let right_context: Either<Regex, OptimizedRegex> =
+                match &right_context.parse::<OptimizedRegex>() {
+                    Ok(optimized) => Either::Right(optimized.clone()),
+                    Err(_) => Either::Left(Regex::new(&right_context)?),
+                };
             let phoneme = parse_phoneme_expr(phoneme_expr)?;
             let rule = Rule {
                 location: filename.to_string(),
-                line: current_line + 1,
+                line: line_number,
                 left_context,
                 pattern: pattern.to_string(),
                 pattern_length_char,
@@ -271,13 +259,54 @@ fn parse_rule(resolver: &Resolver, filename: &str) -> Result<BTreeMap<char, Vec<
             result.entry(ch).or_insert_with(Vec::new);
             let rules = result.get_mut(&ch).unwrap();
             rules.push(rule);
+            continue;
         }
+
+        // Try single line comment
+        if let Ok((rm, _)) = end_of_line()(remains) {
+            remains = rm;
+            continue;
+        }
+
+        // Try includes file
+        if let Ok((rm, include_filename)) = include()(remains) {
+            remains = rm;
+            let rules = parse_rule(resolver, include_filename).map_err(|error| {
+                if let PhoneticError::BMError(error) = error.clone() {
+                    build_error(
+                        line_number,
+                        Some(filename.to_string()),
+                        remains,
+                        error.to_string(),
+                    )
+                } else {
+                    error
+                }
+            })?;
+            result.extend(rules);
+            continue;
+        }
+
+        // Try multiline comment
+        if let Ok((rm, ln)) = multiline_comment()(remains) {
+            line_number += ln - 1;
+            remains = rm;
+            continue;
+        }
+
+        // Everything fails, then return an error...
+        return Err(build_error(
+            line_number,
+            Some(filename.to_string()),
+            remains,
+            "Can't parse line".to_string(),
+        ));
     }
 
     Ok(result)
 }
 
-fn build_rules(resolver: Resolver, languages: &Languages) -> Result<Rules, BMError> {
+fn build_rules(resolver: Resolver, languages: &Languages) -> Result<Rules, PhoneticError> {
     let mut rules: BTreeMap<(NameType, PrivateRuleType, String), BTreeMap<char, Vec<Rule>>> =
         BTreeMap::new();
 
@@ -334,10 +363,10 @@ impl Resolver {
 pub(crate) struct Rule {
     location: String,
     line: usize,
-    left_context: Regex,
+    left_context: Either<Regex, OptimizedRegex>,
     pattern: String,
     pattern_length_char: usize,
-    right_context: Regex,
+    right_context: Either<Regex, OptimizedRegex>,
     phoneme: PhonemeList,
 }
 
@@ -398,7 +427,7 @@ impl Rules {
             .get(&(name_type, rule_type, language.to_string()))
     }
 
-    pub fn new(rules_folder: &Path, languages: &Languages) -> Result<Self, BMError> {
+    pub fn new(rules_folder: &Path, languages: &Languages) -> Result<Self, PhoneticError> {
         let resolver = Resolver {
             path: Some(rules_folder.to_path_buf()),
         };
@@ -577,7 +606,7 @@ mod tests {
     }
 
     #[test]
-    fn test_with_path() -> Result<(), BMError> {
+    fn test_with_path() -> Result<(), PhoneticError> {
         let path = &PathBuf::from("./test_assets/cc-rules/");
         let rules = Rules::new(path, &Languages::try_from(path)?)?;
 
@@ -624,7 +653,7 @@ mod tests {
     }
 
     #[test]
-    fn test_parse_rule_include() -> Result<(), BMError> {
+    fn test_parse_rule_include() -> Result<(), PhoneticError> {
         let resolver = Resolver {
             path: Some(PathBuf::from("./test_assets/test-include/")),
         };

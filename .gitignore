@@ -9,3 +9,5 @@ lcov.info
 *.svg
 *.data
 *.data.old
+memory-profiling_*
+*.log
