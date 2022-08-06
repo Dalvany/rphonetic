@@ -307,7 +307,7 @@ mod tests {
     use std::path::PathBuf;
 
     use crate::beider_morse::DEFAULT_MAX_PHONEMES;
-    use crate::{BMError, ConfigFiles, RuleType};
+    use crate::{ConfigFiles, PhoneticError, RuleType};
 
     use super::*;
 
@@ -381,7 +381,7 @@ mod tests {
     }
 
     #[test]
-    fn test_encode() -> Result<(), BMError> {
+    fn test_encode() -> Result<(), PhoneticError> {
         let config_files = ConfigFiles::new(&PathBuf::from("./test_assets/cc-rules/"))?;
 
         for (index, (value, expected, name_type, rule_type, concat, max_phoneme)) in
@@ -449,7 +449,7 @@ mod tests {
     }
 
     #[test]
-    fn test_solr_generic() -> Result<(), BMError> {
+    fn test_solr_generic() -> Result<(), PhoneticError> {
         let config_files = &ConfigFiles::new(&PathBuf::from("./test_assets/cc-rules/"))?;
 
         //
@@ -569,7 +569,7 @@ mod tests {
     }
 
     #[test]
-    fn test_solr_ashkenazi() -> Result<(), BMError> {
+    fn test_solr_ashkenazi() -> Result<(), PhoneticError> {
         let config_files = &ConfigFiles::new(&PathBuf::from("./test_assets/cc-rules/"))?;
 
         //
@@ -692,7 +692,7 @@ mod tests {
     }
 
     #[test]
-    fn test_solr_sephardic() -> Result<(), BMError> {
+    fn test_solr_sephardic() -> Result<(), PhoneticError> {
         let config_files = &ConfigFiles::new(&PathBuf::from("./test_assets/cc-rules/"))?;
 
         //
@@ -815,7 +815,7 @@ mod tests {
     }
 
     #[test]
-    fn test_compatibility_with_original_version() -> Result<(), BMError> {
+    fn test_compatibility_with_original_version() -> Result<(), PhoneticError> {
         let config_files = &ConfigFiles::new(&PathBuf::from("./test_assets/cc-rules/"))?;
 
         let args = &mut BTreeMap::new();

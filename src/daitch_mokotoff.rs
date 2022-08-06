@@ -18,7 +18,7 @@ use std::collections::BTreeMap;
 
 use crate::helper::is_vowel;
 use crate::{
-    end_of_line, folding, multiline_comment, quadruplet, Encoder, ParseError, PhoneticError,
+    build_error, end_of_line, folding, multiline_comment, quadruplet, Encoder, PhoneticError,
 };
 
 #[cfg(feature = "embedded_dm")]
@@ -497,17 +497,12 @@ impl<'a> DaitchMokotoffSoundexBuilder<'a> {
             }
 
             // Everything fails, then return an error...
-            let eol = remains.find('\n');
-            let line_content = match eol {
-                None => remains,
-                Some(index) => &remains[..index],
-            }
-            .to_string();
-            return Err(PhoneticError::ParseRuleError(ParseError {
+            return Err(build_error(
                 line_number,
-                filename: None,
-                line_content,
-            }));
+                None,
+                remains,
+                "Can't recognize line".to_string(),
+            ));
         }
 
         // Ordering by pattern length decreasing.
@@ -526,6 +521,7 @@ impl<'a> DaitchMokotoffSoundexBuilder<'a> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::ParseError;
 
     const COMMONS_CODEC_RULES: &str = include_str!("../rules/dmrules.txt");
 
@@ -1562,7 +1558,8 @@ This rule convert the substring `sh` into
             Err(PhoneticError::ParseRuleError(ParseError {
                 line_number: 1,
                 filename: None,
-                line_content: "This is wrong.".to_string()
+                line_content: "This is wrong.".to_string(),
+                description: "Can't recognize line".to_string(),
             }))
         );
     }

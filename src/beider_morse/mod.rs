@@ -13,7 +13,7 @@ use crate::beider_morse::lang::Langs;
 pub use crate::beider_morse::languages::LanguageSet;
 use crate::beider_morse::languages::Languages;
 use crate::beider_morse::rule::Rules;
-use crate::Encoder;
+use crate::{Encoder, PhoneticError};
 
 mod engine;
 mod lang;
@@ -88,7 +88,7 @@ impl Error for BMError {}
     Copy, Clone, Debug, Ord, PartialOrd, Eq, PartialEq, Hash, Serialize, Deserialize, Sequence,
 )]
 pub enum NameType {
-    /// Ashkenazi family name.
+    /// Ashkenazi's family name.
     #[serde(rename = "ash")]
     Ashkenazi,
     /// Generic names and words.
@@ -172,7 +172,7 @@ impl ConfigFiles {
     ///
     /// # Errors :
     /// Returns a [BMError] if it misses some files or some rules are not well-formed.
-    pub fn new(directory: &PathBuf) -> Result<Self, BMError> {
+    pub fn new(directory: &PathBuf) -> Result<Self, PhoneticError> {
         let languages = Languages::try_from(directory)?;
         let langs = Langs::new(directory, &languages)?;
         let rules = Rules::new(directory, &languages)?;
@@ -338,9 +338,10 @@ impl<'a> BeiderMorseBuilder<'a> {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     #[cfg(feature = "embedded_bm")]
     use crate::beider_morse::rule::PrivateRuleType;
+
+    use super::*;
 
     lazy_static! {
         static ref CONFIG_FILE: ConfigFiles =

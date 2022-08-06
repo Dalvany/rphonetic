@@ -10,3 +10,4 @@ lcov.info
 *.data
 *.data.old
 memory-profiling_*
+*.log

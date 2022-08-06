@@ -1,8 +1,8 @@
 use nom::branch::alt;
-use nom::bytes::complete::{is_not, take_till1};
-use nom::character::complete::{anychar, char, crlf, space1};
+use nom::bytes::complete::{is_not, take_till1, take_while1};
+use nom::character::complete::{alpha1, anychar, char, crlf, space1};
 use nom::combinator::{eof, map, map_res, opt};
-use nom::sequence::{delimited, pair, separated_pair, terminated};
+use nom::sequence::{delimited, pair, preceded, separated_pair, terminated};
 use nom::{
     bytes::complete::{tag, take_until},
     combinator::value,
@@ -40,7 +40,7 @@ pub fn multiline_comment<'a>() -> impl FnMut(&'a str) -> IResult<&'a str, usize>
 fn eol_comment<'a>() -> impl FnMut(&'a str) -> IResult<&'a str, ()> {
     value(
         (), // Output is thrown away.
-        pair(tag("//"), is_not("\n")),
+        pair(tag("//"), opt(is_not("\n"))),
     )
 }
 
@@ -67,7 +67,9 @@ pub fn end_of_line<'a>() -> impl FnMut(&'a str) -> IResult<&'a str, (Option<&'a 
 
 /// Recognize something between two double quote (`"..."`).
 fn part<'a>() -> impl FnMut(&'a str) -> IResult<&'a str, &'a str> {
-    delimited(char('"'), take_until("\""), char('"'))
+    // There is only "\"" in rules so to keep thing simple we will just alt between
+    // tag("\\\"") and take_until("\"").
+    delimited(char('"'), alt((tag("\\\""), take_until("\""))), char('"'))
 }
 
 /// Recognize a quadruplet rule (`"..." "..." "..." "..."`). It could be followed by a single line comment.
@@ -97,6 +99,22 @@ pub fn lang<'a>() -> impl FnMut(&'a str) -> IResult<&'a str, (&'a str, &'a str, 
     ))
 }
 
+/// Recognize #include for Beider-Morse
+pub fn include<'a>() -> impl FnMut(&'a str) -> IResult<&'a str, &'a str> {
+    terminated(
+        preceded(
+            tag("#include "),
+            take_while1(|c: char| c.is_alphanumeric() || c == '-' || c == '_'),
+        ),
+        end_of_line(),
+    )
+}
+
+/// Recognize language for Beider-Morse
+pub fn language<'a>() -> impl FnMut(&'a str) -> IResult<&'a str, &'a str> {
+    terminated(alpha1, end_of_line())
+}
+
 #[cfg(test)]
 mod tests {
     use std::error::Error;
@@ -113,6 +131,19 @@ mod tests {
         assert_eq!(part2, "part2");
         assert_eq!(part3, "part3");
         assert_eq!(part4, "part4");
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_quadruplet_with_backslash_double_quote() -> Result<(), Box<dyn Error>> {
+        let (remains, (part1, part2, part3, part4)) = quadruplet()("\"\\\"\"  \"\" \"\" \"\"")?;
+
+        assert_eq!(remains, "");
+        assert_eq!(part1, "\\\"");
+        assert_eq!(part2, "");
+        assert_eq!(part3, "");
+        assert_eq!(part4, "");
 
         Ok(())
     }
@@ -254,6 +285,24 @@ mod tests {
         let (remains, _) = end_of_line()("   //This is a comment\nOther data")?;
 
         assert_eq!(remains, "Other data");
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_empty_comment_with_other_line() -> Result<(), Box<dyn Error>> {
+        let (remains, _) = end_of_line()("//\nOther data")?;
+
+        assert_eq!(remains, "Other data");
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_empty_comment() -> Result<(), Box<dyn Error>> {
+        let (remains, _) = end_of_line()("//")?;
+
+        assert_eq!(remains, "");
 
         Ok(())
     }

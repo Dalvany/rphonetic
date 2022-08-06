@@ -1,21 +1,29 @@
 use std::collections::{BTreeMap, BTreeSet};
+use std::fmt::{Display, Formatter};
 use std::path::Path;
-use std::str::FromStr;
 
 use enum_iterator::all;
 use regex::Regex;
 
 use crate::beider_morse::{LanguageSet, Languages};
-use crate::constants::{
-    MULTI_LINE_COMMENT_END, MULTI_LINE_COMMENT_START, RULE_LANG_LINE, SINGLE_LINE_COMMENT,
-};
-use crate::{BMError, NameType};
+use crate::{build_error, end_of_line, lang, multiline_comment, BMError, NameType, PhoneticError};
 
 #[derive(Clone, Debug)]
 struct LangRule {
+    line_number: usize,
     accept_on_match: bool,
     languages: BTreeSet<String>,
     pattern: Regex,
+}
+
+impl Display for LangRule {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{} : \"{}\" {:?} {} ",
+            self.line_number, self.pattern, self.languages, self.accept_on_match
+        )
+    }
 }
 
 impl LangRule {
@@ -72,7 +80,7 @@ impl Default for Langs {
 }
 
 impl Langs {
-    pub fn new(directory: &Path, languages: &Languages) -> Result<Self, BMError> {
+    pub fn new(directory: &Path, languages: &Languages) -> Result<Self, PhoneticError> {
         build_langs(directory, languages)
     }
 
@@ -81,47 +89,58 @@ impl Langs {
     }
 }
 
-fn parse_lang(content: String, languages: &BTreeSet<String>) -> Result<Lang, BMError> {
+fn parse_lang(
+    filename: Option<String>,
+    content: String,
+    languages: &BTreeSet<String>,
+) -> Result<Lang, PhoneticError> {
     let mut rules: Vec<LangRule> = Vec::new();
-    let mut multiline_comment = false;
-    for mut line in content.split('\n') {
-        line = line.trim();
+    let mut remains = content.as_str();
+    let mut line_number: usize = 0;
 
-        // Start to test multiline comment ends, thus we can collapse some 'if'.
-        if line.ends_with(MULTI_LINE_COMMENT_END) {
-            multiline_comment = false;
-            continue;
-        } else if line.is_empty() || line.starts_with(SINGLE_LINE_COMMENT) || multiline_comment {
-            continue;
-        } else if line.starts_with(MULTI_LINE_COMMENT_START) {
-            multiline_comment = true;
+    while !remains.is_empty() {
+        line_number += 1;
+
+        // Since parts are not delimited we try first to parse comment either single line
+        // or multiline.
+
+        // Try single line comment
+        if let Ok((rm, _)) = end_of_line()(remains) {
+            remains = rm;
             continue;
         }
 
-        match RULE_LANG_LINE.captures(line) {
-            None => {
-                return Err(BMError::BadRule(format!("Wrong line {}", line)));
-            }
-            Some(matcher) => {
-                let pattern = matcher.get(1).unwrap().as_str();
-                let pattern: Regex = Regex::new(pattern)?;
-                let langs = matcher.get(2).unwrap().as_str();
-                let langs: BTreeSet<String> =
-                    BTreeSet::from_iter(langs.split('+').map(|v| v.to_string()));
-                let accept_on_match = matcher.get(3).unwrap().as_str();
-                let accept_on_match: bool = bool::from_str(accept_on_match).map_err(|_error| {
-                    BMError::NotABoolean(format!(
-                        "{} is not a boolean. Should be 'true' or 'false'",
-                        accept_on_match
-                    ))
-                })?;
-                rules.push(LangRule {
-                    accept_on_match,
-                    languages: langs,
-                    pattern,
-                });
-            }
+        // Try multiline comment
+        if let Ok((rm, ln)) = multiline_comment()(remains) {
+            line_number += ln - 1;
+            remains = rm;
+            continue;
         }
+
+        if let Ok((rm, (pattern, langs, accept_on_match))) = lang()(remains) {
+            remains = rm;
+
+            let pattern: Regex = Regex::new(pattern).map_err(|error| {
+                build_error(line_number, filename.clone(), remains, error.to_string())
+            })?;
+            let langs: BTreeSet<String> =
+                BTreeSet::from_iter(langs.split('+').map(|v| v.to_string()));
+            rules.push(LangRule {
+                line_number,
+                accept_on_match,
+                languages: langs,
+                pattern,
+            });
+            continue;
+        }
+
+        // Everything fails, then return an error...
+        return Err(build_error(
+            line_number,
+            None,
+            remains,
+            "Can't parse line for language detection".to_string(),
+        ));
     }
 
     Ok(Lang {
@@ -130,14 +149,16 @@ fn parse_lang(content: String, languages: &BTreeSet<String>) -> Result<Lang, BME
     })
 }
 
-fn build_langs(directory: &Path, languages_set: &Languages) -> Result<Langs, BMError> {
+fn build_langs(directory: &Path, languages_set: &Languages) -> Result<Langs, PhoneticError> {
     let mut langs: BTreeMap<NameType, Lang> = BTreeMap::new();
 
     for name_type in all::<NameType>() {
         let languages = languages_set.get(&name_type).unwrap();
         let filename = directory.join(format!("{}_lang.txt", name_type));
-        let content = std::fs::read_to_string(filename)?;
-        let lang = parse_lang(content, languages)?;
+        let content = std::fs::read_to_string(filename.clone())
+            .map_err(|error| PhoneticError::BMError(BMError::from(error)))?;
+        let filename = filename.to_str().map(|v| v.to_string());
+        let lang = parse_lang(filename, content, languages)?;
         langs.insert(name_type, lang);
     }
 
@@ -146,11 +167,12 @@ fn build_langs(directory: &Path, languages_set: &Languages) -> Result<Langs, BME
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use std::path::PathBuf;
 
+    use super::*;
+
     #[test]
-    fn test_langs() -> Result<(), BMError> {
+    fn test_langs() -> Result<(), PhoneticError> {
         let path = &PathBuf::from("./test_assets/cc-rules/");
         let langs = Langs::new(path, &Languages::try_from(path)?)?;
 
@@ -159,7 +181,7 @@ mod tests {
     }
 
     #[test]
-    fn test_language_guessing() -> Result<(), BMError> {
+    fn test_language_guessing() -> Result<(), PhoneticError> {
         let path = &PathBuf::from("./test_assets/cc-rules/");
         let langs = Langs::new(path, &Languages::try_from(path)?)?;
         let langs = langs.get(&NameType::Generic).unwrap();
@@ -187,7 +209,7 @@ mod tests {
 
         for (input, expected) in data {
             let result = langs.guess_languages(input);
-            assert_eq!(result, expected,);
+            assert_eq!(result, expected, "Error for {}", input);
         }
         Ok(())
     }

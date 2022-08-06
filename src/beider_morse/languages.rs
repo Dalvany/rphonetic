@@ -4,12 +4,10 @@ use std::path::PathBuf;
 
 use serde::{Deserialize, Serialize};
 
-use crate::beider_morse::{BMError, NameType};
-use crate::constants::{
-    DM_LANGUAGE_LINE, MULTI_LINE_COMMENT_END, MULTI_LINE_COMMENT_START, SINGLE_LINE_COMMENT,
-};
+use crate::beider_morse::NameType;
+use crate::{build_error, end_of_line, language, multiline_comment, PhoneticError};
 
-/// This represent a set of languages.
+/// This represents a set of languages.
 #[derive(Clone, Debug, Ord, PartialOrd, Eq, PartialEq, Hash, Serialize, Deserialize)]
 pub enum LanguageSet {
     /// This represents `any` language.
@@ -143,7 +141,7 @@ impl Default for Languages {
 }
 
 impl TryFrom<&PathBuf> for Languages {
-    type Error = BMError;
+    type Error = PhoneticError;
 
     fn try_from(directory: &PathBuf) -> Result<Self, Self::Error> {
         let mut map: BTreeMap<NameType, BTreeSet<String>> = BTreeMap::new();
@@ -153,7 +151,7 @@ impl TryFrom<&PathBuf> for Languages {
             let path = path?;
             if let Ok(name_type) = NameType::try_from(path.file_name()) {
                 let content = std::fs::read_to_string(path.path())?;
-                let languages = parse_liste(content);
+                let languages = parse_liste(content)?;
                 map.insert(name_type, languages);
             }
         }
@@ -162,35 +160,47 @@ impl TryFrom<&PathBuf> for Languages {
     }
 }
 
-fn parse_liste(list: String) -> BTreeSet<String> {
+fn parse_liste(list: String) -> Result<BTreeSet<String>, PhoneticError> {
     let mut result = BTreeSet::new();
-    let mut multiline_comment = false;
-    for mut line in list.split('\n') {
-        line = line.trim();
+    let mut remains = list.as_str();
+    let mut line_number: usize = 0;
 
-        // Start to test multiline comment ends, thus we can collapse some 'if'.
-        if line.ends_with(MULTI_LINE_COMMENT_END) {
-            multiline_comment = false;
-            continue;
-        } else if line.is_empty() || line.starts_with(SINGLE_LINE_COMMENT) || multiline_comment {
-            continue;
-        } else if line.starts_with(MULTI_LINE_COMMENT_START) {
-            multiline_comment = true;
+    while !remains.is_empty() {
+        line_number += 1;
+
+        // Since parts are not delimited we try first to parse comment either single line
+        // or multiline.
+
+        // Try single line comment
+        if let Ok((rm, _)) = end_of_line()(remains) {
+            remains = rm;
             continue;
         }
 
-        match DM_LANGUAGE_LINE.captures(line) {
-            None => {
-                result.insert(line.to_string());
-            }
-            Some(capture) => {
-                let tmp = capture.get(1).unwrap().as_str();
-                result.insert(tmp.to_string());
-            }
+        // Try multiline comment
+        if let Ok((rm, ln)) = multiline_comment()(remains) {
+            line_number += ln - 1;
+            remains = rm;
+            continue;
         }
+
+        // Try language
+        if let Ok((rm, language)) = language()(remains) {
+            remains = rm;
+            result.insert(language.to_string());
+            continue;
+        }
+
+        // Everything fails, then return an error...
+        return Err(build_error(
+            line_number,
+            None,
+            remains,
+            "Can't parse line for languages".to_string(),
+        ));
     }
 
-    result
+    Ok(result)
 }
 
 #[cfg(test)]
@@ -217,7 +227,7 @@ mod tests {
     }
 
     #[test]
-    fn test_from_path() -> Result<(), BMError> {
+    fn test_from_path() -> Result<(), PhoneticError> {
         let path = PathBuf::from("./test_assets/cc-rules/");
         let result = Languages::try_from(&path)?;
         let languages = BTreeMap::from([
