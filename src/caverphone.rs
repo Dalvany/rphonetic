@@ -136,7 +136,7 @@ impl Encoder for Caverphone1 {
         let txt = txt.replace('2', "");
         let txt = txt.replace('3', "");
 
-        let txt = txt + &*SIX_1;
+        let txt = txt + SIX_1;
 
         txt[0..SIX_1.len()].to_string()
     }
@@ -272,7 +272,7 @@ impl Encoder for Caverphone2 {
         let txt = helper::replace_end(txt, "3", "A");
         let txt = txt.replace('3', "");
 
-        let txt = txt + &*TEN_1;
+        let txt = txt + TEN_1;
 
         txt[0..TEN_1.len()].to_string()
     }

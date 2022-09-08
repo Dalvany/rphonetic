@@ -403,7 +403,7 @@ mod tests {
     fn test_ascii_encode_not_empty_1_letter() -> Result<(), BMError> {
         let builder = BeiderMorseBuilder::new(&CONFIG_FILE);
         let encoder = builder.build();
-        for ch in 'a'..'z' {
+        for ch in 'a'..='z' {
             assert_ne!(encoder.encode(&ch.to_string()), "");
             assert_ne!(encoder.encode(&ch.to_ascii_uppercase().to_string()), "");
         }
@@ -415,8 +415,8 @@ mod tests {
     fn test_ascii_encode_not_empty_2_letters() -> Result<(), BMError> {
         let builder = BeiderMorseBuilder::new(&CONFIG_FILE);
         let encoder = builder.build();
-        for ch1 in 'a'..'z' {
-            for ch2 in 'a'..'z' {
+        for ch1 in 'a'..='z' {
+            for ch2 in 'a'..='z' {
                 let mut string = String::with_capacity(2);
                 string.push(ch1);
                 string.push(ch2);
