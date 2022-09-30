@@ -28,7 +28,7 @@ enum-iterator = "1.1"
 either = "1.7"
 
 [dev-dependencies]
-criterion = { version = "0.3", features = ["html_reports"] }
+criterion = { version = "0.4", features = ["html_reports"] }
 
 [[bench]]
 name = "benchmark"
