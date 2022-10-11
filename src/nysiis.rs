@@ -192,17 +192,17 @@ impl Encoder for Nysiis {
         let mut tmp = key.clone();
         let result: String = if tmp.len() > 1 {
             if tmp.ends_with('S') {
-                tmp = (&tmp[..tmp.len() - 1]).to_string();
+                tmp = tmp[..tmp.len() - 1].to_string();
             }
 
             if tmp.len() > 2 && tmp.ends_with("AY") {
-                let mut start: String = (&tmp[..tmp.len() - 2]).to_string();
+                let mut start: String = tmp[..tmp.len() - 2].to_string();
                 start.push_str(&tmp[tmp.len() - 1..]);
                 tmp = start;
             }
 
             if tmp.ends_with('A') {
-                tmp = (&tmp[..tmp.len() - 1]).to_string();
+                tmp = tmp[..tmp.len() - 1].to_string();
             }
 
             tmp
