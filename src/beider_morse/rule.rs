@@ -347,7 +347,7 @@ impl Resolver {
                 .get(filename)
                 .map(|v| v.to_string())
                 .ok_or_else(|| {
-                    BMError::WrongFilename(format!("Missing embedded rule {}", filename))
+                    BMError::WrongFilename(format!("Missing embedded rule {filename}",))
                 }),
             #[cfg(not(feature = "embedded_bm"))]
             None => Err(BMError::WrongFilename(
