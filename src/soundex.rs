@@ -268,9 +268,7 @@ mod tests {
             assert_eq!(
                 soundex.encode(v),
                 expected,
-                "Encoding {} should return {}",
-                v,
-                expected
+                "Encoding {v} should return {expected}"
             );
         }
     }

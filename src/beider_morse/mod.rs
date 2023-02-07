@@ -60,14 +60,14 @@ pub enum BMError {
 impl Display for BMError {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
-            BMError::UnknownNameType(error) => write!(f, "Unknown NameType {}", error),
-            BMError::ParseConfiguration(error) => write!(f, "Error reading files {}", error),
-            BMError::WrongFilename(error) => write!(f, "Wrong file name : {}", error),
-            BMError::WrongPhoneme(error) => write!(f, "{}", error),
-            BMError::BadContextRegex(error) => write!(f, "{}", error),
-            BMError::NotABoolean(error) => write!(f, "{}", error),
-            BMError::BadRule(error) => write!(f, "{}", error),
-            BMError::UnknownRuleType(error) => write!(f, "Unknown RuleType {}", error),
+            BMError::UnknownNameType(error) => write!(f, "Unknown NameType {error}"),
+            BMError::ParseConfiguration(error) => write!(f, "Error reading files {error}"),
+            BMError::WrongFilename(error) => write!(f, "Wrong file name : {error}"),
+            BMError::WrongPhoneme(error) => write!(f, "{error}"),
+            BMError::BadContextRegex(error) => write!(f, "{error}"),
+            BMError::NotABoolean(error) => write!(f, "{error}"),
+            BMError::BadRule(error) => write!(f, "{error}"),
+            BMError::UnknownRuleType(error) => write!(f, "Unknown RuleType {error}"),
         }
     }
 }
@@ -119,7 +119,7 @@ pub enum NameType {
 
 impl NameType {
     fn language_filename(&self) -> String {
-        format!("{}_languages.txt", self)
+        format!("{self}_languages.txt")
     }
 }
 
@@ -130,7 +130,7 @@ impl Display for NameType {
             Self::Generic => GEN,
             Self::Sephardic => SEP,
         };
-        write!(f, "{}", r)
+        write!(f, "{r}")
     }
 }
 

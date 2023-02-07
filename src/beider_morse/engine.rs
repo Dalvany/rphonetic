@@ -401,10 +401,7 @@ mod tests {
             assert_eq!(
                 result,
                 expected.to_string(),
-                "Wrong get '{}' instead of '{}' for data at index {}",
-                result,
-                expected,
-                index
+                "Wrong get '{result}' instead of '{expected}' for data at index {index}"
             );
         }
         Ok(())

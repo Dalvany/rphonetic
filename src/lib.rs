@@ -155,8 +155,8 @@ impl From<BMError> for PhoneticError {
 impl Display for PhoneticError {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         match self {
-            Self::ParseRuleError(error) => write!(f, "Error parsing rule file {}", error),
-            Self::BMError(error) => write!(f, "Error : {}", error),
+            Self::ParseRuleError(error) => write!(f, "Error parsing rule file {error}"),
+            Self::BMError(error) => write!(f, "Error : {error}"),
         }
     }
 }

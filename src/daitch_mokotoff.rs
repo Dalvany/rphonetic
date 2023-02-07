@@ -1447,7 +1447,7 @@ mod tests {
             assert_eq!(ch1, ch2, "Rule key differ");
             let iter2 = rules1.into_iter().zip(rules2.into_iter());
             for (rule1, rule2) in iter2 {
-                assert_eq!(rule1, rule2, "Rules differ at key {}", ch1);
+                assert_eq!(rule1, rule2, "Rules differ at key {ch1}");
             }
         }
 
@@ -1628,7 +1628,7 @@ This rule convert the substring `sh` into
         ]
         .iter()
         {
-            assert_eq!(daitch_mokotoff.encode(v), "079600", "Error for {}", v);
+            assert_eq!(daitch_mokotoff.encode(v), "079600", "Error for {v}");
         }
 
         Ok(())
@@ -1654,7 +1654,7 @@ This rule convert the substring `sh` into
         ]
         .iter()
         {
-            assert_eq!(daitch_mokotoff.encode(v), "565463", "Error for {}", v);
+            assert_eq!(daitch_mokotoff.encode(v), "565463", "Error for {v}");
         }
 
         Ok(())

@@ -196,7 +196,7 @@ mod tests {
 
         for (test, expected) in data {
             let result = Cologne.encode(test);
-            assert_eq!(result, expected, "Wrong for {}", test);
+            assert_eq!(result, expected, "Wrong for {test}");
         }
     }
 
@@ -241,7 +241,7 @@ mod tests {
 
         for (test, expected) in data {
             let result = Cologne.encode(test);
-            assert_eq!(result, expected, "Wrong for {}", test);
+            assert_eq!(result, expected, "Wrong for {test}");
         }
     }
 
@@ -254,7 +254,7 @@ mod tests {
 
         for (test, expected) in data {
             let result = Cologne.encode(test);
-            assert_eq!(result, expected, "Wrong for {}", test);
+            assert_eq!(result, expected, "Wrong for {test}");
         }
     }
 
@@ -273,7 +273,7 @@ mod tests {
 
         for (a, b) in data {
             let result = Cologne.is_encoded_equals(a, b);
-            assert!(result, "Encoding {} and {} gives a different result", a, b);
+            assert!(result, "Encoding {a} and {b} gives a different result");
         }
     }
 

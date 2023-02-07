@@ -236,9 +236,7 @@ mod tests {
             assert_eq!(
                 nysiis.encode(value),
                 expected,
-                "Encoding {} should output {}",
-                value,
-                expected
+                "Encoding {value} should output {expected}"
             );
         }
     }

@@ -23,29 +23,29 @@ impl Display for OptimizedRegex {
         match self {
             Self::AllStringsMatcher => write!(f, "\"\""),
             Self::IsEmpty => write!(f, "\"^$\""),
-            Self::Equals(pattern) => write!(f, "\"{}\"", pattern),
-            Self::StartsWith(pattern) => write!(f, "\"^{}\"", pattern),
-            Self::EndsWith(pattern) => write!(f, "\"{}$\"", pattern),
+            Self::Equals(pattern) => write!(f, "\"{pattern}\""),
+            Self::StartsWith(pattern) => write!(f, "\"^{pattern}\""),
+            Self::EndsWith(pattern) => write!(f, "\"{pattern}$\""),
             Self::EqualsChar(pattern, should_match) => {
                 let negate = match should_match {
                     true => "",
                     false => "^",
                 };
-                write!(f, "\"^[{}{}]$\"", negate, pattern)
+                write!(f, "\"^[{negate}{pattern}]$\"")
             }
             Self::StartsWithChar(pattern, should_match) => {
                 let negate = match should_match {
                     true => "",
                     false => "^",
                 };
-                write!(f, "\"^[{}{}]\"", negate, pattern)
+                write!(f, "\"^[{negate}{pattern}]\"")
             }
             Self::EndsWithChar(pattern, should_match) => {
                 let negate = match should_match {
                     true => "",
                     false => "^",
                 };
-                write!(f, "\"[{}{}]$\"", negate, pattern)
+                write!(f, "\"[{negate}{pattern}]$\"")
             }
         }
     }

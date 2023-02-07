@@ -1989,32 +1989,20 @@ mod tests {
             if use_alternate {
                 assert!(
                     encoder.is_double_metaphone_equal(v1, v2, use_alternate),
-                    "{} not equals to {} (use_alternate {})",
-                    v1,
-                    v2,
-                    use_alternate
+                    "{v1} not equals to {v2} (use_alternate {use_alternate})"
                 );
                 assert!(
                     encoder.is_double_metaphone_equal(v1, v2, use_alternate),
-                    "{} not equals to {} (use_alternate {})",
-                    v2,
-                    v1,
-                    use_alternate
+                    "{v2} not equals to {v1} (use_alternate {use_alternate})"
                 );
             } else {
                 assert!(
                     encoder.is_encoded_equals(v1, v2),
-                    "{} not equals to {} (use_alternate {})",
-                    v1,
-                    v2,
-                    use_alternate
+                    "{v1} not equals to {v2} (use_alternate {use_alternate})"
                 );
                 assert!(
                     encoder.is_encoded_equals(v1, v2),
-                    "{} not equals to {} (use_alternate {})",
-                    v2,
-                    v1,
-                    use_alternate
+                    "{v2} not equals to {v1} (use_alternate {use_alternate})"
                 );
             }
         }
@@ -2133,7 +2121,7 @@ mod tests {
             let match1 = encoder.is_double_metaphone_equal(data1, data2, false);
             let match2 = encoder.is_double_metaphone_equal(data1, data2, true);
             if !match1 && !match2 {
-                error.push_str(format!("[{}] {} and {}\n", i, data1, data2).as_str());
+                error.push_str(format!("[{i}] {data1} and {data2}\n").as_str());
                 count += 1;
             }
         }
@@ -2150,10 +2138,7 @@ mod tests {
             let match2 = encoder.is_double_metaphone_equal(data1, data2, true);
             assert!(
                 match1 || match2,
-                "Expected match [{}] {} and {}",
-                i,
-                data1,
-                data2
+                "Expected match [{i}] {data1} and {data2}"
             );
         }
     }
@@ -3437,17 +3422,13 @@ mod tests {
             assert_eq!(
                 result,
                 primary.to_string(),
-                "[{}] primary {} fail",
-                i,
-                value
+                "[{i}] primary {value} fail"
             );
             let result = encoder.encode_alternate(value);
             assert_eq!(
                 result,
                 alternate.to_string(),
-                "[{}] alternate {} fail",
-                i,
-                value
+                "[{i}] alternate {value} fail"
             );
         }
     }

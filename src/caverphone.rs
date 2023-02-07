@@ -387,8 +387,7 @@ mod tests {
             assert_eq!(
                 caverphone.encode(name),
                 "KLN1111111",
-                "{} cause the error",
-                name
+                "{name} cause the error"
             );
         }
     }
@@ -412,8 +411,7 @@ mod tests {
             assert_eq!(
                 caverphone.encode(name),
                 "TN11111111",
-                "{} cause the error",
-                name
+                "{name} cause the error"
             );
         }
     }
@@ -437,8 +435,7 @@ mod tests {
             assert_eq!(
                 caverphone.encode(name),
                 "TTA1111111",
-                "{} cause the error",
-                name
+                "{name} cause the error"
             );
         }
     }

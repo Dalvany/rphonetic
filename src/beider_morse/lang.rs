@@ -154,7 +154,7 @@ fn build_langs(directory: &Path, languages_set: &Languages) -> Result<Langs, Pho
 
     for name_type in all::<NameType>() {
         let languages = languages_set.get(&name_type).unwrap();
-        let filename = directory.join(format!("{}_lang.txt", name_type));
+        let filename = directory.join(format!("{name_type}_lang.txt"));
         let content = std::fs::read_to_string(filename.clone())
             .map_err(|error| PhoneticError::BMError(BMError::from(error)))?;
         let filename = filename.to_str().map(|v| v.to_string());
@@ -209,7 +209,7 @@ mod tests {
 
         for (input, expected) in data {
             let result = langs.guess_languages(input);
-            assert_eq!(result, expected, "Error for {}", input);
+            assert_eq!(result, expected, "Error for {input}");
         }
         Ok(())
     }

@@ -300,9 +300,7 @@ mod tests {
         for (v1, v2) in data.iter() {
             assert!(
                 metaphone.is_encoded_equals(v1, v2),
-                "{} should be equals to {}",
-                v1,
-                v2
+                "{v1} should be equals to {v2}"
             );
         }
     }
@@ -315,9 +313,7 @@ mod tests {
         for (v1, v2) in data.iter() {
             assert!(
                 metaphone.is_encoded_equals(v1, v2),
-                "{} should be equals to {}",
-                v1,
-                v2
+                "{v1} should be equals to {v2}"
             );
         }
     }
@@ -331,9 +327,7 @@ mod tests {
         for v2 in data.iter() {
             assert!(
                 metaphone.is_encoded_equals(v1, v2),
-                "{} should be equals to {}",
-                v1,
-                v2
+                "{v1} should be equals to {v2}"
             );
         }
     }
@@ -350,9 +344,7 @@ mod tests {
         for v2 in data.iter() {
             assert!(
                 metaphone.is_encoded_equals(v1, v2),
-                "{} should be equals to {}",
-                v1,
-                v2
+                "{v1} should be equals to {v2}"
             );
         }
     }
@@ -366,9 +358,7 @@ mod tests {
         for v2 in data.iter() {
             assert!(
                 metaphone.is_encoded_equals(v1, v2),
-                "{} should be equals to {}",
-                v1,
-                v2
+                "{v1} should be equals to {v2}"
             );
         }
     }
@@ -388,9 +378,7 @@ mod tests {
         for v2 in data.iter() {
             assert!(
                 metaphone.is_encoded_equals(v1, v2),
-                "{} should be equals to {}",
-                v1,
-                v2
+                "{v1} should be equals to {v2}"
             );
         }
     }
@@ -412,9 +400,7 @@ mod tests {
         for v2 in data.iter() {
             assert!(
                 metaphone.is_encoded_equals(v1, v2),
-                "{} should be equals to {}",
-                v1,
-                v2
+                "{v1} should be equals to {v2}"
             );
         }
     }
@@ -431,9 +417,7 @@ mod tests {
         for v2 in data.iter() {
             assert!(
                 metaphone.is_encoded_equals(v1, v2),
-                "{} should be equals to {}",
-                v1,
-                v2
+                "{v1} should be equals to {v2}"
             );
         }
     }
@@ -451,9 +435,7 @@ mod tests {
         for v2 in data.iter() {
             assert!(
                 metaphone.is_encoded_equals(v1, v2),
-                "{} should be equals to {}",
-                v1,
-                v2
+                "{v1} should be equals to {v2}"
             );
         }
     }
@@ -467,9 +449,7 @@ mod tests {
         for v2 in data.iter() {
             assert!(
                 metaphone.is_encoded_equals(v1, v2),
-                "{} should be equals to {}",
-                v1,
-                v2
+                "{v1} should be equals to {v2}"
             );
         }
     }
@@ -485,9 +465,7 @@ mod tests {
         for v2 in data.iter() {
             assert!(
                 metaphone.is_encoded_equals(v1, v2),
-                "{} should be equals to {}",
-                v1,
-                v2
+                "{v1} should be equals to {v2}"
             );
         }
     }
@@ -501,9 +479,7 @@ mod tests {
         for v2 in data.iter() {
             assert!(
                 metaphone.is_encoded_equals(v1, v2),
-                "{} should be equals to {}",
-                v1,
-                v2
+                "{v1} should be equals to {v2}"
             );
         }
     }
@@ -520,9 +496,7 @@ mod tests {
         for v2 in data.iter() {
             assert!(
                 metaphone.is_encoded_equals(v1, v2),
-                "{} should be equals to {}",
-                v1,
-                v2
+                "{v1} should be equals to {v2}"
             );
         }
     }
@@ -536,9 +510,7 @@ mod tests {
         for v2 in data.iter() {
             assert!(
                 metaphone.is_encoded_equals(v1, v2),
-                "{} should be equals to {}",
-                v1,
-                v2
+                "{v1} should be equals to {v2}"
             );
         }
     }
@@ -555,9 +527,7 @@ mod tests {
         for v2 in data.iter() {
             assert!(
                 metaphone.is_encoded_equals(v1, v2),
-                "{} should be equals to {}",
-                v1,
-                v2
+                "{v1} should be equals to {v2}"
             );
         }
     }

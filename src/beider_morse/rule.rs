@@ -60,7 +60,7 @@ impl Display for PrivateRuleType {
             Self::Exact => EXACT,
             Self::Rules => RULES,
         };
-        write!(f, "{}", r)
+        write!(f, "{r}")
     }
 }
 
@@ -167,8 +167,7 @@ fn parse_phoneme(phoneme: &str) -> Result<Phoneme, BMError> {
     if let Some((index, _)) = index {
         if !phoneme.ends_with(']') {
             return Err(BMError::WrongPhoneme(format!(
-                "Phoneme expression {} has a '[' but doesn't ends with an ']'",
-                phoneme
+                "Phoneme expression {phoneme} has a '[' but doesn't ends with an ']'"
             )));
         }
         let before = &phoneme[0..index];
@@ -190,8 +189,7 @@ fn parse_phoneme_expr(phoneme_rule: &str) -> Result<PhonemeList, BMError> {
     if phoneme_rule.starts_with('(') {
         if !phoneme_rule.ends_with(')') {
             return Err(BMError::WrongPhoneme(format!(
-                "Wrong phoneme rule {}",
-                phoneme_rule
+                "Wrong phoneme rule {phoneme_rule}"
             )));
         }
         let mut phs: Vec<Phoneme> = Vec::new();
@@ -233,13 +231,13 @@ fn parse_rule(
         {
             remains = rm;
             let pattern_length_char = pattern.chars().count();
-            let left_context = format!("{}$", left_context);
+            let left_context = format!("{left_context}$");
             let left_context: Either<Regex, OptimizedRegex> =
                 match &left_context.parse::<OptimizedRegex>() {
                     Ok(optimized) => Either::Right(optimized.clone()),
                     Err(_) => Either::Left(Regex::new(&left_context)?),
                 };
-            let right_context = format!("^{}", right_context);
+            let right_context = format!("^{right_context}");
             let right_context: Either<Regex, OptimizedRegex> =
                 match &right_context.parse::<OptimizedRegex>() {
                     Ok(optimized) => Either::Right(optimized.clone()),
@@ -316,12 +314,12 @@ fn build_rules(resolver: Resolver, languages: &Languages) -> Result<Rules, Phone
             .ok_or_else(|| BMError::UnknownNameType(name_type.language_filename()))?;
         for rule_type in all::<PrivateRuleType>() {
             for language in l {
-                let filename = format!("{}_{}_{}", name_type, rule_type, language);
+                let filename = format!("{name_type}_{rule_type}_{language}");
                 let r = parse_rule(&resolver, &filename)?;
                 rules.insert((name_type, rule_type, language.clone()), r);
             }
             if PrivateRuleType::Rules != rule_type {
-                let filename = format!("{}_{}_common", name_type, rule_type);
+                let filename = format!("{name_type}_{rule_type}_common");
                 let r = parse_rule(&resolver, &filename)?;
                 rules.insert((name_type, rule_type, String::from("common")), r);
             }
@@ -339,9 +337,9 @@ impl Resolver {
     fn resolve(&self, filename: &str) -> Result<String, BMError> {
         match &self.path {
             Some(folder) => {
-                let f = folder.join(format!("{}.txt", filename));
+                let f = folder.join(format!("{filename}.txt"));
                 std::fs::read_to_string(f).map_err(|_| {
-                    BMError::WrongFilename(format!("Can't find file for {} rules", filename))
+                    BMError::WrongFilename(format!("Can't find file for {filename} rules"))
                 })
             }
             #[cfg(feature = "embedded_bm")]
@@ -624,11 +622,7 @@ mod tests {
                     assert_eq!(
                         phoneme1.cmp(phoneme2),
                         Ordering::Less,
-                        "Error for data ({}, {}) : {} should be 'less' than {}",
-                        set,
-                        index,
-                        phoneme1,
-                        phoneme2
+                        "Error for data ({set}, {index}) : {phoneme1} should be 'less' than {phoneme2}"
                     );
                 }
             }
@@ -643,10 +637,7 @@ mod tests {
                 assert_eq!(
                     phoneme1.cmp(phoneme1),
                     Ordering::Equal,
-                    "Error for data ({}, {}) : {} should be 'equals' to itself",
-                    set,
-                    index,
-                    phoneme1
+                    "Error for data ({set}, {index}) : {phoneme1} should be 'equals' to itself"
                 );
             }
         }
