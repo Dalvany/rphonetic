@@ -19,9 +19,9 @@ use serde::{Deserialize, Serialize};
 use crate::helper::is_vowel;
 use crate::{Encoder, SoundexUtils};
 
-/// Phonex is a modification of the venerable Soundex algorithm. It accounts 
+/// Phonex is a modification of the venerable Soundex algorithm. It accounts
 /// for a few more letter combinations to improve accuracy on some data sets.
-/// It was created by A.J. Lait and Brian Randell in 1996, described in their 
+/// It was created by A.J. Lait and Brian Randell in 1996, described in their
 /// paper "An assessment of name matching algorithms" in the Technical Report
 /// Series published by University of Newcastle Upon Tyne Computing Science.
 ///
@@ -61,14 +61,16 @@ impl Phonex {
             "KN" => input.replace_range(..2, "N"),
             "PH" => input.replace_range(..2, "F"),
             "WR" => input.replace_range(..2, "R"),
-            _ => ()
+            _ => (),
         };
 
         // Replace first characters as follows:
         //    H -> Remove
         let first = input.chars().take(1).collect::<String>();
         match first.as_str() {
-            "H" => { input.remove(0); },
+            "H" => {
+                input.remove(0);
+            }
             _ => (),
         }
 
@@ -87,17 +89,16 @@ impl Phonex {
             "K" | "Q" => input.replace_range(..1, "C"),
             "J" => input.replace_range(..1, "G"),
             "Z" => input.replace_range(..1, "S"),
-            _ => ()
+            _ => (),
         };
 
         input
-
     }
 
     fn is_vowel(c: Option<&char>) -> bool {
         match c {
             Some(c) => is_vowel(Some(c.to_ascii_lowercase()), true),
-            _ => false
+            _ => false,
         }
     }
 
@@ -107,11 +108,9 @@ impl Phonex {
         let code = match curr {
             'B' | 'P' | 'F' | 'V' => '1',
             'C' | 'S' | 'K' | 'G' | 'J' | 'Q' | 'X' | 'Z' => '2',
-            'D' | 'T' => {
-                match next {
-                    Some('C') => '0',
-                    _ => '3'
-                }
+            'D' | 'T' => match next {
+                Some('C') => '0',
+                _ => '3',
             },
             'L' => {
                 if Phonex::is_vowel(next) || is_last_char {
@@ -119,14 +118,14 @@ impl Phonex {
                 } else {
                     '0'
                 }
-            },
+            }
             'M' | 'N' => {
                 skip_next_char = match next {
                     Some('D') | Some('G') => true,
-                    _ => false
+                    _ => false,
                 };
                 '5'
-            },
+            }
             'R' => {
                 if Phonex::is_vowel(next) || is_last_char {
                     '6'
@@ -162,7 +161,7 @@ impl Encoder for Phonex {
 
         while i < chars.len() && result.len() < self.max_code_length {
             let curr = chars[i];
-            let next = chars.get(i+1);
+            let next = chars.get(i + 1);
             let is_last_char = i == (chars.len() - 1);
 
             let (code, skip_next_char) = self.transcode(&curr, next, is_last_char);
@@ -178,9 +177,9 @@ impl Encoder for Phonex {
                 result.push(curr);
                 last = code;
             } else {
-                last = result[result.len()-1]
+                last = result[result.len() - 1]
             }
-            
+
             i += 1;
         }
 
@@ -203,8 +202,7 @@ mod tests {
             let actual = phonex.preprocess(input);
 
             assert_eq!(
-                actual, 
-                expected, 
+                actual, expected,
                 "expected input {input} to be preprocessed to {expected}, but instead got {actual}"
             );
         }
@@ -215,15 +213,10 @@ mod tests {
         for (curr, next, is_last_char, e_code, e_skip_next_char) in values {
             let (code, skip_next_char) = phonex.transcode(curr, next, is_last_char);
 
-            assert_eq!(
-                code, 
-                e_code, 
-                "code {code} should output {e_code}"
-            );
+            assert_eq!(code, e_code, "code {code} should output {e_code}");
 
             assert_eq!(
-                skip_next_char, 
-                e_skip_next_char, 
+                skip_next_char, e_skip_next_char,
                 "skip_next_char {skip_next_char} should output {e_skip_next_char}"
             );
         }
@@ -243,18 +236,18 @@ mod tests {
     #[test]
     fn test_preprocess() {
         preprocess(vec![
-        (&"TESTSSS", String::from("TEST")),
-        (&"SSS", String::from("")),
-        (&"KNUTH", String::from("NUTH")),
-        (&"PHONETIC", String::from("FONETIC")),
-        (&"WRIGHT", String::from("RIGHT")),
-        (&"HARRINGTON", String::from("ARRINGTON")),
-        (&"EIGER", String::from("AIGER")),
-        (&"PERCIVAL", String::from("BERCIVAL")),
-        (&"VERTIGAN", String::from("FERTIGAN")),
-        (&"KELVIN", String::from("CELVIN")),
-        (&"JONES", String::from("GONE")),
-        (&"ZEPHYR", String::from("SEPHYR")),
+            (&"TESTSSS", String::from("TEST")),
+            (&"SSS", String::from("")),
+            (&"KNUTH", String::from("NUTH")),
+            (&"PHONETIC", String::from("FONETIC")),
+            (&"WRIGHT", String::from("RIGHT")),
+            (&"HARRINGTON", String::from("ARRINGTON")),
+            (&"EIGER", String::from("AIGER")),
+            (&"PERCIVAL", String::from("BERCIVAL")),
+            (&"VERTIGAN", String::from("FERTIGAN")),
+            (&"KELVIN", String::from("CELVIN")),
+            (&"JONES", String::from("GONE")),
+            (&"ZEPHYR", String::from("SEPHYR")),
         ])
     }
 
@@ -346,7 +339,6 @@ mod tests {
             ("Kuickening", "C250"),
             ("Joben", "G150"),
             ("Zelda", "S300"),
-            ]);
+        ]);
     }
-
 }
