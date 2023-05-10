@@ -66,7 +66,6 @@ where
 {
     string
         .chars()
-        .into_iter()
         .enumerate()
         .map(f)
         .collect::<String>()
@@ -75,7 +74,6 @@ where
 pub fn remove_all_nonletter(string: String) -> String {
     string
         .chars()
-        .into_iter()
         .filter(|&c| c.is_lowercase())
         .collect::<String>()
 }

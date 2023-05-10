@@ -66,12 +66,9 @@ impl Phonex {
 
         // Replace first characters as follows:
         //    H -> Remove
-        let first = input.chars().take(1).collect::<String>();
-        match first.as_str() {
-            "H" => {
-                input.remove(0);
-            }
-            _ => (),
+        let first = input.chars().next();
+        if first == Some('H') {
+            input.remove(0);
         }
 
         // Replace first characters as follows:
@@ -81,14 +78,16 @@ impl Phonex {
         //    K, Q -> C
         //    J -> G
         //    Z -> S
-        let first = input.chars().take(1).collect::<String>();
-        match first.as_str() {
-            "E" | "I" | "O" | "U" | "Y" => input.replace_range(..1, "A"),
-            "P" => input.replace_range(..1, "B"),
-            "V" => input.replace_range(..1, "F"),
-            "K" | "Q" => input.replace_range(..1, "C"),
-            "J" => input.replace_range(..1, "G"),
-            "Z" => input.replace_range(..1, "S"),
+        let first = input.chars().next();
+        match first {
+            Some('E') | Some('I') | Some('O') | Some('U') | Some('Y') => {
+                input.replace_range(..1, "A")
+            }
+            Some('P') => input.replace_range(..1, "B"),
+            Some('V') => input.replace_range(..1, "F"),
+            Some('K') | Some('Q') => input.replace_range(..1, "C"),
+            Some('J') => input.replace_range(..1, "G"),
+            Some('Z') => input.replace_range(..1, "S"),
             _ => (),
         };
 
@@ -120,10 +119,7 @@ impl Phonex {
                 }
             }
             'M' | 'N' => {
-                skip_next_char = match next {
-                    Some('D') | Some('G') => true,
-                    _ => false,
-                };
+                skip_next_char = matches!(next, Some('D') | Some('G'));
                 '5'
             }
             'R' => {
@@ -236,18 +232,18 @@ mod tests {
     #[test]
     fn test_preprocess() {
         preprocess(vec![
-            (&"TESTSSS", String::from("TEST")),
-            (&"SSS", String::from("")),
-            (&"KNUTH", String::from("NUTH")),
-            (&"PHONETIC", String::from("FONETIC")),
-            (&"WRIGHT", String::from("RIGHT")),
-            (&"HARRINGTON", String::from("ARRINGTON")),
-            (&"EIGER", String::from("AIGER")),
-            (&"PERCIVAL", String::from("BERCIVAL")),
-            (&"VERTIGAN", String::from("FERTIGAN")),
-            (&"KELVIN", String::from("CELVIN")),
-            (&"JONES", String::from("GONE")),
-            (&"ZEPHYR", String::from("SEPHYR")),
+            ("TESTSSS", String::from("TEST")),
+            ("SSS", String::from("")),
+            ("KNUTH", String::from("NUTH")),
+            ("PHONETIC", String::from("FONETIC")),
+            ("WRIGHT", String::from("RIGHT")),
+            ("HARRINGTON", String::from("ARRINGTON")),
+            ("EIGER", String::from("AIGER")),
+            ("PERCIVAL", String::from("BERCIVAL")),
+            ("VERTIGAN", String::from("FERTIGAN")),
+            ("KELVIN", String::from("CELVIN")),
+            ("JONES", String::from("GONE")),
+            ("ZEPHYR", String::from("SEPHYR")),
         ])
     }
 
