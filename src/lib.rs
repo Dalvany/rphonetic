@@ -76,6 +76,7 @@ pub use crate::helper::CharSequence;
 pub use crate::match_rating_approach::MatchRatingApproach;
 pub use crate::metaphone::Metaphone;
 pub use crate::nysiis::Nysiis;
+pub use crate::phonex::Phonex;
 pub use crate::refined_soundex::RefinedSoundex;
 pub use crate::soundex::{
     Soundex, DEFAULT_US_ENGLISH_GENEALOGY_MAPPING_SOUNDEX, DEFAULT_US_ENGLISH_MAPPING_SOUNDEX,
@@ -90,6 +91,7 @@ mod helper;
 mod match_rating_approach;
 mod metaphone;
 mod nysiis;
+mod phonex;
 mod refined_soundex;
 mod rules_parser;
 mod soundex;
