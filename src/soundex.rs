@@ -127,7 +127,7 @@ impl TryFrom<&str> for Soundex {
     /// Construct a [Soundex] from the mapping in parameter. This [str] will
     /// be converted into an array of 26 chars, so `mapping`'s length must be 26.
     ///
-    /// Mapping can contains `-` for silent. See [DEFAULT_US_ENGLISH_GENEALOGY_MAPPING_SOUNDEX].
+    /// Mapping can contain `-` for silent. See [DEFAULT_US_ENGLISH_GENEALOGY_MAPPING_SOUNDEX].
     ///
     /// # Parameters
     ///
@@ -159,7 +159,7 @@ impl FromStr for Soundex {
     /// Construct a [Soundex] from the mapping in parameter. This [str] will
     /// be converted into an array of 26 chars, so `mapping`'s length must be 26.
     ///
-    /// Mapping can contains `-` for silent. See [DEFAULT_US_ENGLISH_GENEALOGY_MAPPING_SOUNDEX].
+    /// Mapping can contain `-` for silent. See [DEFAULT_US_ENGLISH_GENEALOGY_MAPPING_SOUNDEX].
     ///
     /// # Parameters
     ///
@@ -191,7 +191,7 @@ impl TryFrom<String> for Soundex {
     /// Construct a [Soundex] from the mapping in parameter. This [String] will
     /// be converted into an array of 26 chars, so `mapping`'s length must be 26.
     ///
-    /// Mapping can contains `-` for silent. See [DEFAULT_US_ENGLISH_GENEALOGY_MAPPING_SOUNDEX].
+    /// Mapping can contain `-` for silent. See [DEFAULT_US_ENGLISH_GENEALOGY_MAPPING_SOUNDEX].
     ///
     /// # Parameters
     ///
