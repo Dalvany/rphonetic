@@ -49,7 +49,7 @@ impl Display for DoubleMetaphoneResult {
     }
 }
 
-/// This is represent a [DoubleMetaphone] result.
+/// This is representing a [DoubleMetaphone] result.
 ///
 /// It contains both `primary` and `alternate` codes.
 impl DoubleMetaphoneResult {
@@ -2136,10 +2136,7 @@ mod tests {
         for (i, (data1, data2)) in MATCHES.into_iter().enumerate() {
             let match1 = encoder.is_double_metaphone_equal(data1, data2, false);
             let match2 = encoder.is_double_metaphone_equal(data1, data2, true);
-            assert!(
-                match1 || match2,
-                "Expected match [{i}] {data1} and {data2}"
-            );
+            assert!(match1 || match2, "Expected match [{i}] {data1} and {data2}");
         }
     }
 
@@ -3419,11 +3416,7 @@ mod tests {
 
         for (i, (value, primary, alternate)) in TEST_DATA.iter().enumerate() {
             let result = encoder.encode(value);
-            assert_eq!(
-                result,
-                primary.to_string(),
-                "[{i}] primary {value} fail"
-            );
+            assert_eq!(result, primary.to_string(), "[{i}] primary {value} fail");
             let result = encoder.encode_alternate(value);
             assert_eq!(
                 result,

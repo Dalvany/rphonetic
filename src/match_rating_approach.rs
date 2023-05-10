@@ -27,7 +27,7 @@ const PLAIN_ASCII: [char; 60] = [
     'o', 'U', 'u',
 ];
 
-/// Unicode characters corresponding to various accented letters. For example: \u{00DA} is U acute etc...
+/// Unicode's characters corresponding to various accented letters. For example, \u{00DA} is U acute etc...
 const UNICODE: [char; 60] = [
     '\u{00C0}', '\u{00E0}', '\u{00C8}', '\u{00E8}', '\u{00CC}', '\u{00EC}', '\u{00D2}', '\u{00F2}',
     '\u{00D9}', '\u{00F9}', '\u{00C1}', '\u{00E1}', '\u{00C9}', '\u{00E9}', '\u{00CD}', '\u{00ED}',

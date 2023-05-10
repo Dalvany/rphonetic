@@ -241,7 +241,7 @@ impl TryFrom<(&str, &str, &str, &str)> for Rule {
 /// # }
 /// ```
 ///
-/// A [Default] implementation, with default rules is provided when feature `embedded_dm` is enable.
+/// A [Default] implementation, with default rules is provided when feature `embedded_dm` is enabled.
 #[derive(Clone, Debug, Ord, PartialOrd, Eq, PartialEq)]
 pub struct DaitchMokotoffSoundex {
     ascii_folding: bool,
@@ -352,7 +352,7 @@ impl DaitchMokotoffSoundex {
                                 let force = (last_char == 'm' && ch == 'n')
                                     || (last_char == 'n' && ch == 'm');
                                 next_branch.process_next_replacement(next_replacement, force);
-                                // Perhaps use the crate "linked-hash-map" but its major version is 0 and I want to release a major version
+                                // Perhaps use the crate "linked-hash-map" but its major version is 0, and I want to release a major version
                                 if !next_branches.contains(&next_branch) {
                                     next_branches.push(next_branch);
                                 }
@@ -367,7 +367,7 @@ impl DaitchMokotoffSoundex {
                         let l = rule.get_pattern_length();
                         // Since nth(..) is 0 base, nth(0) while call "next()", resulting
                         // in a supplementary call.
-                        // So we need to "skip" if length >= 2 and we need to substract 2.
+                        // So we need to "skip" if length >= 2, and we need to substract 2.
                         if l > 1 {
                             let _ = iterator.nth(rule.get_pattern_length() - 2);
                         }
