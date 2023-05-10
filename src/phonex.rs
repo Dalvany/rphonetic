@@ -22,7 +22,7 @@ use crate::{Encoder, SoundexUtils};
 /// Phonex is a modification of the venerable Soundex algorithm. It accounts
 /// for a few more letter combinations to improve accuracy on some data sets.
 /// It was created by A.J. Lait and Brian Randell in 1996, described in their
-/// paper "An assessment of name matching algorithms" in the Technical Report
+/// paper ["An assessment of name matching algorithms"](https://citeseerx.ist.psu.edu/viewdoc/download;jsessionid=E3997DC51F2046A95EE6459F2B997029?doi=10.1.1.453.4046&rep=rep1&type=pdf) in the Technical Report
 /// Series published by University of Newcastle Upon Tyne Computing Science.
 ///
 /// ```rust
