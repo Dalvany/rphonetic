@@ -26,7 +26,7 @@ Currently, there are :
 * [Refined Soundex](https://en.wikipedia.org/wiki/Soundex)
 * [Soundex](https://en.wikipedia.org/wiki/Soundex)
 * [Beider-Morse](https://en.wikipedia.org/wiki/Daitch%E2%80%93Mokotoff_Soundex#Beider%E2%80%93Morse_Phonetic_Name_Matching_Algorithm)
-* [Phonex](https://citeseerx.ist.psu.edu/viewdoc/download;jsessionid=E3997DC51F2046A95EE6459F2B997029?doi=10.1.1.453.4046&rep=rep1&type=pdf)
+* [Phonex](https://citeseerx.ist.psu.edu/viewdoc/download;jsessionid=E3997DC51F2046A95EE6459F2B997029?doi=10.1.1.453.4046&rep=rep1&type=pdf) (contribution from [Ant Zucaro](https://github.com/antzucaro))
 
 Please note that most of these algorithms are design for ASCII, and they are usually design for certain use case (eg.
 english names, ...etc).
