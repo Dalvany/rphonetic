@@ -20,23 +20,10 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  # Build cache
-  install:
-    name: Install necessary tools
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-      - name: Cache
-        uses: Swatinem/rust-cache@v2
-      - name: Installation binaries
-        run: cargo install cargo-hack cargo-llvm-cov clippy-sarif sarif-fmt cargo-udeps
-
   # Check that crate is compiling avoiding running other jobs
   # if there's an error.
   # TODO : see to cache crates download to save time
   build:
-    needs: install
     name: Check crate compilation
     runs-on: ubuntu-latest
     steps:
@@ -78,6 +65,8 @@ jobs:
         uses: actions/checkout@v3
       - name: Cache
         uses: Swatinem/rust-cache@v2
+      - name: Install required cargo utilities
+        run: cargo install clippy-sarif sarif-fmt
       - name: Run clippy
         run:
           cargo clippy
@@ -110,6 +99,8 @@ jobs:
         uses: actions/checkout@v3
       - name: Cache
         uses: Swatinem/rust-cache@v2
+      - name: Install cargo-udeps
+        run: cargo install cargo-udeps
       - name: Check dependencies
         run: cargo +nighly udeps
 
