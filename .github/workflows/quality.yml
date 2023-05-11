@@ -15,8 +15,6 @@ on:
   pull_request:
     # The branches below must be a subset of the branches above
     branches: [ main ]
-  schedule:
-    - cron: '* * 1,7,14,28 * *'
 
 env:
   CARGO_TERM_COLOR: always
