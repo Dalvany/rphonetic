@@ -18,8 +18,6 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
-  # Change cargo home
-  CARGO_HOME: .cargo
 
 jobs:
   # Check that crate is compiling avoiding running other jobs
@@ -31,6 +29,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+      - name: Cache
+        uses: Swatinem/rust-cache@v2
       - uses: taiki-e/install-action@cargo-hack
       - name: Check compilation
         run: cargo hack check --all --each-feature --clean-per-run --no-dev-deps
@@ -42,6 +42,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+      - name: Cache
+        uses: Swatinem/rust-cache@v2
       - name: Install components
         run: rustup component add llvm-tools-preview
       - uses: taiki-e/install-action@cargo-llvm-cov
@@ -61,6 +63,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+      - name: Cache
+        uses: Swatinem/rust-cache@v2
       - name: Install required cargo utilities
         run: cargo install clippy-sarif sarif-fmt
       - name: Run clippy
@@ -81,6 +85,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+      - name: Cache
+        uses: Swatinem/rust-cache@v2
       - name: Check code style
         run: cargo fmt --check
 
@@ -91,6 +97,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+      - name: Cache
+        uses: Swatinem/rust-cache@v2
       - name: Install cargo-udeps
         run: cargo install cargo-udeps
       - name: Check dependencies
