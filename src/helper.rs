@@ -64,11 +64,7 @@ pub fn replace_char<F>(string: String, f: F) -> String
 where
     F: FnMut((usize, char)) -> char,
 {
-    string
-        .chars()
-        .enumerate()
-        .map(f)
-        .collect::<String>()
+    string.chars().enumerate().map(f).collect::<String>()
 }
 
 pub fn remove_all_nonletter(string: String) -> String {
