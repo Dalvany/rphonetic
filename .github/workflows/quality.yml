@@ -97,12 +97,10 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-      - name: Install nightly toolchain
-        run: rustup toolchain install nightly
       - name: Cache
         uses: Swatinem/rust-cache@v2
-      - name: Install cargo-udeps
-        run: cargo install cargo-udeps
+      - name: Install cargo-machete
+        run: cargo install cargo-machete
       - name: Check dependencies
-        run: cargo +nighly udeps
+        run: cargo machete
 
