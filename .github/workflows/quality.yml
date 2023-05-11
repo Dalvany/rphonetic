@@ -36,7 +36,7 @@ jobs:
         run: cargo hack check --all --each-feature --clean-per-run --no-dev-deps
 
   tests:
-    need: build
+    needs: build
     name: Test crate with code coverage
     runs-on: ubuntu-latest
     steps:
@@ -55,7 +55,7 @@ jobs:
           fail_ci_if_error: true
 
   clippy:
-    need: build
+    needs: build
     name: Lint crate
     runs-on: ubuntu-latest
     steps:
@@ -75,20 +75,24 @@ jobs:
           wait-for-processing: true
 
   fmt:
-    need: build
+    needs: build
     name: Check code style
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+      - name: Check code style
+        run: cargo fmt --check
 
-  audit:
-    need: build
-    name: Audit security vulnerabilities
+  dependencies:
+    needs: build
+    name: Check unused dependencies
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions-rs/audit-check@v1
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - name: Install cargo-udeps
+        run: cargo install cargo-udeps
+      - name: Check dependencies
+        run: cargo +nighly udeps
 
