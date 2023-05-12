@@ -94,14 +94,14 @@ impl Phonex {
         input
     }
 
-    fn is_vowel(c: Option<&char>) -> bool {
+    fn is_vowel(c: Option<char>) -> bool {
         match c {
             Some(c) => is_vowel(Some(c.to_ascii_lowercase()), true),
             _ => false,
         }
     }
 
-    fn transcode(&self, curr: &char, next: Option<&char>, is_last_char: bool) -> (char, bool) {
+    fn transcode(&self, curr: char, next: Option<char>, is_last_char: bool) -> (char, bool) {
         let mut skip_next_char = false;
 
         let code = match curr {
@@ -147,35 +147,51 @@ impl SoundexUtils for Phonex {}
 impl Encoder for Phonex {
     fn encode(&self, value: &str) -> String {
         let input = self.preprocess(value);
-        let chars: Vec<_> = input.chars().collect();
 
-        let mut result = vec![];
+        let mut chars = input.chars().enumerate().peekable();
+
+        // Use directly the return type, with the right allocated capacity (if we're
+        // only using ASCII).
+        let mut result = String::with_capacity(self.max_code_length);
 
         let mut last = '0';
-        let mut i = 0;
+        let mut last_push = '0';
 
-        while i < chars.len() && result.len() < self.max_code_length {
-            let curr = chars[i];
-            let next = chars.get(i + 1);
-            let is_last_char = i == (chars.len() - 1);
-
-            let (code, skip_next_char) = self.transcode(&curr, next, is_last_char);
-            if skip_next_char {
-                i += 1;
+        'char_iter: while let Some((mut i, curr)) = chars.next() {
+            // We reach max_code_length we stop here.
+            if result.len() == self.max_code_length {
+                break 'char_iter;
             }
 
-            if last != code && code != '0' && i != 0 {
-                result.push(code);
+            // We don't care here about the char number (not the index as it could
+            // an invalid UTF-8 position, see difference between char_indices() and
+            // chars().enumerate())
+            let next = chars.peek().map(|(_, ch)| ch).copied();
+
+            // If `next` is None, it means that `curr` is last char. It also worked with previous
+            // implementation.
+            let (code, skip_next_char) = self.transcode(curr, next, next.is_none());
+            if skip_next_char {
+                // Consume iterator
+                let _ = chars.next();
+                // Since `next()` return an Option, and we don't really
+                // want to deal with the `None` case (what value to set `i` with ?)
+                // we directly increment `i` for the remaining loop code.
+                // Note that it will be reset with the right value in the next iteration
+                i += 1;
             }
 
             if i == 0 {
                 result.push(curr);
                 last = code;
+                last_push = curr;
+            } else if last != code && code != '0' && i != 0 {
+                result.push(code);
+                last = code;
+                last_push = code;
             } else {
-                last = result[result.len() - 1]
+                last = last_push;
             }
-
-            i += 1;
         }
 
         // Pad to ensure we meet `max_code_length`
@@ -183,7 +199,7 @@ impl Encoder for Phonex {
             result.push('0');
         }
 
-        result.into_iter().collect()
+        result
     }
 }
 
@@ -203,7 +219,7 @@ mod tests {
         }
     }
 
-    fn transcode(values: Vec<(&char, Option<&char>, bool, char, bool)>) {
+    fn transcode(values: Vec<(char, Option<char>, bool, char, bool)>) {
         let phonex = Phonex::default();
         for (curr, next, is_last_char, e_code, e_skip_next_char) in values {
             let (code, skip_next_char) = phonex.transcode(curr, next, is_last_char);
@@ -249,31 +265,31 @@ mod tests {
     #[test]
     fn test_transcode() {
         transcode(vec![
-            (&'B', None, false, '1', false),
-            (&'P', None, false, '1', false),
-            (&'F', None, false, '1', false),
-            (&'V', None, false, '1', false),
-            (&'C', None, false, '2', false),
-            (&'S', None, false, '2', false),
-            (&'K', None, false, '2', false),
-            (&'G', None, false, '2', false),
-            (&'J', None, false, '2', false),
-            (&'Q', None, false, '2', false),
-            (&'X', None, false, '2', false),
-            (&'Z', None, false, '2', false),
-            (&'D', None, false, '3', false),
-            (&'T', None, false, '3', false),
-            (&'D', Some(&'C'), false, '0', false),
-            (&'T', Some(&'C'), false, '0', false),
-            (&'L', Some(&'A'), false, '4', false),
-            (&'L', Some(&'B'), true, '4', false),
-            (&'L', Some(&'B'), false, '0', false),
-            (&'M', None, false, '5', false),
-            (&'N', None, false, '5', false),
-            (&'M', Some(&'D'), false, '5', true),
-            (&'M', Some(&'G'), false, '5', true),
-            (&'R', Some(&'A'), false, '6', false),
-            (&'R', None, true, '6', false),
+            ('B', None, false, '1', false),
+            ('P', None, false, '1', false),
+            ('F', None, false, '1', false),
+            ('V', None, false, '1', false),
+            ('C', None, false, '2', false),
+            ('S', None, false, '2', false),
+            ('K', None, false, '2', false),
+            ('G', None, false, '2', false),
+            ('J', None, false, '2', false),
+            ('Q', None, false, '2', false),
+            ('X', None, false, '2', false),
+            ('Z', None, false, '2', false),
+            ('D', None, false, '3', false),
+            ('T', None, false, '3', false),
+            ('D', Some('C'), false, '0', false),
+            ('T', Some('C'), false, '0', false),
+            ('L', Some('A'), false, '4', false),
+            ('L', Some('B'), true, '4', false),
+            ('L', Some('B'), false, '0', false),
+            ('M', None, false, '5', false),
+            ('N', None, false, '5', false),
+            ('M', Some('D'), false, '5', true),
+            ('M', Some('G'), false, '5', true),
+            ('R', Some('A'), false, '6', false),
+            ('R', None, true, '6', false),
         ]);
     }
 
