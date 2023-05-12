@@ -46,27 +46,29 @@ impl Phonex {
         Self { max_code_length }
     }
 
-    fn preprocess(&self, mut value: String) -> String {
+    fn preprocess(&self, value: &str) -> String {
+        let mut input = Self::soundex_clean(value);
+
         // 1. Remove all trailing 'S' characters
-        while value.ends_with('S') {
-            value.pop();
+        while input.ends_with('S') {
+            input.pop();
         }
 
         // 2. Convert leading letter pairs as follows:
         //    KN -> N, PH -> F, WR -> R
-        let first_two = value.chars().take(2).collect::<String>();
+        let first_two = input.chars().take(2).collect::<String>();
         match first_two.as_str() {
-            "KN" => value.replace_range(..2, "N"),
-            "PH" => value.replace_range(..2, "F"),
-            "WR" => value.replace_range(..2, "R"),
+            "KN" => input.replace_range(..2, "N"),
+            "PH" => input.replace_range(..2, "F"),
+            "WR" => input.replace_range(..2, "R"),
             _ => (),
         };
 
         // Replace first characters as follows:
         //    H -> Remove
-        let first = value.chars().next();
+        let first = input.chars().next();
         if first == Some('H') {
-            value.remove(0);
+            input.remove(0);
         }
 
         // Replace first characters as follows:
@@ -76,20 +78,20 @@ impl Phonex {
         //    K, Q -> C
         //    J -> G
         //    Z -> S
-        let first = value.chars().next();
+        let first = input.chars().next();
         match first {
             Some('E') | Some('I') | Some('O') | Some('U') | Some('Y') => {
-                value.replace_range(..1, "A")
+                input.replace_range(..1, "A")
             }
-            Some('P') => value.replace_range(..1, "B"),
-            Some('V') => value.replace_range(..1, "F"),
-            Some('K') | Some('Q') => value.replace_range(..1, "C"),
-            Some('J') => value.replace_range(..1, "G"),
-            Some('Z') => value.replace_range(..1, "S"),
+            Some('P') => input.replace_range(..1, "B"),
+            Some('V') => input.replace_range(..1, "F"),
+            Some('K') | Some('Q') => input.replace_range(..1, "C"),
+            Some('J') => input.replace_range(..1, "G"),
+            Some('Z') => input.replace_range(..1, "S"),
             _ => (),
         };
 
-        value
+        input
     }
 
     fn is_vowel(c: Option<&char>) -> bool {
@@ -144,15 +146,7 @@ impl SoundexUtils for Phonex {}
 
 impl Encoder for Phonex {
     fn encode(&self, value: &str) -> String {
-        let input = Self::soundex_clean(value);
-        if input.is_empty() {
-            return input;
-        }
-
-        let input = self.preprocess(input);
-        if input.is_empty() {
-            return input;
-        }
+        let input = self.preprocess(value);
         let chars: Vec<_> = input.chars().collect();
 
         let mut result = vec![];
@@ -200,7 +194,7 @@ mod tests {
     fn preprocess(values: Vec<(&str, String)>) {
         let phonex = Phonex::default();
         for (input, expected) in values {
-            let actual = phonex.preprocess(input.to_owned());
+            let actual = phonex.preprocess(input);
 
             assert_eq!(
                 actual, expected,
@@ -341,5 +335,19 @@ mod tests {
             ("Joben", "G150"),
             ("Zelda", "S300"),
         ]);
+    }
+
+    #[test]
+    fn test_encode_number() {
+        let encoder = Phonex::default();
+
+        assert_eq!(encoder.encode("123456789"), "0000");
+    }
+
+    #[test]
+    fn test_encode_empty_string() {
+        let encoder = Phonex::default();
+
+        assert_eq!(encoder.encode(""), "0000");
     }
 }
