@@ -155,6 +155,7 @@ impl Encoder for Phonex {
         let mut result = String::with_capacity(self.max_code_length);
 
         let mut last = '0';
+        let mut last_push = '0';
 
         'char_iter: while let Some((mut i, curr)) = chars.next() {
             // We reach max_code_length we stop here.
@@ -180,24 +181,16 @@ impl Encoder for Phonex {
                 i += 1;
             }
 
-            if last != code && code != '0' && i != 0 {
-                result.push(code);
-            }
-
             if i == 0 {
                 result.push(curr);
                 last = code;
+                last_push = curr;
+            } else if last != code && code != '0' && i != 0 {
+                result.push(code);
+                last = code;
+                last_push = code;
             } else {
-                // Unwrap is safe here, since we push
-                // the first char must be in result
-                // TODO : nevertheless, try to find another way of doing this.
-                // It fails on some test if we do
-                //    if last != code && code != '0' && i != 0 {
-                //        result.push(code);
-                //        last = code;
-                //    }
-                // and remove this `else`
-                last = result.chars().rev().next().unwrap();
+                last = last_push;
             }
         }
 
