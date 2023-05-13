@@ -233,6 +233,7 @@ mod tests {
         }
     }
 
+    #[allow(clippy::type_complexity)]
     fn transcode(values: Vec<(char, Option<char>, bool, Option<char>, bool)>) {
         let phonex = Phonex::default();
         for (curr, next, is_last_char, e_code, e_skip_next_char) in values {
