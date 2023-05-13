@@ -175,9 +175,6 @@ impl Encoder for Phonex {
                 last_push = curr;
             }
 
-            // We don't care here about the char number (not the index as it could
-            // an invalid UTF-8 position, see difference between char_indices() and
-            // chars().enumerate())
             let next = chars.peek().map(|(_, ch)| ch).copied();
 
             // If `next` is None, it means that `curr` is last char. It also worked with previous
@@ -251,7 +248,10 @@ mod tests {
                 _ => String::from("None"),
             };
 
-            assert_eq!(code, e_code, "expected code to be {expected} but got {actual}");
+            assert_eq!(
+                code, e_code,
+                "expected code to be {expected} but got {actual}"
+            );
 
             assert_eq!(
                 skip_next_char, e_skip_next_char,
