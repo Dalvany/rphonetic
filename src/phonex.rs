@@ -54,13 +54,13 @@ impl Phonex {
             input.pop();
         }
 
-        // 2. Convert leading letter pairs as follows:
-        //    KN -> N, PH -> F, WR -> R
+        // 2. Replace leading letter pairs as follows:
+        //    KN -> NN, PH -> FH, WR -> RR
         let first_two = input.chars().take(2).collect::<String>();
         match first_two.as_str() {
-            "KN" => input.replace_range(..2, "N"),
-            "PH" => input.replace_range(..2, "F"),
-            "WR" => input.replace_range(..2, "R"),
+            "KN" => input.replace_range(..1, "N"),
+            "PH" => input.replace_range(..1, "F"),
+            "WR" => input.replace_range(..1, "R"),
             _ => (),
         };
 
@@ -101,35 +101,40 @@ impl Phonex {
         }
     }
 
-    fn transcode(&self, curr: char, next: Option<char>, is_last_char: bool) -> (char, bool) {
+    fn transcode(
+        &self,
+        curr: char,
+        next: Option<char>,
+        is_last_char: bool,
+    ) -> (Option<char>, bool) {
         let mut skip_next_char = false;
 
-        let code = match curr {
-            'B' | 'P' | 'F' | 'V' => '1',
-            'C' | 'S' | 'K' | 'G' | 'J' | 'Q' | 'X' | 'Z' => '2',
+        let code: Option<char> = match curr {
+            'B' | 'P' | 'F' | 'V' => Some('1'),
+            'C' | 'S' | 'K' | 'G' | 'J' | 'Q' | 'X' | 'Z' => Some('2'),
             'D' | 'T' => match next {
-                Some('C') => '0',
-                _ => '3',
+                Some('C') => None,
+                _ => Some('3'),
             },
             'L' => {
                 if Phonex::is_vowel(next) || is_last_char {
-                    '4'
+                    Some('4')
                 } else {
-                    '0'
+                    None
                 }
             }
             'M' | 'N' => {
                 skip_next_char = matches!(next, Some('D') | Some('G'));
-                '5'
+                Some('5')
             }
             'R' => {
                 if Phonex::is_vowel(next) || is_last_char {
-                    '6'
+                    Some('6')
                 } else {
-                    '0'
+                    None
                 }
             }
-            _ => '0',
+            _ => Some('0'),
         };
 
         (code, skip_next_char)
@@ -154,6 +159,7 @@ impl Encoder for Phonex {
         // only using ASCII).
         let mut result = String::with_capacity(self.max_code_length);
 
+        let mut code = '0';
         let mut last = '0';
         let mut last_push = '0';
 
@@ -163,6 +169,12 @@ impl Encoder for Phonex {
                 break 'char_iter;
             }
 
+            // We always add the first (sanitized, preprocessed) character.
+            if i == 0 {
+                result.push(curr);
+                last_push = curr;
+            }
+
             // We don't care here about the char number (not the index as it could
             // an invalid UTF-8 position, see difference between char_indices() and
             // chars().enumerate())
@@ -170,7 +182,13 @@ impl Encoder for Phonex {
 
             // If `next` is None, it means that `curr` is last char. It also worked with previous
             // implementation.
-            let (code, skip_next_char) = self.transcode(curr, next, next.is_none());
+            let (new_code, skip_next_char) = self.transcode(curr, next, next.is_none());
+
+            // We only care if we have an actual value
+            if let Some(c) = new_code {
+                code = c
+            }
+
             if skip_next_char {
                 // Consume iterator
                 let _ = chars.next();
@@ -181,16 +199,15 @@ impl Encoder for Phonex {
                 i += 1;
             }
 
-            if i == 0 {
-                result.push(curr);
-                last = code;
-                last_push = curr;
-            } else if last != code && code != '0' && i != 0 {
+            if last != code && code != '0' && i != 0 {
                 result.push(code);
-                last = code;
                 last_push = code;
-            } else {
-                last = last_push;
+            }
+
+            last = last_push;
+
+            if i == 0 {
+                last = code;
             }
         }
 
@@ -219,16 +236,26 @@ mod tests {
         }
     }
 
-    fn transcode(values: Vec<(char, Option<char>, bool, char, bool)>) {
+    fn transcode(values: Vec<(char, Option<char>, bool, Option<char>, bool)>) {
         let phonex = Phonex::default();
         for (curr, next, is_last_char, e_code, e_skip_next_char) in values {
             let (code, skip_next_char) = phonex.transcode(curr, next, is_last_char);
 
-            assert_eq!(code, e_code, "code {code} should output {e_code}");
+            let expected = match code {
+                Some(c) => c.to_string(),
+                _ => String::from("None"),
+            };
+
+            let actual = match e_code {
+                Some(c) => c.to_string(),
+                _ => String::from("None"),
+            };
+
+            assert_eq!(code, e_code, "expected code to be {expected} but got {actual}");
 
             assert_eq!(
                 skip_next_char, e_skip_next_char,
-                "skip_next_char {skip_next_char} should output {e_skip_next_char}"
+                "expected skip_next_char to be {e_skip_next_char} but got {skip_next_char}"
             );
         }
     }
@@ -249,9 +276,9 @@ mod tests {
         preprocess(vec![
             ("TESTSSS", String::from("TEST")),
             ("SSS", String::from("")),
-            ("KNUTH", String::from("NUTH")),
-            ("PHONETIC", String::from("FONETIC")),
-            ("WRIGHT", String::from("RIGHT")),
+            ("KNUTH", String::from("NNUTH")),
+            ("PHONETIC", String::from("FHONETIC")),
+            ("WRIGHT", String::from("RRIGHT")),
             ("HARRINGTON", String::from("ARRINGTON")),
             ("EIGER", String::from("AIGER")),
             ("PERCIVAL", String::from("BERCIVAL")),
@@ -265,31 +292,31 @@ mod tests {
     #[test]
     fn test_transcode() {
         transcode(vec![
-            ('B', None, false, '1', false),
-            ('P', None, false, '1', false),
-            ('F', None, false, '1', false),
-            ('V', None, false, '1', false),
-            ('C', None, false, '2', false),
-            ('S', None, false, '2', false),
-            ('K', None, false, '2', false),
-            ('G', None, false, '2', false),
-            ('J', None, false, '2', false),
-            ('Q', None, false, '2', false),
-            ('X', None, false, '2', false),
-            ('Z', None, false, '2', false),
-            ('D', None, false, '3', false),
-            ('T', None, false, '3', false),
-            ('D', Some('C'), false, '0', false),
-            ('T', Some('C'), false, '0', false),
-            ('L', Some('A'), false, '4', false),
-            ('L', Some('B'), true, '4', false),
-            ('L', Some('B'), false, '0', false),
-            ('M', None, false, '5', false),
-            ('N', None, false, '5', false),
-            ('M', Some('D'), false, '5', true),
-            ('M', Some('G'), false, '5', true),
-            ('R', Some('A'), false, '6', false),
-            ('R', None, true, '6', false),
+            ('B', None, false, Some('1'), false),
+            ('P', None, false, Some('1'), false),
+            ('F', None, false, Some('1'), false),
+            ('V', None, false, Some('1'), false),
+            ('C', None, false, Some('2'), false),
+            ('S', None, false, Some('2'), false),
+            ('K', None, false, Some('2'), false),
+            ('G', None, false, Some('2'), false),
+            ('J', None, false, Some('2'), false),
+            ('Q', None, false, Some('2'), false),
+            ('X', None, false, Some('2'), false),
+            ('Z', None, false, Some('2'), false),
+            ('D', None, false, Some('3'), false),
+            ('T', None, false, Some('3'), false),
+            ('D', Some('C'), false, None, false),
+            ('T', Some('C'), false, None, false),
+            ('L', Some('A'), false, Some('4'), false),
+            ('L', Some('B'), true, Some('4'), false),
+            ('L', Some('B'), false, None, false),
+            ('M', None, false, Some('5'), false),
+            ('N', None, false, Some('5'), false),
+            ('M', Some('D'), false, Some('5'), true),
+            ('M', Some('G'), false, Some('5'), true),
+            ('R', Some('A'), false, Some('6'), false),
+            ('R', None, true, Some('6'), false),
         ]);
     }
 
@@ -344,7 +371,7 @@ mod tests {
             ("Czarkowska", "C200"),
             ("Hornblower", "A514"),
             ("Looser", "L260"),
-            ("Wright", "R230"),
+            ("Wright", "R623"),
             ("Phonic", "F520"),
             ("Quickening", "C250"),
             ("Kuickening", "C250"),
