@@ -11,7 +11,7 @@ use nom::{
 };
 
 /// From `nom` recipe.
-/// Recognize a multiline comment and returns the number of line.
+/// Recognize a multiline comment and return the number of lines.
 ///
 /// Multiline comments :
 /// ```norust
@@ -54,7 +54,8 @@ fn boolean_false<'a>() -> impl FnMut(&'a str) -> IResult<&'a str, bool> {
     map_res(tag("false"), |v: &str| v.parse::<bool>())
 }
 
-/// Recognize an end of line. This might be a single line comment or spaces,
+/// Recognize the end of line.
+/// This might be a single line comment or spaces,
 /// followed by a `\n`, end of file or `\r\n`.
 ///
 /// When used at the start of a line, if it matches, the line could be considered as empty.
@@ -67,7 +68,7 @@ pub fn end_of_line<'a>() -> impl FnMut(&'a str) -> IResult<&'a str, (Option<&'a 
 
 /// Recognize something between two double quote (`"..."`).
 fn part<'a>() -> impl FnMut(&'a str) -> IResult<&'a str, &'a str> {
-    // There is only "\"" in rules so to keep thing simple we will just alt between
+    // There is only "\"" in rules, so to keep thing simple, we will just alt between
     // tag("\\\"") and take_until("\"").
     delimited(char('"'), alt((tag("\\\""), take_until("\""))), char('"'))
 }

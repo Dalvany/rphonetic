@@ -61,7 +61,7 @@ fn has_silent_in_mapping(mapping: [char; 26]) -> bool {
 ///
 /// The code will have a constant length of 4.
 ///
-/// Although it was primary done for names, [Soundex] can be used for general words.
+/// Although it was primarily done for names, [Soundex] can be used for general words.
 ///
 /// # Example :
 ///
@@ -84,9 +84,12 @@ impl Soundex {
     ///
     /// # Parameter
     ///
-    /// * `mapping` : mapping array. It contains, for each letter its corresponding code. Index 0 is the code for `A`, index 1
-    /// is for `B`and so on for each letter of the latin alphabet. Code `-` is treated as silent (eg [DEFAULT_US_ENGLISH_GENEALOGY_MAPPING_SOUNDEX]).
-    /// * `special_case_h_w` : a boolean to indicate that `H` and `W` should be treated as silence.
+    /// * `mapping`: mapping array.
+    /// It contains for each letter its corresponding code.
+    /// Index 0 is the code for `A`, index is for `B` and so on for
+    /// each letter of the latin alphabet.
+    /// Code `-` is treated as silent (eg [DEFAULT_US_ENGLISH_GENEALOGY_MAPPING_SOUNDEX]).
+    /// * `special_case_h_w`: a boolean to indicate that `H` and `W` should be treated as silence.
     pub fn new(mapping: [char; 26], special_case_h_w: bool) -> Self {
         Self {
             mapping,
@@ -101,7 +104,7 @@ impl Soundex {
 
 /// This is the [Default] implementation for [Soundex], it returns an instance
 /// with [DEFAULT_US_ENGLISH_MAPPING_SOUNDEX] and, therefor, with a special
-/// treatment for `H` and `W`̀ : they are considered as silence.
+/// treatment for `H` and `W`̀: they are considered as silence.
 impl Default for Soundex {
     fn default() -> Self {
         Self {
@@ -131,7 +134,7 @@ impl TryFrom<&str> for Soundex {
     ///
     /// # Parameters
     ///
-    /// * `mapping` : str that contains the corresponding code for each character.
+    /// * `mapping`: str that contains the corresponding code for each character.
     ///
     /// # Example
     ///
@@ -163,7 +166,7 @@ impl FromStr for Soundex {
     ///
     /// # Parameters
     ///
-    /// * `mapping` : str that contains the corresponding code for each character.
+    /// * `mapping`: str that contains the corresponding code for each character.
     ///
     /// # Example
     ///
@@ -195,7 +198,7 @@ impl TryFrom<String> for Soundex {
     ///
     /// # Parameters
     ///
-    /// * `mapping` : str that contains the corresponding code for each character.
+    /// * `mapping`: str that contains the corresponding code for each character.
     ///
     /// # Example
     ///

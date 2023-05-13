@@ -19,7 +19,7 @@ use serde::{Deserialize, Serialize};
 use crate::helper::is_vowel;
 use crate::Encoder;
 
-/// he plain letter equivalent of the accented letters.
+/// The plain letter equivalent of the accented letters.
 const PLAIN_ASCII: [char; 60] = [
     'A', 'a', 'E', 'e', 'I', 'i', 'O', 'o', 'U', 'u', 'A', 'a', 'E', 'e', 'I', 'i', 'O', 'o', 'U',
     'u', 'Y', 'y', 'A', 'a', 'E', 'e', 'I', 'i', 'O', 'o', 'U', 'u', 'Y', 'y', 'A', 'a', 'O', 'o',
@@ -110,7 +110,7 @@ impl MatchRatingApproach {
 
     fn remove_vowels(value: String) -> String {
         // I drop the Java "name = name.replaceAll("\\s{2,}\\b", SPACE);" of remove_vowels(...) because
-        // clean name removes any whitespace.
+        // clean name removes any space.
         value
             .char_indices()
             .filter(|(index, ch)| index == &0 || !is_vowel(Some(ch.to_ascii_lowercase()), false))

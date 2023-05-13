@@ -22,7 +22,7 @@ use crate::Encoder;
 const FRONTV: &str = "EIY";
 const VARSON: &str = "CSPTG";
 
-/// This the [Metaphone] implementation of [Encoder].
+/// This is the [Metaphone] implementation of [Encoder].
 ///
 /// It takes a maximum code length for the `new` constructor and has
 /// a [Default] implementation with a maximum code length of 4.
@@ -45,7 +45,7 @@ impl Metaphone {
     ///
     /// # Parameter
     ///
-    /// * `max_code_length : the maximum code length.
+    /// * `max_code_length`: the maximum code length.
     pub fn new(max_code_length: usize) -> Self {
         Self { max_code_length }
     }
@@ -72,7 +72,7 @@ impl Metaphone {
     }
 }
 
-/// [Default] implementation with a `max_code_length`of 4.
+/// [Default] implementation with a `max_code_length` of 4.
 impl Default for Metaphone {
     fn default() -> Self {
         Self { max_code_length: 4 }

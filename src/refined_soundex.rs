@@ -49,7 +49,9 @@ impl RefinedSoundex {
     ///
     /// # Parameter
     ///
-    /// * `mapping` : mapping array. It contains, for each letter its corresponding code. Index 0 is the code for `A`, index 1
+    /// * `mapping`: mapping array.
+    /// It contains for each letter its corresponding code.
+    /// Index 0 is the code for `A`, index 1
     /// is for `B`and so on for each letter of the latin alphabet.
     pub fn new(mapping: [char; 26]) -> Self {
         Self { mapping }
@@ -68,7 +70,7 @@ impl FromStr for RefinedSoundex {
     ///
     /// # Parameters
     ///
-    /// * `mapping` : str that contains the corresponding code for each character.
+    /// * `mapping`: str that contains the corresponding code for each character.
     ///
     /// # Example
     ///
@@ -98,7 +100,7 @@ impl TryFrom<&str> for RefinedSoundex {
     ///
     /// # Parameters
     ///
-    /// * `mapping` : str that contains the corresponding code for each character.
+    /// * `mapping`: str that contains the corresponding code for each character.
     ///
     /// # Example
     ///
@@ -128,7 +130,7 @@ impl TryFrom<String> for RefinedSoundex {
     ///
     /// # Parameters
     ///
-    /// * `mapping` : str that contains the corresponding code for each character.
+    /// * `mapping`: str that contains the corresponding code for each character.
     ///
     /// # Example
     ///

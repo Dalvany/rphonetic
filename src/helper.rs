@@ -67,7 +67,7 @@ where
     string.chars().enumerate().map(f).collect::<String>()
 }
 
-pub fn remove_all_nonletter(string: String) -> String {
+pub fn remove_all_non_letter(string: String) -> String {
     string
         .chars()
         .filter(|&c| c.is_lowercase())
@@ -129,7 +129,7 @@ impl<'a> From<CharSequence<'a>> for &'a str {
 impl<'a> Index<Range<usize>> for CharSequence<'a> {
     type Output = str;
 
-    // To make this faster at the cost of an increase of memory usage
+    // To make this faster, at the cost of an increase of memory usage,
     // we could store an array in an array of size chars().count()
     // the index of each char().
     fn index(&self, index: Range<usize>) -> &'a Self::Output {

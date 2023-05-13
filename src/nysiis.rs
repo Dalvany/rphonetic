@@ -47,7 +47,8 @@ const TRUE_LENGTH: usize = 6;
 
 /// This the [Nysiis](https://en.wikipedia.org/wiki/New_York_State_Identification_and_Intelligence_System) algorithm.
 ///
-/// [Default] implementation construct a strict version of the generated code. That means the code have at most 6 characters.
+/// [Default] implementation constructs a strict version of the generated code.
+/// That means the code has at most 6 characters.
 /// A `new` constructor is provided, allowing code to have more than 6 characters.
 ///
 /// ```rust
@@ -71,7 +72,7 @@ impl Nysiis {
     ///
     /// # Parameter
     ///
-    /// * `strict` : if `true` code will have maximum length of 6.
+    /// * `strict`: if `true` code will have maximum length of 6.
     pub fn new(strict: bool) -> Self {
         Self { strict }
     }

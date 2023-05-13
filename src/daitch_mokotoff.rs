@@ -43,7 +43,7 @@ impl<'a> Default for Branch<'a> {
 }
 
 impl<'a> Branch<'a> {
-    /// Finish to match [MAX_LENGTH] by appending `0`.
+    /// Finish matching [MAX_LENGTH] by appending `0`.
     fn finish(&mut self) {
         while self.builder.len() < MAX_LENGTH {
             self.builder.push('0');
@@ -125,24 +125,24 @@ impl TryFrom<(&str, &str, &str, &str)> for Rule {
 
 /// This the [Daitch Mokotoff soundex](https://en.wikipedia.org/wiki/Daitch%E2%80%93Mokotoff_Soundex) implementation.
 ///
-/// When `embedded_dm` feature is enable then there is a [Default] implementation
-/// that use [commons-codec rules](https://github.com/apache/commons-codec/blob/master/src/main/resources/org/apache/commons/codec/language/dmrules.txt).
+/// When `embedded_dm` feature is enabled, then there is a [Default] implementation
+/// that uses [commons-codec rules](https://github.com/apache/commons-codec/blob/master/src/main/resources/org/apache/commons/codec/language/dmrules.txt).
 ///
 /// It can be constructed with custom rules using [TryFrom].
 ///
 /// A rule is either in the form of :
-/// * `char`=`char` (a char is converted into another char, this is use for ASCII folding)
+/// * `char`=`char` (a char is converted into another char, this is used for ASCII folding)
 /// * "`pattern`" "`replacement_at_start`" "`replacement_before_vowel`" "`default_replacement`"
 ///     * `pattern` : a string to match
 ///     * `replacement_at_start` : the code to replace `pattern` with if `pattern` is at the start of the word.
-///     * `replacement_before_vowel` : the code to replace `pattern` with if `pattern` is before a vowel inside the word.
-///     * `default_replacement` : the code to replace `pattern` with for other case.
+///     * `Replacement_before_vowel`: the code to replace `pattern` with if `pattern` is before a vowel inside the word.
+///     * `default_replacement`: the code to replace `pattern` with for other cases.
 /// To support branching, any pattern can be in the form of `code|code|...`.
 ///
 /// Rules are separated by `\n`.
 ///
-/// Parse support single line comment using `//` and multiline comments using `/* ... */`. Note that multiline comment must start
-/// at the beginning of a line.
+/// Parse supports single line comment using `//` and multiline comments using `/* ... */`.
+/// Note that multiline comment must start at the beginning of a line.
 ///
 /// # Example :
 ///
@@ -158,9 +158,10 @@ impl TryFrom<(&str, &str, &str, &str)> for Rule {
 ///
 /// // This is a single line comment.
 ///
-/// à=a // You can put a one line comment at the end of a rule. This rule is for ASCII folding.
+/// À=a // You can put a one line comment at the end of a rule.
+/// This rule is for ASCII folding.
 /// /*
-/// This rule convert the substring `sh` into
+/// This rule converts the substring `sh` into
 ///  - `0` if at the start of the word
 ///  - an empty string if before a vowel
 ///  - otherwise it does a branching with code `0` and code `1`
@@ -183,7 +184,8 @@ impl TryFrom<(&str, &str, &str, &str)> for Rule {
 ///
 /// // This is a single line comment.
 ///
-/// à=a // You can put a one line comment at the end of a rule. This rule is for ASCII folding.
+/// À=a // You can put a one line comment at the end of a rule.
+/// This rule is for ASCII folding.
 /// /*
 /// This rule convert the substring `sh` into
 ///  - `0` if at the start of the word
@@ -197,14 +199,16 @@ impl TryFrom<(&str, &str, &str, &str)> for Rule {
 /// # }
 /// ```
 ///
-/// The algorithm, first, removes all whitespaces and, if enables, apply ASCII folding
+/// The algorithm, first, removes all spaces and, if enables, apply ASCII folding
 /// with provided rules.
 ///
 /// # Encoding
 ///
-/// There is 2 method to encode a string :
-/// * [DaitchMokotoffSoundex](#encode) that encode without branching. Only one code is returned
-/// * [DaitchMokotoffSoundex](#soundex) that encode with branching. Multiple code, separated by a `|` are returned.
+/// There are 2 methods to encode a string:
+/// * [DaitchMokotoffSoundex](#encode) that encode without branching.
+/// Only one code is returned
+/// * [DaitchMokotoffSoundex](#soundex) that encode with branching.
+/// Multiple codes, separated by a `|` are returned.
 ///
 /// There is a [helper function](DaitchMokotoffSoundex#method.inner_soundex) that returns code(s) in the form
 /// of a vec, avoiding parsing the output.
@@ -241,7 +245,7 @@ impl TryFrom<(&str, &str, &str, &str)> for Rule {
 /// # }
 /// ```
 ///
-/// A [Default] implementation, with default rules is provided when feature `embedded_dm` is enabled.
+/// A [Default] implementation with default rules is provided when feature `embedded_dm` is enabled.
 #[derive(Clone, Debug, Ord, PartialOrd, Eq, PartialEq)]
 pub struct DaitchMokotoffSoundex {
     ascii_folding: bool,
@@ -257,7 +261,8 @@ impl Default for DaitchMokotoffSoundex {
 }
 
 impl DaitchMokotoffSoundex {
-    /// Encode the string with branching. Multiple codes might be generated, seperated by a pipe.
+    /// Encode the string with branching.
+    /// Multiple codes might be generated, separated by a pipe.
     ///
     /// # Example :
     ///
@@ -278,17 +283,18 @@ impl DaitchMokotoffSoundex {
         self.inner_soundex(value, true).join("|")
     }
 
-    /// Encode a string and return vector of codes avoiding parsing result
+    /// Encode a string and return vector of codes avoiding a parsing result
     ///
     /// # Parameters :
     ///
     /// * `value` : value to encode
-    /// * `branching` : if `true` branching will be enabled and multiple code can
+    /// * `branching`: if `true` branching will be enabled and multiple code can
     /// be generated, otherwise the result will contain only one code.
     ///
     /// # Result :
     ///
-    /// A list of code. If branching is disabled, result will contain only one code,
+    /// A list of code.
+    /// If branching is disabled, a result will contain only one code;
     /// otherwise it might contain multiple codes.
     ///
     /// # Example :
@@ -455,7 +461,7 @@ impl<'a> DaitchMokotoffSoundexBuilder<'a> {
     ///
     /// # Error
     ///
-    /// This method return an error in case it can't parse the rules.
+    /// This method returns an error in case it can't parse the rules.
     pub fn build(self) -> Result<DaitchMokotoffSoundex, PhoneticError> {
         let mut rules: BTreeMap<char, Vec<Rule>> = BTreeMap::new();
         let mut ascii_folding_rules: BTreeMap<char, char> = BTreeMap::new();

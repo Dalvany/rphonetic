@@ -30,8 +30,8 @@ const ES_EP_EB_EL_EY_IB_IL_IN_IE_EI_ER: &[&str; 11] = &[
 ];
 const L_T_K_S_N_M_B_Z: &[&str; 8] = &["L", "T", "K", "S", "N", "M", "B", "Z"];
 
-/// THis struct represent a double metaphone result. It contains both `primary` and
-/// `alternate` code.
+/// This struct represents a double metaphone result.
+/// It contains both `primary` and `alternate` code.
 #[derive(Clone, Debug, Ord, PartialOrd, Eq, PartialEq, Hash, Serialize, Deserialize)]
 pub struct DoubleMetaphoneResult {
     primary: String,
@@ -118,10 +118,11 @@ impl DoubleMetaphoneResult {
 
 /// This is the [Double Metaphone](https://en.wikipedia.org/wiki/Metaphone#Double_Metaphone) implementation.
 ///
-/// The [Default] implementation have a maximum code length of 4. Use `new()` contructor to override.
+/// The [Default] implementation has a maximum code length of 4.
+/// Use `new()` contructor to override.
 ///
-/// Double Metaphone can generate two codes :  `primary` and `alternate`.
-/// [Encoder] implementation return the primary code while `encode_alternate()` returns `alternate` code.
+/// Double Metaphone can generate two codes: `primary` and `alternate`.
+/// [Encoder] implementation returns the primary code while `encode_alternate()` returns `alternate` code.
 ///
 /// # Example
 ///
@@ -150,7 +151,7 @@ impl DoubleMetaphone {
     ///
     /// # Parameter
     ///
-    /// * `max_code_length : the maximum code length.
+    /// * `max_code_length`: the maximum code length.
     pub fn new(max_code_length: usize) -> Self {
         Self { max_code_length }
     }
@@ -172,8 +173,8 @@ impl DoubleMetaphone {
     ///
     /// # Parameters
     ///
-    /// * `value1` and `value2` : values to check.
-    /// *  `alternate` : if  ̀false` then `primary` codes are checked, otherwise it is the alternate codes that are compared.
+    /// * `value1` and `value2`: values to check.
+    /// *  `alternate`: if  ̀false` then `primary` codes are checked, otherwise it is the alternate codes that are compared.
     ///
     /// # Result
     ///
@@ -224,8 +225,9 @@ impl DoubleMetaphone {
         None
     }
 
-    /// Encode `value` and return the code. If  ̀alternate` is `false` then `primary` code
-    /// is return, otherwise it will be the `alternate` code.
+    /// Encode `value` and return the code.
+    /// If  ̀alternate` is `false`, then `primary` code
+    /// is returned, otherwise it will be the `alternate` code.
     ///
     /// # Parameter
     ///
@@ -792,7 +794,7 @@ impl DoubleMetaphone {
         {
             //-- german & anglicisations, e.g. "smith" match "schmidt" //
             // "snider" match "schneider" --//
-            //-- also, -sz- in slavic language although in hungarian it //
+            //-- also, -sz- in slavic language, although in hungarian it //
             //   is pronounced "s" --//
             result.append_char('S', Some('X'));
             if Self::contains(value, index + 1, 1, vec!["Z"]) {
