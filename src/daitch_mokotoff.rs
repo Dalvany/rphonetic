@@ -184,10 +184,9 @@ impl TryFrom<(&str, &str, &str, &str)> for Rule {
 ///
 /// // This is a single line comment.
 ///
-/// À=a // You can put a one line comment at the end of a rule.
-/// This rule is for ASCII folding.
+/// à=a // You can put a one line comment at the end of a rule. This rule is for ASCII folding.
 /// /*
-/// This rule convert the substring `sh` into
+/// This rule converts the substring `sh` into
 ///  - `0` if at the start of the word
 ///  - an empty string if before a vowel
 ///  - otherwise it does a branching with code `0` and code `1`

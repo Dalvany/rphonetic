@@ -46,6 +46,9 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }} # not required for public repos
           files: lcov.info
           fail_ci_if_error: true
+      # cargo llvm-cov doesn't run doc test.
+      - name: Test doc
+        run: cargo test --doc
 
   clippy:
     needs: build
