@@ -1,5 +1,5 @@
 [![Crate](https://img.shields.io/crates/v/rphonetic.svg)](https://crates.io/crates/rphonetic)
-[![Build Status](https://github.com/Dalvany/rphonetic/actions/workflows/quality.yml/badge.svg)](https://github.com/Dalvany/rphonetic/actions/workflows/rust.yml)
+[![Build Status](https://github.com/Dalvany/rphonetic/actions/workflows/quality.yml/badge.svg)](https://github.com/Dalvany/rphonetic/actions/workflows/quality.yml)
 [![codecov](https://codecov.io/gh/Dalvany/rphonetic/branch/main/graph/badge.svg)](https://codecov.io/gh/Dalvany/rphonetic)
 [![dependency status](https://deps.rs/repo/github/Dalvany/rphonetic/status.svg)](https://deps.rs/repo/github/Dalvany/rphonetic)
 [![Documentation](https://docs.rs/rphonetic/badge.svg)](https://docs.rs/rphonetic/)
