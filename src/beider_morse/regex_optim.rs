@@ -88,7 +88,7 @@ impl IsMatch for OptimizedRegex {
                 char.is_some() && char_list.contains(char.unwrap()) == *should_match
             }
             Self::EndsWithChar(char_list, should_match) => {
-                let char = input.chars().rev().next();
+                let char = input.chars().next_back();
                 char.is_some() && char_list.contains(char.unwrap()) == *should_match
             }
         }
