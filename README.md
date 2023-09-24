@@ -94,17 +94,7 @@ fn main() -> Result<(), rphonetic::PhoneticError> {
 }
 ```
 
-### Double Metaphone
 
-```rust
-fn main() {
-    use rphonetic::{DoubleMetaphone, Encoder};
-
-    let double_metaphone = DoubleMetaphone::default();
-    assert_eq!(double_metaphone.encode("jumped"), "JMPT");
-    ssert_eq!(double_metaphone.encode_alternate("jumped"), "AMPT");
-}
-```
 
 ### Match Rating Approach
 
@@ -128,6 +118,18 @@ fn main() {
 }
 ```
 
+### Metaphone (Double)
+
+```rust
+fn main() {
+    use rphonetic::{DoubleMetaphone, Encoder};
+
+    let double_metaphone = DoubleMetaphone::default();
+    assert_eq!(double_metaphone.encode("jumped"), "JMPT");
+    ssert_eq!(double_metaphone.encode_alternate("jumped"), "AMPT");
+}
+```
+
 ### Nysiis
 
 ```rust
@@ -144,16 +146,6 @@ fn main() {
 }
 ```
 
-### Refined Soundex
-
-```rust
-fn main() {
-    use rphonetic::{Encoder, RefinedSoundex};
-    
-    let refined_soundex = RefinedSoundex::default();
-    assert_eq!(refined_soundex.encode("jumped"), "J408106");
-}
-```
 
 ### Soundex
 
@@ -163,6 +155,17 @@ fn main() {
 
     let soundex = Soundex::default();
     assert_eq!(soundex.encode("jumped"), "J513");
+}
+```
+
+### Soundex (Refined)
+
+```rust
+fn main() {
+    use rphonetic::{Encoder, RefinedSoundex};
+    
+    let refined_soundex = RefinedSoundex::default();
+    assert_eq!(refined_soundex.encode("jumped"), "J408106");
 }
 ```
 
