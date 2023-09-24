@@ -130,6 +130,18 @@ fn main() {
 }
 ```
 
+### Phonex
+
+```rust
+fn main() {
+    use rphonetic::{Phonex, Encoder};
+
+    // Strict
+    let phonex = Phonex::default();
+    assert_eq!(phonex.encode("William"),"W450");
+}
+```
+
 ### Nysiis
 
 ```rust
