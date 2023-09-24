@@ -28,8 +28,8 @@ Currently, there are :
 * [Soundex](https://en.wikipedia.org/wiki/Soundex)
 * [Soundex (Refined)](https://en.wikipedia.org/wiki/Soundex)
 
-Please note that most of these algorithms are design for ASCII, and they are usually design for certain use case (eg.
-english names, ...etc).
+Please note that most of these algorithms are design for the latin alphabet, and they are usually design for certain use case (eg.
+english names / english dictonary words, ...etc).
 
 ## Examples
 
