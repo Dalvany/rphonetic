@@ -15,21 +15,21 @@ algorithms.
 
 Currently, there are :
 
+* [Beider-Morse](https://en.wikipedia.org/wiki/Daitch%E2%80%93Mokotoff_Soundex#Beider%E2%80%93Morse_Phonetic_Name_Matching_Algorithm)
 * [Caverphone 1](https://en.wikipedia.org/wiki/Caverphone)
 * [Caverphone 2](https://en.wikipedia.org/wiki/Caverphone)
 * [Cologne](https://en.wikipedia.org/wiki/Cologne_phonetics)
 * [Daitch Mokotoff Soundex](https://en.wikipedia.org/wiki/Daitch%E2%80%93Mokotoff_Soundex)
-* [Double Metaphone](https://en.wikipedia.org/wiki/Metaphone#Double_Metaphone)
 * [Match Rating Approach](https://en.wikipedia.org/wiki/Match_rating_approach)
 * [Metaphone](https://en.wikipedia.org/wiki/Metaphone)
+* [Metaphone (Double)](https://en.wikipedia.org/wiki/Metaphone#Double_Metaphone)
 * [NYSIIS](https://en.wikipedia.org/wiki/New_York_State_Identification_and_Intelligence_System)
-* [Refined Soundex](https://en.wikipedia.org/wiki/Soundex)
+* [Phonex](https://citeseerx.ist.psu.edu/viewdoc/download;jsessionid=E3997DC51F2046A95EE6459F2B997029?doi=10.1.1.453.4046&rep=rep1&type=pdf)
 * [Soundex](https://en.wikipedia.org/wiki/Soundex)
-* [Beider-Morse](https://en.wikipedia.org/wiki/Daitch%E2%80%93Mokotoff_Soundex#Beider%E2%80%93Morse_Phonetic_Name_Matching_Algorithm)
-* [Phonex](https://citeseerx.ist.psu.edu/viewdoc/download;jsessionid=E3997DC51F2046A95EE6459F2B997029?doi=10.1.1.453.4046&rep=rep1&type=pdf) (contribution from [Ant Zucaro](https://github.com/antzucaro))
+* [Soundex (Refined)](https://en.wikipedia.org/wiki/Soundex)
 
-Please note that most of these algorithms are design for ASCII, and they are usually design for certain use case (eg.
-english names, ...etc).
+Please note that most of these algorithms are design for the latin alphabet, and they are usually design for certain use case (eg.
+english names / english dictonary words, ...etc).
 
 ## Examples
 
@@ -94,17 +94,7 @@ fn main() -> Result<(), rphonetic::PhoneticError> {
 }
 ```
 
-### Double Metaphone
 
-```rust
-fn main() {
-    use rphonetic::{DoubleMetaphone, Encoder};
-
-    let double_metaphone = DoubleMetaphone::default();
-    assert_eq!(double_metaphone.encode("jumped"), "JMPT");
-    ssert_eq!(double_metaphone.encode_alternate("jumped"), "AMPT");
-}
-```
 
 ### Match Rating Approach
 
@@ -128,6 +118,30 @@ fn main() {
 }
 ```
 
+### Metaphone (Double)
+
+```rust
+fn main() {
+    use rphonetic::{DoubleMetaphone, Encoder};
+
+    let double_metaphone = DoubleMetaphone::default();
+    assert_eq!(double_metaphone.encode("jumped"), "JMPT");
+    assert_eq!(double_metaphone.encode_alternate("jumped"), "AMPT");
+}
+```
+
+### Phonex
+
+```rust
+fn main() {
+    use rphonetic::{Phonex, Encoder};
+
+    // Strict
+    let phonex = Phonex::default();
+    assert_eq!(phonex.encode("William"),"W450");
+}
+```
+
 ### Nysiis
 
 ```rust
@@ -144,16 +158,6 @@ fn main() {
 }
 ```
 
-### Refined Soundex
-
-```rust
-fn main() {
-    use rphonetic::{Encoder, RefinedSoundex};
-    
-    let refined_soundex = RefinedSoundex::default();
-    assert_eq!(refined_soundex.encode("jumped"), "J408106");
-}
-```
 
 ### Soundex
 
@@ -163,6 +167,17 @@ fn main() {
 
     let soundex = Soundex::default();
     assert_eq!(soundex.encode("jumped"), "J513");
+}
+```
+
+### Soundex (Refined)
+
+```rust
+fn main() {
+    use rphonetic::{Encoder, RefinedSoundex};
+    
+    let refined_soundex = RefinedSoundex::default();
+    assert_eq!(refined_soundex.encode("jumped"), "J408106");
 }
 ```
 
