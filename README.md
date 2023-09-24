@@ -126,7 +126,7 @@ fn main() {
 
     let double_metaphone = DoubleMetaphone::default();
     assert_eq!(double_metaphone.encode("jumped"), "JMPT");
-    ssert_eq!(double_metaphone.encode_alternate("jumped"), "AMPT");
+    assert_eq!(double_metaphone.encode_alternate("jumped"), "AMPT");
 }
 ```
 
