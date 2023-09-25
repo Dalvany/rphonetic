@@ -1,6 +1,6 @@
 [package]
 name = "rphonetic"
-version = "2.1.0"
+version = "2.1.1"
 edition = "2021"
 authors = ["dalvany", "Crabe de France"]
 description = "Rust port of phonetic Apache commons-codec algorithms"
