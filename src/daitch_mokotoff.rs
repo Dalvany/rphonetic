@@ -416,7 +416,7 @@ impl Encoder for DaitchMokotoffSoundex {
         self.inner_soundex(s, false)
             .get(0)
             .map(|v| v.to_string())
-            .unwrap_or_else(|| "".to_string())
+            .unwrap_or_default()
     }
 }
 
@@ -476,7 +476,7 @@ impl<'a> DaitchMokotoffSoundexBuilder<'a> {
                 let rule = Rule::try_from(quadruplet)?;
                 // There's always at least one char, the regex ensures that.
                 let ch = rule.pattern.chars().next().unwrap();
-                rules.entry(ch).or_insert_with(Vec::new).push(rule);
+                rules.entry(ch).or_default().push(rule);
                 remains = rm;
                 continue;
             }
