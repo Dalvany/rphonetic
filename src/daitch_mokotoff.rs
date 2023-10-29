@@ -1447,7 +1447,7 @@ mod tests {
             ascii_folding_rules,
         };
 
-        let iter1 = result.rules.into_iter().zip(expected.rules.into_iter());
+        let iter1 = result.rules.into_iter().zip(expected.rules);
         for ((ch1, rules1), (ch2, rules2)) in iter1 {
             assert_eq!(ch1, ch2, "Rule key differ");
             let iter2 = rules1.into_iter().zip(rules2.into_iter());
@@ -1628,7 +1628,7 @@ This rule convert the substring `sh` into
         let daitch_mokotoff =
             DaitchMokotoffSoundexBuilder::with_rules(COMMONS_CODEC_RULES).build()?;
 
-        for v in vec![
+        for v in [
             "OBrien", "'OBrien", "O'Brien", "OB'rien", "OBr'ien", "OBri'en", "OBrie'n", "OBrien'",
         ]
         .iter()
@@ -1644,7 +1644,7 @@ This rule convert the substring `sh` into
         let daitch_mokotoff =
             DaitchMokotoffSoundexBuilder::with_rules(COMMONS_CODEC_RULES).build()?;
 
-        for v in vec![
+        for v in [
             "KINGSMITH",
             "-KINGSMITH",
             "K-INGSMITH",
