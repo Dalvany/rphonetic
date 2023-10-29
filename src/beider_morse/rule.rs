@@ -85,23 +85,23 @@ pub struct Phoneme {
 
 impl PartialOrd<Self> for Phoneme {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for Phoneme {
+    fn cmp(&self, other: &Self) -> Ordering {
         let iterator = self.phoneme_text.chars().zip(other.phoneme_text.chars());
         for (ch1, ch2) in iterator {
             if ch1 != ch2 {
-                return ch1.partial_cmp(&ch2);
+                return ch1.cmp(&ch2);
             }
         }
 
         let o1length = self.phoneme_text.len();
         let o2length = other.phoneme_text.len();
 
-        o1length.partial_cmp(&o2length)
-    }
-}
-
-impl Ord for Phoneme {
-    fn cmp(&self, other: &Self) -> Ordering {
-        self.partial_cmp(other).unwrap()
+        o1length.cmp(&o2length)
     }
 }
 
@@ -254,7 +254,7 @@ fn parse_rule(
                 phoneme,
             };
             let ch = pattern.chars().next().unwrap();
-            result.entry(ch).or_insert_with(Vec::new);
+            result.entry(ch).or_default();
             let rules = result.get_mut(&ch).unwrap();
             rules.push(rule);
             continue;
