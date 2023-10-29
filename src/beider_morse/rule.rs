@@ -505,7 +505,7 @@ mod tests {
     fn make_phonemes() -> Vec<Vec<Phoneme>> {
         let mut result = Vec::new();
 
-        let data: Vec<Phoneme> = vec![
+        let data: Vec<Phoneme> = [
             "rinD", "rinDlt", "rina", "rinalt", "rino", "rinolt", "rinu", "rinult",
         ]
         .iter()
@@ -516,7 +516,7 @@ mod tests {
         .collect();
         result.push(data);
 
-        let data: Vec<Phoneme> = vec!["dortlaj", "dortlej", "ortlaj", "ortlej", "ortlej-dortlaj"]
+        let data: Vec<Phoneme> = ["dortlaj", "dortlej", "ortlaj", "ortlej", "ortlej-dortlaj"]
             .iter()
             .map(|v| Phoneme {
                 phoneme_text: v.to_string(),
