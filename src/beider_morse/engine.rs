@@ -247,6 +247,15 @@ impl<'a> PhoneticEngine<'a> {
 
         let words: Vec<&str> = input.split_whitespace().collect();
 
+        // Early return, avoid clone and allocations
+        if !self.concat && words.len() != 1 {
+            return words
+                .iter()
+                .map(|v| self.encode(v))
+                .collect::<Vec<String>>()
+                .join("-");
+        }
+
         let words2: Vec<&str> = words
             .clone()
             .iter()
@@ -265,14 +274,9 @@ impl<'a> PhoneticEngine<'a> {
 
         let input = if self.concat {
             words2.join(" ")
-        } else if words.len() == 1 {
-            words.first().unwrap().to_string()
         } else {
-            return words
-                .iter()
-                .map(|v| self.encode(v))
-                .collect::<Vec<String>>()
-                .join("-");
+            // words.len() == 1 because on "early return" above
+            words.first().unwrap().to_string()
         };
 
         let mut phoneme_builder = &mut PhonemeBuilder::empty(languages);
