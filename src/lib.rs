@@ -35,15 +35,8 @@
 //! Please note that most of these algorithms are design for ASCII, and they are usually design for certain use case (eg.
 //! english names, ...etc).
 //!
-//! # Features
-//!
-//! There is two features that provide default rules and [Default] implementation for some struct. They are not enabled
-//! by default as files are embedded into code, so it might increase binary size. It's best to provide rules by your own.
-//!
-//! * `embedded` : shorthand for `embedded_bm` and `embedded_dm`.
-//!   * `embedded_bm` : Beider-Morse rules. It includes only `any` language and other files that are required. All file can be found in
-//! [commons-codec repository](https://github.com/apache/commons-codec/tree/rel/commons-codec-1.15/src/main/resources/org/apache/commons/codec/language/bm)
-//!   * `embedded_dm` : Daitch-Mokotoff rules. They can be also found in [commons-codec repository](https://github.com/apache/commons-codec/blob/rel/commons-codec-1.15/src/main/resources/org/apache/commons/codec/language/dmrules.txt)
+//! ## Feature flags
+#![doc = document_features::document_features!()]
 #![warn(
     missing_copy_implementations,
     missing_debug_implementations,
@@ -54,6 +47,7 @@
     unused_import_braces,
     unused_qualifications
 )]
+#![cfg_attr(docsrs, feature(doc_auto_cfg))]
 #[macro_use]
 extern crate lazy_static;
 
