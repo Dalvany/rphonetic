@@ -413,7 +413,8 @@ impl Encoder for DaitchMokotoffSoundex {
     /// # }
     /// ```
     fn encode(&self, s: &str) -> String {
-        self.inner_soundex(s, false).first()
+        self.inner_soundex(s, false)
+            .first()
             .map(|v| v.to_string())
             .unwrap_or_default()
     }
