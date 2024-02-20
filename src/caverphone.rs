@@ -21,8 +21,6 @@ use crate::{helper, Encoder};
 const SIX_1: &str = "111111";
 const TEN_1: &str = "1111111111";
 
-// TODO Try to remove as much regex as possible : they're quite simple.
-
 /// This a [Caverphone 1](https://en.wikipedia.org/wiki/Caverphone) encoder.
 ///
 /// # Example
