@@ -45,7 +45,6 @@ impl Encoder for Caverphone1 {
 
         let txt = helper::remove_all_non_letter(txt);
 
-        // Avoid regex since it's quite simple
         let txt = if txt.starts_with("cough") {
             txt.replacen("cough", "cou2f", 1)
         } else {
@@ -166,7 +165,6 @@ impl Encoder for Caverphone2 {
 
         let txt = helper::replace_end(txt, "e", "");
 
-        // Avoid regex since it's quite simple
         let txt = if txt.starts_with("cough") {
             txt.replacen("cough", "cou2f", 1)
         } else {
