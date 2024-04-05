@@ -195,8 +195,14 @@ impl DoubleMetaphone {
             || value.contains("WITZ")
     }
 
-    fn contains(value: &str, start: usize, length: usize, criteria: Vec<&str>) -> bool {
+    fn contains(value: &str, start: isize, length: usize, criteria: Vec<&str>) -> bool {
         let result = false;
+
+        if start < 0 {
+            return false;
+        }
+
+        let start = start as usize;
 
         if start + length <= value.len() {
             let target: &str = &value[start..start + length];
@@ -206,8 +212,13 @@ impl DoubleMetaphone {
         result
     }
 
-    fn contains_array(value: &str, start: usize, length: usize, criteria: &[&str]) -> bool {
+    fn contains_array(value: &str, start: isize, length: usize, criteria: &[&str]) -> bool {
         let result = false;
+
+        if start < 0 {
+            return false;
+        }
+        let start = start as usize;
 
         if start + length <= value.len() {
             let target: &str = &value[start..start + length];
@@ -217,9 +228,9 @@ impl DoubleMetaphone {
         result
     }
 
-    fn char_at(value: &str, index: usize) -> Option<char> {
-        if index < value.len() {
-            return value[index..].chars().next();
+    fn char_at(value: &str, index: isize) -> Option<char> {
+        if index >= 0 && (index as usize) < value.len() {
+            return value[index as usize..].chars().next();
         }
 
         None
@@ -254,6 +265,7 @@ impl DoubleMetaphone {
         }
         while !result.is_complete() && char_index.is_some() {
             let (index, ch) = char_index.unwrap();
+            let index = index as isize;
 
             let skip = match ch {
                 'A' | 'E' | 'I' | 'O' | 'U' | 'Y' => {
@@ -348,7 +360,7 @@ impl DoubleMetaphone {
         result
     }
 
-    fn handle_c(value: &str, result: &mut DoubleMetaphoneResult, index: usize) -> usize {
+    fn handle_c(value: &str, result: &mut DoubleMetaphoneResult, index: isize) -> usize {
         if Self::condition_c0(value, index) {
             result.append_char('K', None);
             1
@@ -398,7 +410,7 @@ impl DoubleMetaphone {
         }
     }
 
-    fn condition_c0(value: &str, index: usize) -> bool {
+    fn condition_c0(value: &str, index: isize) -> bool {
         if Self::contains(value, index, 4, vec!["CHIA"]) {
             return true;
         }
@@ -426,7 +438,7 @@ impl DoubleMetaphone {
         }
     }
 
-    fn handle_ch(value: &str, result: &mut DoubleMetaphoneResult, index: usize) -> usize {
+    fn handle_ch(value: &str, result: &mut DoubleMetaphoneResult, index: isize) -> usize {
         if index > 0 && Self::contains(value, index, 4, vec!["CHAE"]) {
             // Michael
             result.append_char('K', Some('X'));
@@ -447,7 +459,7 @@ impl DoubleMetaphone {
         1
     }
 
-    fn condition_ch0(value: &str, index: usize) -> bool {
+    fn condition_ch0(value: &str, index: isize) -> bool {
         if index != 0 {
             return false;
         }
@@ -461,7 +473,7 @@ impl DoubleMetaphone {
         !Self::contains(value, 0, 5, vec!["CHORE"])
     }
 
-    fn condition_ch1(value: &str, index: usize) -> bool {
+    fn condition_ch1(value: &str, index: isize) -> bool {
         (Self::contains(value, 0, 4, vec!["VAN", "VON"])
             || Self::contains(value, 0, 3, vec!["SCH"]))
             || (index > 1
@@ -469,10 +481,10 @@ impl DoubleMetaphone {
             || (index > 1 && Self::contains(value, index + 2, 1, vec!["T", "S"]))
             || ((index == 0 || Self::contains(value, index - 1, 1, vec!["A", "O", "U", "E"]))
                 && (Self::contains_array(value, index + 2, 1, L_R_N_M_B_H_F_V_W_SPACE)
-                    || index + 1 == value.len() - 1))
+                    || (index as usize) + 1 == value.len() - 1))
     }
 
-    fn handle_cc(value: &str, result: &mut DoubleMetaphoneResult, index: usize) -> usize {
+    fn handle_cc(value: &str, result: &mut DoubleMetaphoneResult, index: isize) -> usize {
         if Self::contains(value, index + 2, 1, vec!["I", "E", "H"])
             && !Self::contains(value, index + 2, 2, vec!["HU"])
         {
@@ -494,7 +506,7 @@ impl DoubleMetaphone {
         }
     }
 
-    fn handle_d(value: &str, result: &mut DoubleMetaphoneResult, index: usize) -> usize {
+    fn handle_d(value: &str, result: &mut DoubleMetaphoneResult, index: isize) -> usize {
         if Self::contains(value, index, 2, vec!["DG"]) {
             if Self::contains(value, index + 2, 1, vec!["I", "E", "Y"]) {
                 result.append_char('J', None);
@@ -515,7 +527,7 @@ impl DoubleMetaphone {
     fn handle_g(
         value: &str,
         result: &mut DoubleMetaphoneResult,
-        index: usize,
+        index: isize,
         slavo_germanic: bool,
     ) -> usize {
         if Self::char_at(value, index + 1) == Some('H') {
@@ -579,7 +591,7 @@ impl DoubleMetaphone {
         }
     }
 
-    fn handle_gh(value: &str, result: &mut DoubleMetaphoneResult, index: usize) -> usize {
+    fn handle_gh(value: &str, result: &mut DoubleMetaphoneResult, index: isize) -> usize {
         // Unwrap is safe in the first if because index > 0
         if index > 0
             && !(is_vowel(
@@ -616,7 +628,7 @@ impl DoubleMetaphone {
         }
     }
 
-    fn handle_h(value: &str, result: &mut DoubleMetaphoneResult, index: usize) -> usize {
+    fn handle_h(value: &str, result: &mut DoubleMetaphoneResult, index: isize) -> usize {
         //-- only keep if first & before vowel or between 2 vowels --//
         if (index == 0
             || is_vowel(
@@ -639,7 +651,7 @@ impl DoubleMetaphone {
     fn handle_j(
         value: &str,
         result: &mut DoubleMetaphoneResult,
-        index: usize,
+        index: isize,
         slavo_germanic: bool,
     ) -> usize {
         if Self::contains(value, index, 4, vec!["JOSE"])
@@ -667,7 +679,7 @@ impl DoubleMetaphone {
                     || Self::char_at(value, index + 1) == Some('O'))
             {
                 result.append_char('J', Some('H'));
-            } else if index == value.len() - 1 {
+            } else if (index as usize) == value.len() - 1 {
                 result.append_char('J', Some(' '));
             } else if !Self::contains_array(value, index + 1, 1, L_T_K_S_N_M_B_Z)
                 && (index == 0 || !Self::contains(value, index - 1, 1, vec!["S", "K", "L"]))
@@ -683,7 +695,7 @@ impl DoubleMetaphone {
         }
     }
 
-    fn handle_l(value: &str, result: &mut DoubleMetaphoneResult, index: usize) -> usize {
+    fn handle_l(value: &str, result: &mut DoubleMetaphoneResult, index: isize) -> usize {
         if Self::char_at(value, index + 1) == Some('L') {
             if Self::condition_l0(value, index) {
                 result.append_char_primary('L');
@@ -697,31 +709,33 @@ impl DoubleMetaphone {
         }
     }
 
-    fn condition_l0(value: &str, index: usize) -> bool {
-        if index == value.len() - 3
+    fn condition_l0(value: &str, index: isize) -> bool {
+        if (index as usize) == value.len() - 3
             && index > 0
             && Self::contains(value, index - 1, 4, vec!["ILLO", "ILLA", "ALLE"])
         {
             return true;
         }
 
-        ((value.len() > 1 && Self::contains(value, value.len() - 2, 2, vec!["AS", "OS"]))
-            || (!value.is_empty() && Self::contains(value, value.len() - 1, 1, vec!["A", "O"])))
+        ((value.len() > 1 && Self::contains(value, value.len() as isize - 2, 2, vec!["AS", "OS"]))
+            || (!value.is_empty()
+                && Self::contains(value, value.len() as isize - 1, 1, vec!["A", "O"])))
             && !value.is_empty()
             && Self::contains(value, index - 1, 4, vec!["ALLE"])
     }
 
-    fn condition_m0(value: &str, index: usize) -> bool {
+    fn condition_m0(value: &str, index: isize) -> bool {
         if Self::char_at(value, index + 1) == Some('M') {
             return true;
         }
 
         index > 0
             && Self::contains(value, index - 1, 3, vec!["UMB"])
-            && ((index + 1) == value.len() - 1 || Self::contains(value, index + 2, 2, vec!["ER"]))
+            && ((index + 1) == value.len() as isize - 1
+                || Self::contains(value, index + 2, 2, vec!["ER"]))
     }
 
-    fn handle_p(value: &str, result: &mut DoubleMetaphoneResult, index: usize) -> usize {
+    fn handle_p(value: &str, result: &mut DoubleMetaphoneResult, index: isize) -> usize {
         if Self::char_at(value, index + 1) == Some('H') {
             result.append_char('F', None);
             1
@@ -738,11 +752,11 @@ impl DoubleMetaphone {
     fn handle_r(
         value: &str,
         result: &mut DoubleMetaphoneResult,
-        index: usize,
+        index: isize,
         slavo_germanic: bool,
     ) -> usize {
         if index > 3
-            && index == value.len() - 1
+            && index == value.len() as isize - 1
             && !slavo_germanic
             && Self::contains(value, index - 2, 2, vec!["IE"])
             && !Self::contains(value, index - 4, 2, vec!["ME", "MA"])
@@ -761,7 +775,7 @@ impl DoubleMetaphone {
     fn handle_s(
         value: &str,
         result: &mut DoubleMetaphoneResult,
-        index: usize,
+        index: isize,
         slavo_germanic: bool,
     ) -> usize {
         if index > 0 && Self::contains(value, index - 1, 3, vec!["ISL", "YSL"]) {
@@ -806,7 +820,7 @@ impl DoubleMetaphone {
             Self::handle_sc(value, result, index)
         } else {
             if index > 1
-                && index == value.len() - 1
+                && index == value.len() as isize - 1
                 && Self::contains(value, index - 2, 2, vec!["AI", "OI"])
             {
                 //-- french e.g. "resnais", "artois" --//
@@ -822,7 +836,7 @@ impl DoubleMetaphone {
         }
     }
 
-    fn handle_sc(value: &str, result: &mut DoubleMetaphoneResult, index: usize) -> usize {
+    fn handle_sc(value: &str, result: &mut DoubleMetaphoneResult, index: isize) -> usize {
         if Self::char_at(value, index + 2) == Some('H') {
             //-- Schlesinger's rule --//
             if Self::contains(
@@ -857,7 +871,7 @@ impl DoubleMetaphone {
         2
     }
 
-    fn handle_t(value: &str, result: &mut DoubleMetaphoneResult, index: usize) -> usize {
+    fn handle_t(value: &str, result: &mut DoubleMetaphoneResult, index: isize) -> usize {
         if Self::contains(value, index, 4, vec!["TION"])
             || Self::contains(value, index, 3, vec!["TIA", "TCH"])
         {
@@ -886,7 +900,7 @@ impl DoubleMetaphone {
         }
     }
 
-    fn handle_w(value: &str, result: &mut DoubleMetaphoneResult, index: usize) -> usize {
+    fn handle_w(value: &str, result: &mut DoubleMetaphoneResult, index: isize) -> usize {
         if Self::contains(value, index, 2, vec!["WR"]) {
             //-- can also be in middle of word --//
             result.append_char('R', None);
@@ -909,7 +923,7 @@ impl DoubleMetaphone {
             }
             0
         } else if (index > 0
-            && index == value.len() - 1
+            && index == value.len() as isize - 1
             && is_vowel(
                 Self::char_at(value, index - 1).map(|c| c.to_ascii_lowercase()),
                 true,
@@ -935,12 +949,12 @@ impl DoubleMetaphone {
         }
     }
 
-    fn handle_x(value: &str, result: &mut DoubleMetaphoneResult, index: usize) -> usize {
+    fn handle_x(value: &str, result: &mut DoubleMetaphoneResult, index: isize) -> usize {
         if index == 0 {
             result.append_char('S', None);
             0
         } else {
-            if !((index == value.len() - 1)
+            if !((index == value.len() as isize - 1)
                 && ((index > 2 && Self::contains(value, index - 3, 3, vec!["IAU", "EAU"]))
                     || (index > 1 && Self::contains(value, index - 2, 2, vec!["AU", "OU"]))))
             {
@@ -958,7 +972,7 @@ impl DoubleMetaphone {
     fn handle_z(
         value: &str,
         result: &mut DoubleMetaphoneResult,
-        index: usize,
+        index: isize,
         slavo_germanic: bool,
     ) -> usize {
         if Self::char_at(value, index + 1) == Some('H') {
@@ -3426,5 +3440,14 @@ mod tests {
                 "[{i}] alternate {value} fail"
             );
         }
+    }
+
+    #[test]
+    fn test_overflow_contains() {
+        let encoder = DoubleMetaphone::default();
+
+        let result = encoder.encode_alternate("LLANA");
+
+        assert_eq!(result, "LN");
     }
 }
