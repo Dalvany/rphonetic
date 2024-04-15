@@ -3443,11 +3443,20 @@ mod tests {
     }
 
     #[test]
-    fn test_overflow_contains() {
+    fn test_overflow_contains_case_1() {
         let encoder = DoubleMetaphone::default();
 
         let result = encoder.encode_alternate("LLANA");
 
         assert_eq!(result, "LN");
+    }
+
+    #[test]
+    fn test_overflow_contains_case_2() {
+        let encoder = DoubleMetaphone::default();
+
+        let result = encoder.encode_alternate("CCILE");
+
+        assert_eq!(result, "XL");
     }
 }
