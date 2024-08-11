@@ -1,14 +1,9 @@
 use nom::branch::alt;
-use nom::bytes::complete::{is_not, take_till1, take_while1};
+use nom::bytes::complete::{is_not, tag, take_till1, take_until, take_while1};
 use nom::character::complete::{alpha1, anychar, char, crlf, space1};
-use nom::combinator::{eof, map, map_res, opt};
-use nom::sequence::{delimited, pair, preceded, separated_pair, terminated};
-use nom::{
-    bytes::complete::{tag, take_until},
-    combinator::value,
-    sequence::tuple,
-    IResult,
-};
+use nom::combinator::{eof, map, map_res, opt, value};
+use nom::sequence::{delimited, pair, preceded, separated_pair, terminated, tuple};
+use nom::IResult;
 
 /// From `nom` recipe.
 /// Recognize a multiline comment and return the number of lines.

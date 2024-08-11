@@ -7,10 +7,9 @@ use std::str::FromStr;
 use either::Either;
 use enum_iterator::Sequence;
 use regex::Regex;
-use serde::{Deserialize, Serialize};
-
 use regex_optim::OptimizedRegex;
 pub use rule::RuleType;
+use serde::{Deserialize, Serialize};
 
 use crate::beider_morse::engine::PhoneticEngine;
 use crate::beider_morse::lang::Langs;
@@ -185,8 +184,8 @@ impl ConfigFiles {
     ///
     /// # Parameter :
     /// * `directory` : this directory must contain all rules files. You can get them
-    /// from [commons-codec](https://github.com/apache/commons-codec/tree/rel/commons-codec-1.15/src/main/resources/org/apache/commons/codec/language/bm)
-    /// repository.
+    ///   from [commons-codec](https://github.com/apache/commons-codec/tree/rel/commons-codec-1.15/src/main/resources/org/apache/commons/codec/language/bm)
+    ///   repository.
     ///
     /// # Errors :
     /// Returns a [BMError] if it misses some files or some rules are not well-formed.
@@ -356,10 +355,9 @@ impl<'a> BeiderMorseBuilder<'a> {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
     #[cfg(feature = "embedded_bm")]
     use crate::beider_morse::rule::PrivateRuleType;
-
-    use super::*;
 
     lazy_static! {
         static ref CONFIG_FILE: ConfigFiles =

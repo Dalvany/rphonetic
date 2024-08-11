@@ -1,6 +1,6 @@
-use criterion::{criterion_group, criterion_main, Criterion};
 use std::path::PathBuf;
 
+use criterion::{criterion_group, criterion_main, Criterion};
 use rphonetic::*;
 
 fn bench_encoder(c: &mut Criterion, encoder_name: &str, encoder: Box<dyn Encoder>, text: &str) {

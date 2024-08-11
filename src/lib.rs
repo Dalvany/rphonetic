@@ -55,15 +55,13 @@ use std::error::Error;
 use std::fmt;
 use std::fmt::{Display, Formatter};
 
-use serde::{Deserialize, Serialize};
-
 use rules_parser::*;
+use serde::{Deserialize, Serialize};
 
 pub use crate::beider_morse::{
     BMError, BeiderMorse, BeiderMorseBuilder, ConfigFiles, LanguageSet, NameType, RuleType,
 };
-pub use crate::caverphone::Caverphone1;
-pub use crate::caverphone::Caverphone2;
+pub use crate::caverphone::{Caverphone1, Caverphone2};
 pub use crate::cologne::Cologne;
 pub use crate::daitch_mokotoff::{DaitchMokotoffSoundex, DaitchMokotoffSoundexBuilder};
 pub use crate::double_metaphone::{DoubleMetaphone, DoubleMetaphoneResult};

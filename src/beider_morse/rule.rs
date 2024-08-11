@@ -9,6 +9,7 @@ use enum_iterator::{all, Sequence};
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 
+use super::{IsMatch, LanguageSet};
 use crate::beider_morse::regex_optim::OptimizedRegex;
 use crate::beider_morse::Languages;
 use crate::helper::CharSequence;
@@ -16,9 +17,6 @@ use crate::{
     build_error, end_of_line, include, multiline_comment, quadruplet, BMError, NameType,
     PhoneticError,
 };
-
-use super::IsMatch;
-use super::LanguageSet;
 
 const APPROX: &str = "approx";
 const EXACT: &str = "exact";

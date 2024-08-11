@@ -310,10 +310,9 @@ impl<'a> PhoneticEngine<'a> {
 mod tests {
     use std::path::PathBuf;
 
+    use super::*;
     use crate::beider_morse::DEFAULT_MAX_PHONEMES;
     use crate::{ConfigFiles, PhoneticError, RuleType};
-
-    use super::*;
 
     lazy_static! {
         static ref DATA: [(&'static str, &'static str, NameType, RuleType, bool, usize); 8] = [

@@ -50,9 +50,9 @@ impl RefinedSoundex {
     /// # Parameter
     ///
     /// * `mapping`: mapping array.
-    /// It contains for each letter its corresponding code.
-    /// Index 0 is the code for `A`, index 1
-    /// is for `B`and so on for each letter of the latin alphabet.
+    ///   It contains for each letter its corresponding code.
+    ///   Index 0 is the code for `A`, index 1
+    ///   is for `B`and so on for each letter of the latin alphabet.
     pub fn new(mapping: [char; 26]) -> Self {
         Self { mapping }
     }

@@ -137,6 +137,7 @@ impl TryFrom<(&str, &str, &str, &str)> for Rule {
 ///     * `replacement_at_start` : the code to replace `pattern` with if `pattern` is at the start of the word.
 ///     * `Replacement_before_vowel`: the code to replace `pattern` with if `pattern` is before a vowel inside the word.
 ///     * `default_replacement`: the code to replace `pattern` with for other cases.
+///
 /// To support branching, any pattern can be in the form of `code|code|...`.
 ///
 /// Rules are separated by `\n`.
@@ -205,9 +206,9 @@ impl TryFrom<(&str, &str, &str, &str)> for Rule {
 ///
 /// There are 2 methods to encode a string:
 /// * [DaitchMokotoffSoundex](#encode) that encode without branching.
-/// Only one code is returned
+///   Only one code is returned
 /// * [DaitchMokotoffSoundex](#soundex) that encode with branching.
-/// Multiple codes, separated by a `|` are returned.
+///   Multiple codes, separated by a `|` are returned.
 ///
 /// There is a [helper function](DaitchMokotoffSoundex#method.inner_soundex) that returns code(s) in the form
 /// of a vec, avoiding parsing the output.
@@ -288,7 +289,7 @@ impl DaitchMokotoffSoundex {
     ///
     /// * `value` : value to encode
     /// * `branching`: if `true` branching will be enabled and multiple code can
-    /// be generated, otherwise the result will contain only one code.
+    ///   be generated, otherwise the result will contain only one code.
     ///
     /// # Result :
     ///
