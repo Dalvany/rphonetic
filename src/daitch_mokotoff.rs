@@ -138,7 +138,7 @@ impl TryFrom<(&str, &str, &str, &str)> for Rule {
 ///     * `Replacement_before_vowel`: the code to replace `pattern` with if `pattern` is before a vowel inside the word.
 ///     * `default_replacement`: the code to replace `pattern` with for other cases.
 ///
-/// To support branching, any pattern can be in the form of `code|code|...`.
+///   To support branching, any pattern can be in the form of `code|code|...`.
 ///
 /// Rules are separated by `\n`.
 ///
