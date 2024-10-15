@@ -37,7 +37,7 @@ const VARSON: &str = "CSPTG";
 /// ```
 #[derive(Copy, Clone, Debug, Ord, PartialOrd, Eq, PartialEq, Hash, Serialize, Deserialize)]
 pub struct Metaphone {
-    max_code_length: usize,
+    max_code_length: Option<usize>,
 }
 
 impl Metaphone {
@@ -45,8 +45,9 @@ impl Metaphone {
     ///
     /// # Parameter
     ///
-    /// * `max_code_length`: the maximum code length.
-    pub fn new(max_code_length: usize) -> Self {
+    /// * `max_code_length`: the maximum code length. If you provide [Option::None]
+    ///   then the resulting code can be of any length.
+    pub fn new(max_code_length: Option<usize>) -> Self {
         Self { max_code_length }
     }
 
@@ -75,7 +76,9 @@ impl Metaphone {
 /// [Default] implementation with a `max_code_length` of 4.
 impl Default for Metaphone {
     fn default() -> Self {
-        Self { max_code_length: 4 }
+        Self {
+            max_code_length: Some(4),
+        }
     }
 }
 
@@ -126,7 +129,12 @@ impl Encoder for Metaphone {
         let mut skip = 0;
         for (index, symb) in local.chars().enumerate() {
             if skip == 0 {
-                if code.len() == self.max_code_length {
+                // Don't stop if max_length is `None`
+                if self
+                    .max_code_length
+                    .map(|v| code.len() == v)
+                    .unwrap_or(false)
+                {
                     break;
                 }
                 if symb == 'C' || !Metaphone::is_previous_char(&local, index, symb) {
@@ -271,8 +279,12 @@ impl Encoder for Metaphone {
                         }
                     }
                 }
-                if code.len() > self.max_code_length {
-                    code = code[..self.max_code_length].to_string();
+
+                // Don't truncate code if max length is ̀`None`
+                if let Some(max_code_length) = self.max_code_length {
+                    if code.len() > max_code_length {
+                        code = code[..max_code_length].to_string();
+                    }
                 }
             } else {
                 skip -= 1;
@@ -657,8 +669,24 @@ mod tests {
 
     #[test]
     fn test_set_max_length_with_truncation() {
-        let metaphone = Metaphone::new(6);
+        let metaphone = Metaphone::new(Some(6));
 
         assert_eq!(metaphone.encode("AXEAXEAXE"), "AKSKSK");
+    }
+
+    #[test]
+    fn test_unbounded_1() {
+        let encoder = Metaphone::new(None);
+
+        let result = encoder.encode("ALLERTON");
+        assert_eq!(result, "ALRTN");
+    }
+
+    #[test]
+    fn test_unbounded_2() {
+        let encoder = Metaphone::new(None);
+
+        let result = encoder.encode("synchronization");
+        assert_eq!(result, "SNXRNSXN");
     }
 }

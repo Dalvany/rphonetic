@@ -86,7 +86,8 @@ impl Soundex {
     ///
     /// * `mapping`: mapping array.
     ///   It contains for each letter its corresponding code.
-    ///   Index 0 is the code for `A`, index is for `B` and so on for each letter of the latin alphabet.
+    ///   Index 0 is the code for `A`, index is for `B` and so on for
+    ///   each letter of the latin alphabet.
     ///   Code `-` is treated as silent (eg [DEFAULT_US_ENGLISH_GENEALOGY_MAPPING_SOUNDEX]).
     /// * `special_case_h_w`: a boolean to indicate that `H` and `W` should be treated as silence.
     pub fn new(mapping: [char; 26], special_case_h_w: bool) -> Self {

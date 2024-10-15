@@ -36,7 +36,7 @@ const L_T_K_S_N_M_B_Z: &[&str; 8] = &["L", "T", "K", "S", "N", "M", "B", "Z"];
 pub struct DoubleMetaphoneResult {
     primary: String,
     alternate: String,
-    max_length: usize,
+    max_length: Option<usize>,
 }
 
 impl Display for DoubleMetaphoneResult {
@@ -53,10 +53,12 @@ impl Display for DoubleMetaphoneResult {
 ///
 /// It contains both `primary` and `alternate` codes.
 impl DoubleMetaphoneResult {
-    fn new(max_length: usize) -> Self {
+    fn new(max_length: Option<usize>) -> Self {
+        // If no `max_length` is given, allocate resulting string with
+        // a capacity of 10. It should be sufficient without realloc.
         Self {
-            primary: String::with_capacity(max_length),
-            alternate: String::with_capacity(max_length),
+            primary: String::with_capacity(max_length.unwrap_or(10)),
+            alternate: String::with_capacity(max_length.unwrap_or(10)),
             max_length,
         }
     }
@@ -77,13 +79,21 @@ impl DoubleMetaphoneResult {
     }
 
     fn append_char_primary(&mut self, ch: char) {
-        if self.primary.len() < self.max_length {
+        if self
+            .max_length
+            .map(|v| self.primary.len() < v)
+            .unwrap_or(true)
+        {
             self.primary.push(ch);
         }
     }
 
     fn append_char_alternate(&mut self, ch: char) {
-        if self.alternate.len() < self.max_length {
+        if self
+            .max_length
+            .map(|v| self.alternate.len() < v)
+            .unwrap_or(true)
+        {
             self.alternate.push(ch);
         }
     }
@@ -94,25 +104,38 @@ impl DoubleMetaphoneResult {
     }
 
     fn append_str_primary(&mut self, value: &str) {
-        let length_remaining = self.max_length - self.primary.len();
-        if value.len() <= length_remaining {
-            self.primary.push_str(value);
+        let length_remaining = self.max_length.map(|v| v - self.primary.len());
+        if let Some(length_remaining) = length_remaining {
+            if value.len() <= length_remaining {
+                self.primary.push_str(value);
+            } else {
+                self.primary.push_str(&value[0..length_remaining]);
+            }
         } else {
-            self.primary.push_str(&value[0..length_remaining]);
+            self.primary.push_str(value);
         }
     }
 
     fn append_str_alternate(&mut self, value: &str) {
-        let length_remaining = self.max_length - self.alternate.len();
-        if value.len() <= length_remaining {
-            self.alternate.push_str(value);
+        let length_remaining = self.max_length.map(|v| v - self.alternate.len());
+        if let Some(length_remaining) = length_remaining {
+            if value.len() <= length_remaining {
+                self.alternate.push_str(value);
+            } else {
+                self.alternate.push_str(&value[0..length_remaining]);
+            }
         } else {
-            self.alternate.push_str(&value[0..length_remaining]);
+            self.alternate.push_str(value);
         }
     }
 
+    /// It complete when we reach the max size. If no max size is given
+    /// then we return `false` so we consume all the string.
+    /// https://github.com/Dalvany/rphonetic/issues/49
     fn is_complete(&self) -> bool {
-        self.primary.len() >= self.max_length && self.alternate.len() >= self.max_length
+        self.max_length
+            .map(|v| self.primary.len() >= v && self.alternate.len() >= v)
+            .unwrap_or(false)
     }
 }
 
@@ -136,13 +159,15 @@ impl DoubleMetaphoneResult {
 /// ```
 #[derive(Copy, Clone, Debug, Ord, PartialOrd, Eq, PartialEq, Hash, Serialize, Deserialize)]
 pub struct DoubleMetaphone {
-    max_code_length: usize,
+    max_code_length: Option<usize>,
 }
 
 impl Default for DoubleMetaphone {
     /// Construct a new [DoubleMetaphone] with a maximum code length of 4.
     fn default() -> Self {
-        Self { max_code_length: 4 }
+        Self {
+            max_code_length: Some(4),
+        }
     }
 }
 
@@ -151,8 +176,9 @@ impl DoubleMetaphone {
     ///
     /// # Parameter
     ///
-    /// * `max_code_length`: the maximum code length.
-    pub fn new(max_code_length: usize) -> Self {
+    /// * `max_code_length`: the maximum code length. If you provide [Option::None]
+    ///   then the resulting code can be of any length.
+    pub fn new(max_code_length: Option<usize>) -> Self {
         Self { max_code_length }
     }
 
@@ -2174,12 +2200,12 @@ mod tests {
         let value = "jumped";
 
         let encoder = DoubleMetaphone::default();
-        assert_eq!(encoder.max_code_length, 4);
+        assert_eq!(encoder.max_code_length, Some(4));
         assert_eq!(encoder.encode(value), "JMPT");
         assert_eq!(encoder.encode_alternate(value), "AMPT");
 
-        let encoder = DoubleMetaphone::new(3);
-        assert_eq!(encoder.max_code_length, 3);
+        let encoder = DoubleMetaphone::new(Some(3));
+        assert_eq!(encoder.max_code_length, Some(3));
         assert_eq!(encoder.encode(value), "JMP");
         assert_eq!(encoder.encode_alternate(value), "AMP");
     }
@@ -3458,5 +3484,27 @@ mod tests {
         let result = encoder.encode_alternate("CCILE");
 
         assert_eq!(result, "XL");
+    }
+
+    #[test]
+    fn test_unbounded_1() {
+        let encoder = DoubleMetaphone::new(None);
+
+        let result = encoder.encode("ALLERTON");
+        assert_eq!(result, "ALRTN");
+
+        let result = encoder.encode_alternate("ALLERTON");
+        assert_eq!(result, "ALRTN");
+    }
+
+    #[test]
+    fn test_unbounded_2() {
+        let encoder = DoubleMetaphone::new(None);
+
+        let result = encoder.encode("synchronization");
+        assert_eq!(result, "SNXRNSXN");
+
+        let result = encoder.encode_alternate("synchronization");
+        assert_eq!(result, "SNKRNSXN");
     }
 }
