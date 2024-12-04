@@ -27,12 +27,12 @@ embedded_bm = []
 embedded_dm = []
 
 [dependencies]
-regex = "1.6"
+regex = "1.11"
 nom = "7.1"
-lazy_static = "1.4"
+lazy_static = "1.5"
 serde = { version = "1.0", features = ["derive"] }
 enum-iterator = "2.0"
-either = "1.7"
+either = "1.13"
 document-features = "0.2"
 
 [dev-dependencies]

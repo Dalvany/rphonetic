@@ -90,7 +90,7 @@ struct RulesApplication<'a> {
     found: bool,
 }
 
-impl<'a> RulesApplication<'a> {
+impl RulesApplication<'_> {
     fn i(&self) -> usize {
         self.i
     }
@@ -130,7 +130,7 @@ pub(crate) struct PhoneticEngine<'a> {
     pub(crate) max_phonemes: usize,
 }
 
-impl<'a> PhoneticEngine<'a> {
+impl PhoneticEngine<'_> {
     fn apply_final_rule(
         &self,
         phoneme_builder: PhonemeBuilder,

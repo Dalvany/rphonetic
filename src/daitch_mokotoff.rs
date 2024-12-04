@@ -33,7 +33,7 @@ struct Branch<'a> {
     last_replacement: Option<&'a str>,
 }
 
-impl<'a> Default for Branch<'a> {
+impl Default for Branch<'_> {
     fn default() -> Self {
         Self {
             builder: String::with_capacity(MAX_LENGTH),
