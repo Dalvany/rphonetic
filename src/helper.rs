@@ -86,13 +86,13 @@ pub struct CharSequence<'a> {
     len_in_char: usize,
 }
 
-impl<'a> Display for CharSequence<'a> {
+impl Display for CharSequence<'_> {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.inner)
     }
 }
 
-impl<'a> CharSequence<'a> {
+impl CharSequence<'_> {
     /// Return the length of the string in terme of
     /// [char] instead of byte.
     pub fn len(&self) -> usize {
@@ -156,7 +156,7 @@ impl<'a> Index<Range<usize>> for CharSequence<'a> {
     }
 }
 
-impl<'a> Index<RangeFrom<usize>> for CharSequence<'a> {
+impl Index<RangeFrom<usize>> for CharSequence<'_> {
     type Output = str;
 
     fn index(&self, index: RangeFrom<usize>) -> &Self::Output {
@@ -164,7 +164,7 @@ impl<'a> Index<RangeFrom<usize>> for CharSequence<'a> {
     }
 }
 
-impl<'a> Index<RangeFull> for CharSequence<'a> {
+impl Index<RangeFull> for CharSequence<'_> {
     type Output = str;
 
     fn index(&self, _: RangeFull) -> &Self::Output {
@@ -172,7 +172,7 @@ impl<'a> Index<RangeFull> for CharSequence<'a> {
     }
 }
 
-impl<'a> Index<RangeInclusive<usize>> for CharSequence<'a> {
+impl Index<RangeInclusive<usize>> for CharSequence<'_> {
     type Output = str;
 
     fn index(&self, index: RangeInclusive<usize>) -> &Self::Output {
@@ -180,7 +180,7 @@ impl<'a> Index<RangeInclusive<usize>> for CharSequence<'a> {
     }
 }
 
-impl<'a> Index<RangeTo<usize>> for CharSequence<'a> {
+impl Index<RangeTo<usize>> for CharSequence<'_> {
     type Output = str;
 
     fn index(&self, index: RangeTo<usize>) -> &Self::Output {
@@ -188,7 +188,7 @@ impl<'a> Index<RangeTo<usize>> for CharSequence<'a> {
     }
 }
 
-impl<'a> Index<RangeToInclusive<usize>> for CharSequence<'a> {
+impl Index<RangeToInclusive<usize>> for CharSequence<'_> {
     type Output = str;
 
     fn index(&self, index: RangeToInclusive<usize>) -> &Self::Output {

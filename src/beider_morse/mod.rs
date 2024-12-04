@@ -242,7 +242,7 @@ pub struct BeiderMorse<'a> {
     engine: PhoneticEngine<'a>,
 }
 
-impl<'a> BeiderMorse<'a> {
+impl BeiderMorse<'_> {
     /// Encode a value with the provided [LanguageSet]. Using this method will avoid language detection.
     ///
     /// # Parameters
@@ -277,7 +277,7 @@ impl<'a> BeiderMorse<'a> {
     }
 }
 
-impl<'a> Encoder for BeiderMorse<'a> {
+impl Encoder for BeiderMorse<'_> {
     fn encode(&self, value: &str) -> String {
         self.engine.encode(value)
     }
