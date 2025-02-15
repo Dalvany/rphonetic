@@ -48,9 +48,6 @@
     unused_qualifications
 )]
 #![cfg_attr(docsrs, feature(doc_auto_cfg))]
-#[macro_use]
-extern crate lazy_static;
-
 use std::error::Error;
 use std::fmt;
 use std::fmt::{Display, Formatter};
