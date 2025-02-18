@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.0.2](https://github.com/Dalvany/rphonetic/compare/v3.0.1...v3.0.2) - 2025-02-18
+
+### Fixed
+
+- fix compilation
+- compilation errors
+
+### Other
+
+- bump dependencies
+
 ## [3.0.1](https://github.com/Dalvany/rphonetic/compare/v3.0.0...v3.0.1) - 2024-12-04
 
 ### Other
