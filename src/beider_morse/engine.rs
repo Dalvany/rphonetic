@@ -261,7 +261,7 @@ impl PhoneticEngine<'_> {
             .iter()
             .map(|v| {
                 if self.name_type == NameType::Sephardic {
-                    v.split('\'').last().unwrap()
+                    v.split('\'').next_back().unwrap()
                 } else {
                     v
                 }

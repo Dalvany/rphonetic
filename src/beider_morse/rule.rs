@@ -6,6 +6,7 @@ use std::str::FromStr;
 
 use either::Either;
 use enum_iterator::{all, Sequence};
+use nom::Parser;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 
@@ -225,7 +226,7 @@ fn parse_rule(
         // Parrsing test from more probable to less probable.
         // Try quadruplet rule
         if let Ok((rm, (pattern, left_context, right_context, phoneme_expr))) =
-            quadruplet()(remains)
+            quadruplet().parse(remains)
         {
             remains = rm;
             let pattern_length_char = pattern.chars().count();
@@ -259,13 +260,13 @@ fn parse_rule(
         }
 
         // Try single line comment
-        if let Ok((rm, _)) = end_of_line()(remains) {
+        if let Ok((rm, _)) = end_of_line().parse(remains) {
             remains = rm;
             continue;
         }
 
         // Try includes file
-        if let Ok((rm, include_filename)) = include()(remains) {
+        if let Ok((rm, include_filename)) = include().parse(remains) {
             remains = rm;
             let rules = parse_rule(resolver, include_filename).map_err(|error| {
                 if let PhoneticError::BMError(error) = error.clone() {
@@ -284,7 +285,7 @@ fn parse_rule(
         }
 
         // Try multiline comment
-        if let Ok((rm, ln)) = multiline_comment()(remains) {
+        if let Ok((rm, ln)) = multiline_comment().parse(remains) {
             line_number += ln - 1;
             remains = rm;
             continue;
