@@ -464,7 +464,7 @@ mod embedded {
     const SEP_EXACT_COMMON: &str = include_str!("../../rules/bm/sep_exact_common.txt");
     const SEP_RULES_ANY: &str = include_str!("../../rules/bm/sep_rules_any.txt");
 
-    lazy_static! {
+    lazy_static::lazy_static! {
         pub static ref EMBEDDED_RULES: BTreeMap<&'static str, &'static str> = BTreeMap::from([
             ("ash_exact_approx_common", ASH_EXACT_APPROX_COMMON),
             ("ash_approx_any", ASH_APPROX_ANY),
