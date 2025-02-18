@@ -359,7 +359,7 @@ mod tests {
     #[cfg(feature = "embedded_bm")]
     use crate::beider_morse::rule::PrivateRuleType;
 
-    lazy_static! {
+    lazy_static::lazy_static! {
         static ref CONFIG_FILE: ConfigFiles =
             ConfigFiles::new(&PathBuf::from("./test_assets/cc-rules/")).unwrap();
     }

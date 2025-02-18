@@ -1050,7 +1050,7 @@ mod tests {
      *
      * Massaged the test data in the array below.
      */
-    const FIXTURE: [(&str, &str); 547] = [
+    static FIXTURE: [(&str, &str); 547] = [
         ("Accosinly", "Occasionally"),
         ("Ciculer", "Circler"),
         ("Circue", "Circle"),
@@ -2228,7 +2228,7 @@ mod tests {
         );
     }
 
-    const TEST_DATA: [(&str, &str, &str); 1221] = [
+    static TEST_DATA: [(&str, &str, &str); 1221] = [
         ("ALLERTON", "ALRT", "ALRT"),
         ("Acton", "AKTN", "AKTN"),
         ("Adams", "ATMS", "ATMS"),

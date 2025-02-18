@@ -8,7 +8,7 @@ use crate::beider_morse::rule::{Phoneme, PhonemeList, PrivateRuleType, Rule, Rul
 use crate::helper::CharSequence;
 use crate::NameType;
 
-lazy_static! {
+lazy_static::lazy_static! {
     static ref NAME_PREFIXES: BTreeMap<NameType, BTreeSet<&'static str>> = BTreeMap::from([
         (
             NameType::Ashkenazi,
@@ -261,7 +261,7 @@ impl PhoneticEngine<'_> {
             .iter()
             .map(|v| {
                 if self.name_type == NameType::Sephardic {
-                    v.split('\'').last().unwrap()
+                    v.split('\'').next_back().unwrap()
                 } else {
                     v
                 }
@@ -314,7 +314,7 @@ mod tests {
     use crate::beider_morse::DEFAULT_MAX_PHONEMES;
     use crate::{ConfigFiles, PhoneticError, RuleType};
 
-    lazy_static! {
+    lazy_static::lazy_static! {
         static ref DATA: [(&'static str, &'static str, NameType, RuleType, bool, usize); 8] = [
             (
                 "Renault",

@@ -2,6 +2,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::fmt::{Display, Formatter};
 use std::path::PathBuf;
 
+use nom::Parser;
 use serde::{Deserialize, Serialize};
 
 use crate::beider_morse::NameType;
@@ -172,20 +173,20 @@ fn parse_liste(list: String) -> Result<BTreeSet<String>, PhoneticError> {
         // or multiline.
 
         // Try single line comment
-        if let Ok((rm, _)) = end_of_line()(remains) {
+        if let Ok((rm, _)) = end_of_line().parse(remains) {
             remains = rm;
             continue;
         }
 
         // Try multiline comment
-        if let Ok((rm, ln)) = multiline_comment()(remains) {
+        if let Ok((rm, ln)) = multiline_comment().parse(remains) {
             line_number += ln - 1;
             remains = rm;
             continue;
         }
 
         // Try language
-        if let Ok((rm, language)) = language()(remains) {
+        if let Ok((rm, language)) = language().parse(remains) {
             remains = rm;
             result.insert(language.to_string());
             continue;

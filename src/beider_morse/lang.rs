@@ -3,6 +3,7 @@ use std::fmt::{Display, Formatter};
 use std::path::Path;
 
 use enum_iterator::all;
+use nom::Parser;
 use regex::Regex;
 
 use crate::beider_morse::{LanguageSet, Languages};
@@ -105,19 +106,19 @@ fn parse_lang(
         // or multiline.
 
         // Try single line comment
-        if let Ok((rm, _)) = end_of_line()(remains) {
+        if let Ok((rm, _)) = end_of_line().parse(remains) {
             remains = rm;
             continue;
         }
 
         // Try multiline comment
-        if let Ok((rm, ln)) = multiline_comment()(remains) {
+        if let Ok((rm, ln)) = multiline_comment().parse(remains) {
             line_number += ln - 1;
             remains = rm;
             continue;
         }
 
-        if let Ok((rm, (pattern, langs, accept_on_match))) = lang()(remains) {
+        if let Ok((rm, (pattern, langs, accept_on_match))) = lang().parse(remains) {
             remains = rm;
 
             let pattern: Regex = Regex::new(pattern).map_err(|error| {

@@ -16,6 +16,8 @@
  */
 use std::collections::BTreeMap;
 
+use nom::Parser;
+
 use crate::helper::is_vowel;
 use crate::{
     build_error, end_of_line, folding, multiline_comment, quadruplet, Encoder, PhoneticError,
@@ -473,7 +475,7 @@ impl<'a> DaitchMokotoffSoundexBuilder<'a> {
             // Parrsing test from more probable to less probable.
 
             // Try quadruplet rule
-            if let Ok((rm, quadruplet)) = quadruplet()(remains) {
+            if let Ok((rm, quadruplet)) = quadruplet().parse(remains) {
                 let rule = Rule::try_from(quadruplet)?;
                 // There's always at least one char, the regex ensures that.
                 let ch = rule.pattern.chars().next().unwrap();
@@ -483,20 +485,20 @@ impl<'a> DaitchMokotoffSoundexBuilder<'a> {
             }
 
             // Try folding rule
-            if let Ok((rm, (pattern, replacement))) = folding()(remains) {
+            if let Ok((rm, (pattern, replacement))) = folding().parse(remains) {
                 ascii_folding_rules.insert(pattern, replacement);
                 remains = rm;
                 continue;
             }
 
             // Try single line comment
-            if let Ok((rm, _)) = end_of_line()(remains) {
+            if let Ok((rm, _)) = end_of_line().parse(remains) {
                 remains = rm;
                 continue;
             }
 
             // Try multiline comment
-            if let Ok((rm, ln)) = multiline_comment()(remains) {
+            if let Ok((rm, ln)) = multiline_comment().parse(remains) {
                 line_number += ln;
                 remains = rm;
                 continue;
