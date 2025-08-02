@@ -434,7 +434,7 @@ pub struct DaitchMokotoffSoundexBuilder<'a> {
 /// [commons-codec](https://github.com/apache/commons-codec/blob/master/src/main/resources/org/apache/commons/codec/language/dmrules.txt)
 /// rules and `ascii_folding` enable.
 #[cfg(feature = "embedded_dm")]
-impl<'a> Default for DaitchMokotoffSoundexBuilder<'a> {
+impl Default for DaitchMokotoffSoundexBuilder<'_> {
     fn default() -> Self {
         Self {
             rules: DEFAULT_RULES,
