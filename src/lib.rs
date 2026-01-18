@@ -47,7 +47,7 @@
     unused_import_braces,
     unused_qualifications
 )]
-#![cfg_attr(docsrs, feature(doc_auto_cfg))]
+#![cfg_attr(docsrs, feature(doc_cfg))]
 use std::error::Error;
 use std::fmt;
 use std::fmt::{Display, Formatter};
