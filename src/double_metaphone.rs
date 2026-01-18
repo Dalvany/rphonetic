@@ -736,7 +736,8 @@ impl DoubleMetaphone {
     }
 
     fn condition_l0(value: &str, index: isize) -> bool {
-        if (index as usize) == value.len() - 3
+        if value.len() >= 3 &&
+            (index as usize) == value.len() - 3
             && index > 0
             && Self::contains(value, index - 1, 4, vec!["ILLO", "ILLA", "ALLE"])
         {
@@ -2094,6 +2095,7 @@ mod tests {
         assert_double_metaphone("MKLL", "McClelland");
         assert_double_metaphone("SNHS", "san jose");
         assert_double_metaphone("SNFP", "xenophobia");
+        assert_double_metaphone("L", "ll");
 
         assert_double_metaphone_alternate("TSTN", "testing");
         assert_double_metaphone_alternate("T", "The");
@@ -2115,6 +2117,7 @@ mod tests {
         assert_double_metaphone_alternate("AK", "Joqqi");
         assert_double_metaphone_alternate("HF", "Hovvi");
         assert_double_metaphone_alternate("XRN", "Czerny");
+        assert_double_metaphone_alternate("L", "ll");
     }
 
     #[test]
