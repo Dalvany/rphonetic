@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.0.5](https://github.com/Dalvany/rphonetic/compare/v3.0.4...v3.0.5) - 2026-01-18
+
+### Fixed
+
+- underflow panic in double_metaphone::condition_l0 function ([#67](https://github.com/Dalvany/rphonetic/pull/67)). Thanks to [Oliver Coleman](https://github.com/OliverColeman)
+
+### Other
+
+- apply fmt
+- bump dependencies
+
 ## [3.0.4](https://github.com/Dalvany/rphonetic/compare/v3.0.3...v3.0.4) - 2025-08-02
 
 ### Other
