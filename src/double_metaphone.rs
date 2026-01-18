@@ -736,8 +736,8 @@ impl DoubleMetaphone {
     }
 
     fn condition_l0(value: &str, index: isize) -> bool {
-        if value.len() >= 3 &&
-            (index as usize) == value.len() - 3
+        if value.len() >= 3
+            && (index as usize) == value.len() - 3
             && index > 0
             && Self::contains(value, index - 1, 4, vec!["ILLO", "ILLA", "ALLE"])
         {
