@@ -45,3 +45,10 @@ harness = false
 [package.metadata.docs.rs]
 all-features = true
 rustdoc-args = ["--cfg", "docsrs"]
+
+[lints.clippy]
+print_stderr = "deny"
+print_stdout = "deny"
+indexing_slicing = "warn"
+unwrap_used = "warn"
+expect_used = "warn"
