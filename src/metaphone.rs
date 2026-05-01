@@ -139,17 +139,13 @@ impl Encoder for Metaphone {
                 }
                 if symb == 'C' || !Metaphone::is_previous_char(&local, index, symb) {
                     match symb {
-                        'A' | 'E' | 'I' | 'O' | 'U' => {
-                            if index == 0 {
-                                code.push(symb);
-                            }
+                        'A' | 'E' | 'I' | 'O' | 'U' if index == 0 => {
+                            code.push(symb);
                         }
-                        'B' => {
-                            if !Metaphone::is_previous_char(&local, index, 'M')
-                                || !Metaphone::is_last_char(wdsz, index)
-                            {
-                                code.push(symb);
-                            }
+                        'B' if (!Metaphone::is_previous_char(&local, index, 'M')
+                            || !Metaphone::is_last_char(wdsz, index)) =>
+                        {
+                            code.push(symb);
                         }
                         'C' => {
                             let next = local.chars().nth(index + 1);
@@ -225,10 +221,8 @@ impl Encoder for Metaphone {
                             }
                         }
                         'F' | 'J' | 'L' | 'M' | 'N' | 'R' => code.push(symb),
-                        'K' => {
-                            if index == 0 || !Metaphone::is_previous_char(&local, index, 'C') {
-                                code.push(symb);
-                            }
+                        'K' if (index == 0 || !Metaphone::is_previous_char(&local, index, 'C')) => {
+                            code.push(symb);
                         }
                         'P' => {
                             if Metaphone::is_next_char(&local, index, 'H') {
@@ -262,12 +256,11 @@ impl Encoder for Metaphone {
                             }
                         }
                         'V' => code.push('F'),
-                        'W' | 'Y' => {
+                        'W' | 'Y'
                             if !Metaphone::is_last_char(wdsz, index)
-                                && Metaphone::is_vowel(&local, index + 1)
-                            {
-                                code.push(symb);
-                            }
+                                && Metaphone::is_vowel(&local, index + 1) =>
+                        {
+                            code.push(symb);
                         }
                         'X' => {
                             code.push('K');
