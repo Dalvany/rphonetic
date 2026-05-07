@@ -2,9 +2,9 @@ use std::path::PathBuf;
 
 use rphonetic::{BeiderMorseBuilder, ConfigFiles, Encoder};
 
-#[allow(clippy::disallowed_macros)]
-fn main() {
-    let config_file = ConfigFiles::new(&PathBuf::from("./test_assets/cc-rules")).unwrap();
+#[allow(clippy::print_stdout)]
+fn main() -> anyhow::Result<()> {
+    let config_file = ConfigFiles::new(&PathBuf::from("./test_assets/cc-rules"))?;
     let beider_morse = BeiderMorseBuilder::new(&config_file).build();
     let mut count = 100;
     while count > 0 {
@@ -13,4 +13,6 @@ fn main() {
         std::thread::sleep(ten_seconds);
         count -= 1;
     }
+
+    Ok(())
 }

@@ -48,12 +48,10 @@
     unused_qualifications
 )]
 #![cfg_attr(docsrs, feature(doc_cfg))]
-use std::error::Error;
-use std::fmt;
-use std::fmt::{Display, Formatter};
 
 use rules_parser::*;
 use serde::{Deserialize, Serialize};
+use thiserror::Error;
 
 pub use crate::beider_morse::{
     BMError, BeiderMorse, BeiderMorseBuilder, ConfigFiles, LanguageSet, NameType, RuleType,
@@ -88,7 +86,8 @@ mod soundex;
 
 /// This represents a parsing error. It contains the
 /// line number, the line, and if possible the filename.
-#[derive(Debug, Clone, Ord, PartialOrd, Eq, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Error, Serialize, Deserialize)]
+#[error("{}:{line_number} {description} : {line_content}", filename.clone().unwrap_or_else(|| "Unknown".to_string()))]
 pub struct ParseError {
     /// Line number
     pub line_number: usize,
@@ -100,30 +99,15 @@ pub struct ParseError {
     pub description: String,
 }
 
-impl Display for ParseError {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        write!(
-            f,
-            "{}:{} {} : {}",
-            self.filename
-                .clone()
-                .unwrap_or_else(|| "Unknown".to_string()),
-            self.line_number,
-            self.description,
-            self.line_content,
-        )
-    }
-}
-
-impl Error for ParseError {}
-
 /// Errors
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Error)]
 pub enum PhoneticError {
     /// This variant contains parsing errors.
-    ParseRuleError(ParseError),
+    #[error("Error parsing rule file {0}")]
+    ParseRuleError(#[from] ParseError),
     /// This error contains errors related to Beider Morse.
-    BMError(BMError),
+    #[error("Error : {0}")]
+    BMError(#[from] BMError),
 }
 
 impl From<std::io::Error> for PhoneticError {
@@ -137,23 +121,6 @@ impl From<regex::Error> for PhoneticError {
         Self::BMError(BMError::from(error))
     }
 }
-
-impl From<BMError> for PhoneticError {
-    fn from(error: BMError) -> Self {
-        Self::BMError(error)
-    }
-}
-
-impl Display for PhoneticError {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::ParseRuleError(error) => write!(f, "Error parsing rule file {error}"),
-            Self::BMError(error) => write!(f, "Error : {error}"),
-        }
-    }
-}
-
-impl Error for PhoneticError {}
 
 fn build_error(
     line_number: usize,

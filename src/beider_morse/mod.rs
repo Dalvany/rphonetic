@@ -1,4 +1,3 @@
-use std::error::Error;
 use std::ffi::OsString;
 use std::fmt::{Display, Formatter};
 use std::path::PathBuf;
@@ -10,6 +9,7 @@ use regex::Regex;
 use regex_optim::OptimizedRegex;
 pub use rule::RuleType;
 use serde::{Deserialize, Serialize};
+use thiserror::Error;
 
 use crate::beider_morse::engine::PhoneticEngine;
 use crate::beider_morse::lang::Langs;
@@ -30,45 +30,38 @@ const SEP: &str = "sep";
 const DEFAULT_MAX_PHONEMES: usize = 20;
 
 /// Beider-Morse errors.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Error)]
 pub enum BMError {
     /// This error can be raised when parsing a [NameType] that isn't
     /// a variant of the enum or when a filename does not contain
     /// a [NameType] variant.
+    #[error("Unknown NameType {0}")]
     UnknownNameType(String),
     /// This error is raised when parsing a [RuleType] that isn't a
     /// variant of the enum.
+    #[error("Unknown RuleType {0}")]
     UnknownRuleType(String),
     /// This error is raised when a configuration file contains a line
     /// that can't be parsed.
+    #[error("Error reading files {0}")]
     ParseConfiguration(String),
     /// This error is raised when a rule file is missing.
+    #[error("Wrong file name : {0}")]
     WrongFilename(String),
     /// This error is raised when the parser can't parse a phoneme
     /// in a rule file.
+    #[error("Wrong phoneme : {0}")]
     WrongPhoneme(String),
     /// This error is raised when a regex in a rule file is wrong
-    BadContextRegex(regex::Error),
+    #[error(transparent)]
+    BadContextRegex(#[from] regex::Error),
     /// This error is raised when trying to parse a boolean in a rule
     /// file. Boolean should be either true or false.
+    #[error("{0} is not a boolean")]
     NotABoolean(String),
     /// This error is raised when a rule is not well-formed.
+    #[error("Ill formated rule : {0}")]
     BadRule(String),
-}
-
-impl Display for BMError {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        match self {
-            BMError::UnknownNameType(error) => write!(f, "Unknown NameType {error}"),
-            BMError::ParseConfiguration(error) => write!(f, "Error reading files {error}"),
-            BMError::WrongFilename(error) => write!(f, "Wrong file name : {error}"),
-            BMError::WrongPhoneme(error) => write!(f, "{error}"),
-            BMError::BadContextRegex(error) => write!(f, "{error}"),
-            BMError::NotABoolean(error) => write!(f, "{error}"),
-            BMError::BadRule(error) => write!(f, "{error}"),
-            BMError::UnknownRuleType(error) => write!(f, "Unknown RuleType {error}"),
-        }
-    }
 }
 
 impl From<std::io::Error> for BMError {
@@ -76,14 +69,6 @@ impl From<std::io::Error> for BMError {
         Self::ParseConfiguration(error.to_string())
     }
 }
-
-impl From<regex::Error> for BMError {
-    fn from(error: regex::Error) -> Self {
-        Self::BadContextRegex(error)
-    }
-}
-
-impl Error for BMError {}
 
 trait IsMatch {
     fn is_match(&self, input: &str) -> bool;
