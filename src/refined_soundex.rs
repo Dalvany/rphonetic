@@ -162,12 +162,15 @@ impl Default for RefinedSoundex {
 impl Encoder for RefinedSoundex {
     fn encode(&self, value: &str) -> String {
         let value = Self::soundex_clean(value);
-        if value.is_empty() {
-            return value;
-        }
 
-        let mut code = String::with_capacity(value.len() + 1);
-        code.push(value.chars().next().unwrap());
+        let mut code = match value.chars().next() {
+            Some(ch) => {
+                let mut code = String::with_capacity(value.len() + 1);
+                code.push(ch);
+                code
+            }
+            None => return value,
+        };
 
         let mut previous: Option<char> = None;
 

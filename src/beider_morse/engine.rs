@@ -169,8 +169,7 @@ impl PhoneticEngine<'_> {
             }
 
             for new_phoneme in sub_builder.phonemes {
-                if phonemes.contains(&new_phoneme) {
-                    let old_phoneme = phonemes.get(&new_phoneme).unwrap();
+                if let Some(old_phoneme) = phonemes.get(&new_phoneme) {
                     let merge_phoneme = old_phoneme.merge_with_language(phoneme.languages());
                     // Since equality is on text, replace should work fine
                     phonemes.replace(merge_phoneme);
@@ -190,22 +189,24 @@ impl PhoneticEngine<'_> {
 
     pub fn encode_with_language_set(&self, input: &str, languages: &LanguageSet) -> String {
         let l = if languages.is_singleton() {
-            languages.any().unwrap()
+            match languages.any() {
+                Some(l) => l,
+                None => unreachable!(
+                    "It's a singleton, so there is one language and 'any()' must be 'Some(...)'"
+                ),
+            }
         } else {
-            "any".to_string()
+            "any"
         };
         let rules = self
             .rules
-            .rules(self.name_type, PrivateRuleType::Rules, l.as_str())
+            .rules(self.name_type, PrivateRuleType::Rules, l)
             .unwrap();
         let final_rules1 = self
             .rules
             .rules(self.name_type, self.rule_type, "common")
             .unwrap();
-        let final_rules2 = self
-            .rules
-            .rules(self.name_type, self.rule_type, l.as_str())
-            .unwrap();
+        let final_rules2 = self.rules.rules(self.name_type, self.rule_type, l).unwrap();
 
         let input = input.to_lowercase().replace('-', " ");
 
@@ -458,7 +459,7 @@ mod tests {
         let args = &mut BTreeMap::new();
         args.insert("nameType", "gen");
         assert_eq!(
-            encode_helper(config_files, args, true, "Angelo"), 
+            encode_helper(config_files, args, true, "Angelo"),
             "YngYlo|Yngilo|agilo|angYlo|angilo|aniilo|anilo|anxilo|anzilo|ogilo|ongYlo|ongilo|oniilo|onilo|onxilo|onzilo"
         );
 
@@ -486,7 +487,7 @@ mod tests {
         //
         let args = &mut BTreeMap::new();
         assert_eq!(
-            encode_helper(config_files, args, false, "Angelo"), 
+            encode_helper(config_files, args, false, "Angelo"),
             "YngYlo|Yngilo|agilo|angYlo|angilo|aniilo|anilo|anxilo|anzilo|ogilo|ongYlo|ongilo|oniilo|onilo|onxilo|onzilo"
         );
 

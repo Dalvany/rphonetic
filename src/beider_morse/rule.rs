@@ -253,9 +253,7 @@ fn parse_rule(
                 phoneme,
             };
             let ch = pattern.chars().next().unwrap();
-            result.entry(ch).or_default();
-            let rules = result.get_mut(&ch).unwrap();
-            rules.push(rule);
+            result.entry(ch).or_default().push(rule);
             continue;
         }
 
@@ -649,7 +647,7 @@ mod tests {
         };
         let tmp = parse_rule(&resolver, "gen_exact_german")?;
         let mut result: BTreeSet<String> = BTreeSet::new();
-        for (_, v) in tmp.iter() {
+        for v in tmp.values() {
             for r in v {
                 result.insert(r.pattern.clone());
             }
