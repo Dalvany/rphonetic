@@ -74,11 +74,11 @@ impl LanguageSet {
 
     /// Return the first language of `self` or [None](Option::None) if
     /// `self` is empty.
-    pub fn any(&self) -> Option<String> {
+    pub fn any(&self) -> Option<&str> {
         match self {
             LanguageSet::Any => None,
             LanguageSet::NoLanguages => None,
-            LanguageSet::SomeLanguages(languages) => languages.iter().next().cloned(),
+            LanguageSet::SomeLanguages(languages) => languages.iter().next().map(|v| v.as_str()),
         }
     }
 }

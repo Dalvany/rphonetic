@@ -326,8 +326,10 @@ impl DaitchMokotoffSoundex {
                 match lower {
                     None => ch,
                     Some(mut lower) => {
-                        if self.ascii_folding && self.ascii_folding_rules.contains_key(&lower) {
-                            lower = *self.ascii_folding_rules.get(&lower).unwrap();
+                        if self.ascii_folding {
+                            if let Some(elem) = self.ascii_folding_rules.get(&lower) {
+                                lower = *elem
+                            }
                         }
 
                         lower
@@ -1453,7 +1455,7 @@ mod tests {
         let iter1 = result.rules.into_iter().zip(expected.rules);
         for ((ch1, rules1), (ch2, rules2)) in iter1 {
             assert_eq!(ch1, ch2, "Rule key differ");
-            let iter2 = rules1.into_iter().zip(rules2.into_iter());
+            let iter2 = rules1.into_iter().zip(rules2);
             for (rule1, rule2) in iter2 {
                 assert_eq!(rule1, rule2, "Rules differ at key {ch1}");
             }

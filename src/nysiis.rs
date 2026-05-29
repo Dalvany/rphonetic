@@ -165,7 +165,9 @@ impl Encoder for Nysiis {
         }
 
         let mut result = String::with_capacity(tmp.len());
-        result.push(tmp.chars().next().unwrap());
+        if let Some(ch) = tmp.chars().next() {
+            result.push(ch);
+        }
 
         let mut chars: Vec<char> = tmp.chars().collect();
         let len = chars.len();

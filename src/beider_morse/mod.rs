@@ -460,7 +460,8 @@ mod tests {
         let mut string = String::with_capacity(40);
 
         for i in 0..40 {
-            string.push(test_chars[i % test_chars.len()]);
+            let ch = *test_chars.get(i % test_chars.len()).unwrap();
+            string.push(ch);
             assert_ne!(encoder.encode(&string), "");
         }
 

@@ -151,15 +151,13 @@ impl Encoder for Metaphone {
                             let next = local.chars().nth(index + 1);
                             if Metaphone::is_previous_char(&local, index, 'S')
                                 && !Metaphone::is_last_char(wdsz, index)
-                                && next.is_some()
-                                && FRONTV.contains(next.unwrap())
+                                && next.map(|ch| FRONTV.contains(ch)) == Some(true)
                             {
                                 // Doing nothing
                             } else if Metaphone::region_match(&local, index, "CIA") {
                                 code.push('X');
                             } else if !Metaphone::is_last_char(wdsz, index)
-                                && next.is_some()
-                                && FRONTV.contains(next.unwrap())
+                                && next.map(|ch| FRONTV.contains(ch)) == Some(true)
                             {
                                 code.push('S');
                             } else if Metaphone::is_previous_char(&local, index, 'S')
@@ -179,7 +177,8 @@ impl Encoder for Metaphone {
                         'D' => {
                             if !Metaphone::is_last_char(wdsz, index + 1)
                                 && Metaphone::is_next_char(&local, index, 'G')
-                                && FRONTV.contains(local.chars().nth(index + 2).unwrap())
+                                && local.chars().nth(index + 2).map(|ch| FRONTV.contains(ch))
+                                    == Some(true)
                             {
                                 code.push('J');
                                 skip = 2;
@@ -199,10 +198,10 @@ impl Encoder for Metaphone {
                             {
                                 // Doing nothing
                             } else {
-                                let hard = Metaphone::is_previous_char(&local, index, 'G');
-                                if !Metaphone::is_last_char(wdsz, index)
-                                    && FRONTV.contains(local.chars().nth(index + 1).unwrap())
-                                    && !hard
+                                if !Metaphone::is_previous_char(&local, index, 'G')
+                                    && !Metaphone::is_last_char(wdsz, index)
+                                    && local.chars().nth(index + 1).map(|ch| FRONTV.contains(ch))
+                                        == Some(true)
                                 {
                                     code.push('J');
                                 } else {
@@ -213,7 +212,8 @@ impl Encoder for Metaphone {
                         'H' => {
                             if Metaphone::is_last_char(wdsz, index)
                                 || (index > 0
-                                    && VARSON.contains(local.chars().nth(index - 1).unwrap()))
+                                    && local.chars().nth(index - 1).map(|ch| VARSON.contains(ch))
+                                        == Some(true))
                             {
                                 // Doing nothing
                             } else if Metaphone::is_vowel(&local, index + 1) {

@@ -222,15 +222,17 @@ impl TryFrom<String> for Soundex {
 impl Encoder for Soundex {
     fn encode(&self, value: &str) -> String {
         let value = Self::soundex_clean(value);
-        if value.is_empty() {
-            return value;
-        }
+        let mut iterator = value.chars();
 
         let mut code: [char; 4] = ['0', '0', '0', '0'];
-        code[0] = value.chars().next().unwrap();
+
+        match iterator.next() {
+            Some(ch) => code[0] = ch,
+            None => return value,
+        }
+
         let mut count = 1;
         let mut previous = self.get_mapping_code(code[0]);
-        let mut iterator = value.chars().skip(1);
         while count < code.len() {
             match iterator.next() {
                 None => break,

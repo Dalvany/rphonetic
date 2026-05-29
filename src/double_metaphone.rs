@@ -289,98 +289,102 @@ impl DoubleMetaphone {
         if SILENT_START.iter().any(|sl| value.starts_with(sl)) {
             char_index = iterator.next();
         }
+
         while !result.is_complete() && char_index.is_some() {
-            let (index, ch) = char_index.unwrap();
-            let index = index as isize;
+            if let Some((index, ch)) = char_index {
+                let index = index as isize;
 
-            let skip = match ch {
-                'A' | 'E' | 'I' | 'O' | 'U' | 'Y' => {
-                    if index == 0 {
-                        result.append_char('A', None);
-                    }
-                    0
-                }
-                'B' => {
-                    result.append_char('P', None);
-                    if Self::char_at(value, index + 1) == Some('B') {
-                        1
-                    } else {
+                let skip = match ch {
+                    'A' | 'E' | 'I' | 'O' | 'U' | 'Y' => {
+                        if index == 0 {
+                            result.append_char('A', None);
+                        }
                         0
                     }
-                }
-                'Ç' => {
-                    result.append_char('S', None);
-                    0
-                }
-                'C' => Self::handle_c(value, &mut result, index),
-                'D' => Self::handle_d(value, &mut result, index),
-                'F' => {
-                    result.append_char('F', None);
-                    if Self::char_at(value, index + 1) == Some('F') {
-                        1
-                    } else {
+                    'B' => {
+                        result.append_char('P', None);
+                        if Self::char_at(value, index + 1) == Some('B') {
+                            1
+                        } else {
+                            0
+                        }
+                    }
+                    'Ç' => {
+                        result.append_char('S', None);
                         0
                     }
-                }
-                'G' => Self::handle_g(value, &mut result, index, slavo_germanic),
-                'H' => Self::handle_h(value, &mut result, index),
-                'J' => Self::handle_j(value, &mut result, index, slavo_germanic),
-                'K' => {
-                    result.append_char('K', None);
-                    if Self::char_at(value, index + 1) == Some('K') {
-                        1
-                    } else {
+                    'C' => Self::handle_c(value, &mut result, index),
+                    'D' => Self::handle_d(value, &mut result, index),
+                    'F' => {
+                        result.append_char('F', None);
+                        if Self::char_at(value, index + 1) == Some('F') {
+                            1
+                        } else {
+                            0
+                        }
+                    }
+                    'G' => Self::handle_g(value, &mut result, index, slavo_germanic),
+                    'H' => Self::handle_h(value, &mut result, index),
+                    'J' => Self::handle_j(value, &mut result, index, slavo_germanic),
+                    'K' => {
+                        result.append_char('K', None);
+                        if Self::char_at(value, index + 1) == Some('K') {
+                            1
+                        } else {
+                            0
+                        }
+                    }
+                    'L' => Self::handle_l(value, &mut result, index),
+                    'M' => {
+                        result.append_char('M', None);
+                        if Self::condition_m0(value, index) {
+                            1
+                        } else {
+                            0
+                        }
+                    }
+                    'N' => {
+                        result.append_char('N', None);
+                        if Self::char_at(value, index + 1) == Some('N') {
+                            1
+                        } else {
+                            0
+                        }
+                    }
+                    'Ñ' => {
+                        result.append_char('N', None);
                         0
                     }
-                }
-                'L' => Self::handle_l(value, &mut result, index),
-                'M' => {
-                    result.append_char('M', None);
-                    if Self::condition_m0(value, index) {
-                        1
-                    } else {
-                        0
+                    'P' => Self::handle_p(value, &mut result, index),
+                    'Q' => {
+                        result.append_char('K', None);
+                        if Self::char_at(value, index + 1) == Some('Q') {
+                            1
+                        } else {
+                            0
+                        }
                     }
-                }
-                'N' => {
-                    result.append_char('N', None);
-                    if Self::char_at(value, index + 1) == Some('N') {
-                        1
-                    } else {
-                        0
+                    'R' => Self::handle_r(value, &mut result, index, slavo_germanic),
+                    'S' => Self::handle_s(value, &mut result, index, slavo_germanic),
+                    'T' => Self::handle_t(value, &mut result, index),
+                    'V' => {
+                        result.append_char('F', None);
+                        if Self::char_at(value, index + 1) == Some('V') {
+                            1
+                        } else {
+                            0
+                        }
                     }
-                }
-                'Ñ' => {
-                    result.append_char('N', None);
-                    0
-                }
-                'P' => Self::handle_p(value, &mut result, index),
-                'Q' => {
-                    result.append_char('K', None);
-                    if Self::char_at(value, index + 1) == Some('Q') {
-                        1
-                    } else {
-                        0
-                    }
-                }
-                'R' => Self::handle_r(value, &mut result, index, slavo_germanic),
-                'S' => Self::handle_s(value, &mut result, index, slavo_germanic),
-                'T' => Self::handle_t(value, &mut result, index),
-                'V' => {
-                    result.append_char('F', None);
-                    if Self::char_at(value, index + 1) == Some('V') {
-                        1
-                    } else {
-                        0
-                    }
-                }
-                'W' => Self::handle_w(value, &mut result, index),
-                'X' => Self::handle_x(value, &mut result, index),
-                'Z' => Self::handle_z(value, &mut result, index, slavo_germanic),
-                _ => 0,
-            };
+                    'W' => Self::handle_w(value, &mut result, index),
+                    'X' => Self::handle_x(value, &mut result, index),
+                    'Z' => Self::handle_z(value, &mut result, index, slavo_germanic),
+                    _ => 0,
+                };
 
-            char_index = iterator.nth(skip);
+                char_index = iterator.nth(skip);
+            } else {
+                return result;
+            }
         }
 
         result

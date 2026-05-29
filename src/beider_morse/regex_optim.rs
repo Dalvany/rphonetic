@@ -76,21 +76,22 @@ impl IsMatch for OptimizedRegex {
                 // Slicing won't work well since it slices on byte
                 // so the trick is to use chars, I think it should be cheap here
                 let mut iterator = input.chars();
-                let first = iterator.next();
-                let second = iterator.next();
                 // commons-codec check that length of string is exactly one
-                first.is_some()
-                    && second.is_none()
-                    && char_list.contains(first.unwrap()) == *should_match
+                match iterator.next() {
+                    Some(ch) => {
+                        iterator.next().is_none() && char_list.contains(ch) == *should_match
+                    }
+                    None => false,
+                }
             }
-            Self::StartsWithChar(char_list, should_match) => {
-                let char = input.chars().next();
-                char.is_some() && char_list.contains(char.unwrap()) == *should_match
-            }
-            Self::EndsWithChar(char_list, should_match) => {
-                let char = input.chars().next_back();
-                char.is_some() && char_list.contains(char.unwrap()) == *should_match
-            }
+            Self::StartsWithChar(char_list, should_match) => match input.chars().next() {
+                Some(ch) => char_list.contains(ch) == *should_match,
+                None => false,
+            },
+            Self::EndsWithChar(char_list, should_match) => match input.chars().next_back() {
+                Some(ch) => char_list.contains(ch) == *should_match,
+                None => false,
+            },
         }
     }
 }
