@@ -6,7 +6,7 @@ use nom::Parser;
 use serde::{Deserialize, Serialize};
 
 use crate::beider_morse::NameType;
-use crate::{build_error, end_of_line, language, multiline_comment, PhoneticError};
+use crate::{build_parse_error, end_of_line, language, multiline_comment, PhoneticError};
 
 /// This represents a set of languages.
 #[derive(Clone, Debug, Ord, PartialOrd, Eq, PartialEq, Hash, Serialize, Deserialize)]
@@ -193,7 +193,7 @@ fn parse_liste(list: String) -> Result<BTreeSet<String>, PhoneticError> {
         }
 
         // Everything fails, then return an error...
-        return Err(build_error(
+        return Err(build_parse_error(
             line_number,
             None,
             remains,

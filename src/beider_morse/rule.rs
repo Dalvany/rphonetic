@@ -15,7 +15,7 @@ use crate::beider_morse::regex_optim::OptimizedRegex;
 use crate::beider_morse::Languages;
 use crate::helper::CharSequence;
 use crate::{
-    build_error, end_of_line, include, multiline_comment, quadruplet, BMError, NameType,
+    build_parse_error, end_of_line, include, multiline_comment, quadruplet, BMError, NameType,
     PhoneticError,
 };
 
@@ -268,7 +268,7 @@ fn parse_rule(
             remains = rm;
             let rules = parse_rule(resolver, include_filename).map_err(|error| {
                 if let PhoneticError::BMError(error) = error.clone() {
-                    build_error(
+                    build_parse_error(
                         line_number,
                         Some(filename.to_string()),
                         remains,
