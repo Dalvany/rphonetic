@@ -34,6 +34,7 @@ enum-iterator = "2.0"
 either = "1.15"
 document-features = "0.2"
 thiserror = "2.0"
+fs-err = "3.3"
 
 [dev-dependencies]
 criterion = { version = "0.8", features = ["html_reports"] }

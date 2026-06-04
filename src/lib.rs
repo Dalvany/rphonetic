@@ -122,12 +122,12 @@ impl From<regex::Error> for PhoneticError {
     }
 }
 
-fn build_error(
+fn build_parse_error(
     line_number: usize,
     filename: Option<String>,
     remains: &str,
     description: String,
-) -> PhoneticError {
+) -> ParseError {
     let eol = remains.find('\n');
     let line_content = match eol {
         None => remains,
@@ -135,12 +135,12 @@ fn build_error(
     }
     .to_string();
 
-    PhoneticError::ParseRuleError(ParseError {
+    ParseError {
         line_number,
         filename,
         line_content,
         description,
-    })
+    }
 }
 
 /// This trait represents a phonetic algorithm.

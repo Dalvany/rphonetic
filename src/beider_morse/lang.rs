@@ -7,7 +7,9 @@ use nom::Parser;
 use regex::Regex;
 
 use crate::beider_morse::{LanguageSet, Languages};
-use crate::{build_error, end_of_line, lang, multiline_comment, BMError, NameType, PhoneticError};
+use crate::{
+    build_parse_error, end_of_line, lang, multiline_comment, BMError, NameType, PhoneticError,
+};
 
 #[derive(Clone, Debug)]
 struct LangRule {
@@ -35,6 +37,7 @@ impl LangRule {
 
 #[derive(Clone, Debug)]
 #[cfg_attr(feature = "embedded_bm", derive(Default))]
+
 pub struct Lang {
     languages: BTreeSet<String>,
     rules: Vec<LangRule>,
@@ -122,7 +125,7 @@ fn parse_lang(
             remains = rm;
 
             let pattern: Regex = Regex::new(pattern).map_err(|error| {
-                build_error(line_number, filename.clone(), remains, error.to_string())
+                build_parse_error(line_number, filename.clone(), remains, error.to_string())
             })?;
             let langs: BTreeSet<String> =
                 BTreeSet::from_iter(langs.split('+').map(|v| v.to_string()));
@@ -136,7 +139,7 @@ fn parse_lang(
         }
 
         // Everything fails, then return an error...
-        return Err(build_error(
+        return Err(build_parse_error(
             line_number,
             None,
             remains,
