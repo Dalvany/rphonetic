@@ -16,7 +16,7 @@ use crate::beider_morse::lang::Langs;
 pub use crate::beider_morse::languages::LanguageSet;
 use crate::beider_morse::languages::Languages;
 use crate::beider_morse::rule::Rules;
-use crate::{Encoder, PhoneticError};
+use crate::{Encoder, ParseError};
 
 mod engine;
 mod lang;
@@ -29,10 +29,33 @@ const GEN: &str = "gen";
 const SEP: &str = "sep";
 const DEFAULT_MAX_PHONEMES: usize = 20;
 
+/// Beider-Morse parsing errors.
+#[derive(Debug, Error)]
+pub enum ParseBmError {
+    #[error(transparent)]
+    IoError(#[from] std::io::Error),
+    #[error(transparent)]
+    Parse(#[from] ParseError),
+    #[error("Missing name type {0}")]
+    MissingNameType(NameType),
+    #[error("Phoneme expression '{0}' has a '[' but doesn't ends with an ']'")]
+    UnclosedPhonemeExpression(String),
+    #[error("Phoneme rule '{0}' has a '(' but doesn't ends with an ')'")]
+    UnclosedPhonemeRule(String),
+    #[error(transparent)]
+    Regex(#[from] regex::Error),
+    #[error("Missing embedded rule {0}")]
+    MissingEmbedded(String),
+    #[error("Feature 'embedded_bm' is disabled")]
+    FeatureDisabled,
+    #[error("Unknown name type {0}")]
+    UnknownNameType(NameType),
+}
+
 /// Beider-Morse errors.
 #[derive(Debug, Clone, PartialEq, Error)]
 pub enum BMError {
-    /// This error can be raised when parsing a [NameType] that isn't
+    /// This error can be raised when parsing a [NameType] that isn'trun
     /// a variant of the enum or when a filename does not contain
     /// a [NameType] variant.
     #[error("Unknown NameType {0}")]
@@ -154,7 +177,7 @@ impl TryFrom<OsString> for NameType {
 ///
 /// If `embedded_bm` feature is enable, then there is a [Default] implementation
 /// that only support `any` and `common` languages rules for each variant of
-/// [NameType]. It is provided as a convenience but as files are embedded into
+/// [NameType]. It is provided as a convenience but because files are embedded into
 /// code, it can result in a significant increase of binary size. The preferred
 /// way is to construct a new [ConfigFiles] with a [path to files](ConfigFiles#new).
 #[derive(Debug, Clone)]
@@ -174,7 +197,7 @@ impl ConfigFiles {
     ///
     /// # Errors :
     /// Returns a [BMError] if it misses some files or some rules are not well-formed.
-    pub fn new(directory: &PathBuf) -> Result<Self, PhoneticError> {
+    pub fn new(directory: &PathBuf) -> Result<Self, ParseBmError> {
         let languages = Languages::try_from(directory)?;
         let langs = Langs::new(directory, &languages)?;
         let rules = Rules::new(directory, &languages)?;
@@ -208,7 +231,7 @@ impl ConfigFiles {
 /// # Example
 ///
 /// ```rust
-/// # fn main() -> Result<(), rphonetic::PhoneticError> {
+/// # fn main() -> Result<(), rphonetic::ParseBmError> {
 /// use std::path::PathBuf;
 /// use rphonetic::{BeiderMorseBuilder, ConfigFiles, Encoder};
 ///
@@ -238,7 +261,7 @@ impl BeiderMorse<'_> {
     /// # Example
     ///
     /// ```rust
-    /// # fn main() -> Result<(), rphonetic::PhoneticError> {
+    /// # fn main() -> Result<(), rphonetic::ParseBmError> {
     /// use std::path::PathBuf;
     /// use rphonetic::{BeiderMorseBuilder, ConfigFiles, Encoder, LanguageSet, RuleType};
     ///
