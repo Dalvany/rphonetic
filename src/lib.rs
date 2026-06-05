@@ -49,12 +49,13 @@
 )]
 #![cfg_attr(docsrs, feature(doc_cfg))]
 
-use rules_parser::*;
+use nom::*;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
 pub use crate::beider_morse::{
-    BMError, BeiderMorse, BeiderMorseBuilder, ConfigFiles, LanguageSet, NameType, RuleType,
+    BMError, BeiderMorse, BeiderMorseBuilder, ConfigFiles, LanguageSet, NameType, ParseBmError,
+    RuleType,
 };
 pub use crate::caverphone::{Caverphone1, Caverphone2};
 pub use crate::cologne::Cologne;
@@ -78,10 +79,10 @@ mod double_metaphone;
 mod helper;
 mod match_rating_approach;
 mod metaphone;
+mod nom;
 mod nysiis;
 mod phonex;
 mod refined_soundex;
-mod rules_parser;
 mod soundex;
 
 /// This represents a parsing error. It contains the

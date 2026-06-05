@@ -313,7 +313,7 @@ mod tests {
 
     use super::*;
     use crate::beider_morse::DEFAULT_MAX_PHONEMES;
-    use crate::{ConfigFiles, PhoneticError, RuleType};
+    use crate::{ConfigFiles, RuleType};
 
     lazy_static::lazy_static! {
         static ref DATA: [(&'static str, &'static str, NameType, RuleType, bool, usize); 8] = [
@@ -385,8 +385,8 @@ mod tests {
     }
 
     #[test]
-    fn test_encode() -> Result<(), PhoneticError> {
-        let config_files = ConfigFiles::new(&PathBuf::from("./test_assets/cc-rules/"))?;
+    fn test_encode() {
+        let config_files = ConfigFiles::new(&PathBuf::from("./test_assets/cc-rules/")).unwrap();
 
         for (index, (value, expected, name_type, rule_type, concat, max_phoneme)) in
             DATA.iter().enumerate()
@@ -408,7 +408,6 @@ mod tests {
                 "Wrong get '{result}' instead of '{expected}' for data at index {index}"
             );
         }
-        Ok(())
     }
 
     fn encode_helper(
@@ -450,8 +449,8 @@ mod tests {
     }
 
     #[test]
-    fn test_solr_generic() -> Result<(), PhoneticError> {
-        let config_files = &ConfigFiles::new(&PathBuf::from("./test_assets/cc-rules/"))?;
+    fn test_solr_generic() {
+        let config_files = &ConfigFiles::new(&PathBuf::from("./test_assets/cc-rules/")).unwrap();
 
         //
         // concat is true, ruleType is EXACT
@@ -565,13 +564,11 @@ mod tests {
         );
 
         assert_eq!(encode_helper(config_files, args, false, "1234"), "");
-
-        Ok(())
     }
 
     #[test]
-    fn test_solr_ashkenazi() -> Result<(), PhoneticError> {
-        let config_files = &ConfigFiles::new(&PathBuf::from("./test_assets/cc-rules/"))?;
+    fn test_solr_ashkenazi() {
+        let config_files = &ConfigFiles::new(&PathBuf::from("./test_assets/cc-rules/")).unwrap();
 
         //
         // concat is true, ruleType is EXACT
@@ -688,13 +685,11 @@ mod tests {
         );
 
         assert_eq!(encode_helper(config_files, args, false, "1234"), "");
-
-        Ok(())
     }
 
     #[test]
-    fn test_solr_sephardic() -> Result<(), PhoneticError> {
-        let config_files = &ConfigFiles::new(&PathBuf::from("./test_assets/cc-rules/"))?;
+    fn test_solr_sephardic() {
+        let config_files = &ConfigFiles::new(&PathBuf::from("./test_assets/cc-rules/")).unwrap();
 
         //
         // concat is true, ruleType is EXACT
@@ -811,13 +806,11 @@ mod tests {
         );
 
         assert_eq!(encode_helper(config_files, args, false, "1234"), "");
-
-        Ok(())
     }
 
     #[test]
-    fn test_compatibility_with_original_version() -> Result<(), PhoneticError> {
-        let config_files = &ConfigFiles::new(&PathBuf::from("./test_assets/cc-rules/"))?;
+    fn test_compatibility_with_original_version() {
+        let config_files = &ConfigFiles::new(&PathBuf::from("./test_assets/cc-rules/")).unwrap();
 
         let args = &mut BTreeMap::new();
         args.insert("nameType", "gen");
@@ -842,7 +835,5 @@ mod tests {
             encode_helper(config_files, args, false, "Halpern"),
             "YlpYrn|Ylpirn|alpYrn|alpirn|olpYrn|olpirn|xalpirn|xolpirn"
         );
-
-        Ok(())
     }
 }

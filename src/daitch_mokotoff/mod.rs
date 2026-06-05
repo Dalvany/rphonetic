@@ -24,7 +24,7 @@ mod builder;
 mod parser;
 
 #[cfg(feature = "embedded_dm")]
-const DEFAULT_RULES: &str = include_str!("../rules/dmrules.txt");
+const DEFAULT_RULES: &str = include_str!("../../rules/dmrules.txt");
 
 /// Max length of a DM soundex value.
 const MAX_LENGTH: usize = 6;
@@ -200,8 +200,8 @@ impl Rule {
 /// # fn main() -> Result<(), rphonetic::PhoneticError> {
 /// use rphonetic::{DaitchMokotoffSoundex, DaitchMokotoffSoundexBuilder, Encoder};
 ///
-/// const COMMONS_CODEC_RULES: &str = include_str!("../rules/dmrules.txt");
-///PhoneticError
+/// const COMMONS_CODEC_RULES: &str = include_str!("../../rules/dmrules.txt");
+///
 /// let encoder = DaitchMokotoffSoundexBuilder::with_rules(COMMONS_CODEC_RULES).build()?;
 ///
 /// assert_eq!(encoder.encode("Rosochowaciec"), "944744");
@@ -215,7 +215,7 @@ impl Rule {
 /// # fn main() -> Result<(), rphonetic::PhoneticError> {
 /// use rphonetic::{DaitchMokotoffSoundex, DaitchMokotoffSoundexBuilder, Encoder};
 ///
-/// const COMMONS_CODEC_RULES: &str = include_str!("../rules/dmrules.txt");
+/// const COMMONS_CODEC_RULES: &str = include_str!("../../rules/dmrules.txt");
 ///
 /// let encoder = DaitchMokotoffSoundexBuilder::with_rules(COMMONS_CODEC_RULES).build()?;
 ///
@@ -249,7 +249,7 @@ impl DaitchMokotoffSoundex {
     /// # fn main() -> Result<(), rphonetic::PhoneticError> {
     /// use rphonetic::{DaitchMokotoffSoundex, DaitchMokotoffSoundexBuilder, Encoder};
     ///
-    /// const COMMONS_CODEC_RULES: &str = include_str!("../rules/dmrules.txt");
+    /// const COMMONS_CODEC_RULES: &str = include_str!("../../rules/dmrules.txt");
     ///
     /// let encoder = DaitchMokotoffSoundexBuilder::with_rules(COMMONS_CODEC_RULES).build()?;
     ///
@@ -282,7 +282,7 @@ impl DaitchMokotoffSoundex {
     /// # fn main() -> Result<(), rphonetic::PhoneticError> {
     /// use rphonetic::{DaitchMokotoffSoundex, DaitchMokotoffSoundexBuilder, Encoder};
     ///
-    /// const COMMONS_CODEC_RULES: &str = include_str!("../rules/dmrules.txt");
+    /// const COMMONS_CODEC_RULES: &str = include_str!("../../rules/dmrules.txt");
     ///
     /// let encoder = DaitchMokotoffSoundexBuilder::with_rules(COMMONS_CODEC_RULES).build()?;
     ///
@@ -381,10 +381,10 @@ impl Encoder for DaitchMokotoffSoundex {
     /// # Example :
     ///
     /// ```rust
-    /// # fn main() -> Result<(), rphonetic::PhoneticError> {
+    /// # fn main() -> Result<(), rphonetic::ParseError> {
     /// use rphonetic::{DaitchMokotoffSoundex, DaitchMokotoffSoundexBuilder, Encoder};
     ///
-    /// const COMMONS_CODEC_RULES: &str = include_str!("../rules/dmrules.txt");
+    /// const COMMONS_CODEC_RULES: &str = include_str!("../../rules/dmrules.txt");
     ///
     /// let encoder = DaitchMokotoffSoundexBuilder::with_rules(COMMONS_CODEC_RULES).build()?;
     ///

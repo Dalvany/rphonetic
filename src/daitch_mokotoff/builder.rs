@@ -19,7 +19,7 @@ pub struct DaitchMokotoffSoundexBuilder<'a> {
 impl Default for DaitchMokotoffSoundexBuilder<'_> {
     fn default() -> Self {
         Self {
-            rules: DEFAULT_RULES,
+            rules: crate::daitch_mokotoff::DEFAULT_RULES,
             ascii_folding: true,
         }
     }

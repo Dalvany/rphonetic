@@ -36,7 +36,7 @@ English names / English dictionary words, ...etc.).
 ### Beider-Morse
 
 ```rust
-fn main() -> Result<(), rphonetic::PhoneticError> {
+fn main() -> Result<(), rphonetic::ParseBmError> {
     use std::path::PathBuf;
     use rphonetic::{BeiderMorseBuilder, ConfigFiles, Encoder};
 
@@ -83,7 +83,7 @@ fn main() {
 ### Daitch-Mokotoff
 
 ```rust
-fn main() -> Result<(), rphonetic::PhoneticError> {
+fn main() -> Result<(), rphonetic::ParseError> {
     use rphonetic::{DaitchMokotoffSoundex, DaitchMokotoffSoundexBuilder, Encoder};
 
     const COMMONS_CODEC_RULES: &str = include_str!("./rules/dmrules.txt");
@@ -93,8 +93,6 @@ fn main() -> Result<(), rphonetic::PhoneticError> {
     Ok(())
 }
 ```
-
-
 
 ### Match Rating Approach
 
@@ -202,4 +200,3 @@ cargo bench --bench benchmark -- --save-baseline main
 Do not
 run [Criterion benches on CI](https://bheisler.github.io/criterion.rs/book/faq.html#how-should-i-run-criterionrs-benchmarks-in-a-ci-pipeline)
 .
-
