@@ -15,6 +15,7 @@
  * limitations under the License.
  */
 use std::collections::BTreeMap;
+use std::convert::Infallible;
 
 pub use crate::daitch_mokotoff::builder::*;
 use crate::helper::is_vowel;
@@ -152,7 +153,7 @@ impl Rule {
 /// In the following example, we construct a [DaitchMokotoffSoundex] using the previous rule :
 ///
 /// ```rust
-/// # fn main() -> Result<(), rphonetic::PhoneticError> {
+/// # fn main() -> anyhow::Result<()> {
 /// use rphonetic::{DaitchMokotoffSoundex, DaitchMokotoffSoundexBuilder};
 /// let rules = "/*
 /// This
@@ -197,14 +198,14 @@ impl Rule {
 /// ## Encode methode
 ///
 /// ```rust
-/// # fn main() -> Result<(), rphonetic::PhoneticError> {
+/// # fn main() -> anyhow::Result<()> {
 /// use rphonetic::{DaitchMokotoffSoundex, DaitchMokotoffSoundexBuilder, Encoder};
 ///
 /// const COMMONS_CODEC_RULES: &str = include_str!("../../rules/dmrules.txt");
 ///
 /// let encoder = DaitchMokotoffSoundexBuilder::with_rules(COMMONS_CODEC_RULES).build()?;
 ///
-/// assert_eq!(encoder.encode("Rosochowaciec"), "944744");
+/// assert_eq!(encoder.encode("Rosochowaciec")?, "944744");
 /// #   Ok(())
 /// # }
 /// ```
@@ -212,14 +213,14 @@ impl Rule {
 /// ## Soundex
 ///
 /// ```rust
-/// # fn main() -> Result<(), rphonetic::PhoneticError> {
+/// # fn main() -> anyhow::Result<()> {
 /// use rphonetic::{DaitchMokotoffSoundex, DaitchMokotoffSoundexBuilder, Encoder};
 ///
 /// const COMMONS_CODEC_RULES: &str = include_str!("../../rules/dmrules.txt");
 ///
 /// let encoder = DaitchMokotoffSoundexBuilder::with_rules(COMMONS_CODEC_RULES).build()?;
 ///
-/// assert_eq!(encoder.soundex("Rosochowaciec"), "944744|944745|944754|944755|945744|945745|945754|945755");
+/// assert_eq!(encoder.soundex("Rosochowaciec")?, "944744|944745|944754|944755|945744|945745|945754|945755");
 /// #   Ok(())
 /// # }
 /// ```
@@ -246,7 +247,7 @@ impl DaitchMokotoffSoundex {
     /// # Example :
     ///
     /// ```rust
-    /// # fn main() -> Result<(), rphonetic::PhoneticError> {
+    /// # fn main() -> anyhow::Result<()> {
     /// use rphonetic::{DaitchMokotoffSoundex, DaitchMokotoffSoundexBuilder, Encoder};
     ///
     /// const COMMONS_CODEC_RULES: &str = include_str!("../../rules/dmrules.txt");
@@ -254,12 +255,12 @@ impl DaitchMokotoffSoundex {
     /// let encoder = DaitchMokotoffSoundexBuilder::with_rules(COMMONS_CODEC_RULES).build()?;
     ///
     /// // With branching
-    /// assert_eq!(encoder.soundex("Rosochowaciec"), "944744|944745|944754|944755|945744|945745|945754|945755");
+    /// assert_eq!(encoder.soundex("Rosochowaciec")?, "944744|944745|944754|944755|945744|945745|945754|945755");
     /// #   Ok(())
     /// # }
     /// ```
-    pub fn soundex(&self, value: &str) -> String {
-        self.inner_soundex(value, true).join("|")
+    pub fn soundex(&self, value: &str) -> Result<String, Infallible> {
+        self.inner_soundex(value, true).map(|v| v.join("|"))
     }
 
     /// Encode a string and return vector of codes avoiding a parsing result
@@ -279,7 +280,7 @@ impl DaitchMokotoffSoundex {
     /// # Example :
     ///
     /// ```rust
-    /// # fn main() -> Result<(), rphonetic::PhoneticError> {
+    /// # fn main() -> anyhow::Result<()> {
     /// use rphonetic::{DaitchMokotoffSoundex, DaitchMokotoffSoundexBuilder, Encoder};
     ///
     /// const COMMONS_CODEC_RULES: &str = include_str!("../../rules/dmrules.txt");
@@ -287,14 +288,14 @@ impl DaitchMokotoffSoundex {
     /// let encoder = DaitchMokotoffSoundexBuilder::with_rules(COMMONS_CODEC_RULES).build()?;
     ///
     /// // With branching
-    /// assert_eq!(encoder.inner_soundex("Rosochowaciec", true), vec!["944744","944745","944754","944755","945744","945745","945754","945755"]);
+    /// assert_eq!(encoder.inner_soundex("Rosochowaciec", true)?, vec!["944744","944745","944754","944755","945744","945745","945754","945755"]);
     ///
     /// // Without branching
-    /// assert_eq!(encoder.inner_soundex("Rosochowaciec", false), vec!["944744"]);
+    /// assert_eq!(encoder.inner_soundex("Rosochowaciec", false)?, vec!["944744"]);
     /// #   Ok(())
     /// # }
     /// ```
-    pub fn inner_soundex(&self, value: &str, branching: bool) -> Vec<String> {
+    pub fn inner_soundex(&self, value: &str, branching: bool) -> Result<Vec<String>, Infallible> {
         let source = value
             .chars()
             .filter(|ch| !ch.is_whitespace())
@@ -371,17 +372,19 @@ impl DaitchMokotoffSoundex {
             result.push(branch.builder.clone());
         }
 
-        result
+        Ok(result)
     }
 }
 
 impl Encoder for DaitchMokotoffSoundex {
+    type Error = Infallible;
+
     /// Encode a string without branching, only one code will be generated
     ///
     /// # Example :
     ///
     /// ```rust
-    /// # fn main() -> Result<(), rphonetic::ParseError> {
+    /// # fn main() -> anyhow::Result<()> {
     /// use rphonetic::{DaitchMokotoffSoundex, DaitchMokotoffSoundexBuilder, Encoder};
     ///
     /// const COMMONS_CODEC_RULES: &str = include_str!("../../rules/dmrules.txt");
@@ -390,15 +393,18 @@ impl Encoder for DaitchMokotoffSoundex {
     ///
     ///
     /// // Without branching
-    /// assert_eq!(encoder.encode("Rosochowaciec"), "944744");
+    /// assert_eq!(encoder.encode("Rosochowaciec")?, "944744");
     /// #   Ok(())
     /// # }
     /// ```
-    fn encode(&self, s: &str) -> String {
-        self.inner_soundex(s, false)
+    fn encode(&self, s: &str) -> Result<String, Infallible> {
+        let result = self
+            .inner_soundex(s, false)?
             .first()
             .map(|v| v.to_string())
-            .unwrap_or_default()
+            .unwrap_or_default();
+
+        Ok(result)
     }
 }
 
@@ -414,11 +420,17 @@ mod tests {
             .build()
             .unwrap();
 
-        assert_eq!(daitch_mokotoff.soundex("Straßburg"), "294795");
-        assert_eq!(daitch_mokotoff.soundex("Strasburg"), "294795");
+        assert_eq!(
+            daitch_mokotoff.soundex("Straßburg"),
+            Ok("294795".to_string())
+        );
+        assert_eq!(
+            daitch_mokotoff.soundex("Strasburg"),
+            Ok("294795".to_string())
+        );
 
-        assert_eq!(daitch_mokotoff.soundex("Éregon"), "095600");
-        assert_eq!(daitch_mokotoff.soundex("Eregon"), "095600");
+        assert_eq!(daitch_mokotoff.soundex("Éregon"), Ok("095600".to_string()));
+        assert_eq!(daitch_mokotoff.soundex("Eregon"), Ok("095600".to_string()));
     }
 
     #[test]
@@ -431,7 +443,7 @@ mod tests {
         // A-KS-S-O-L
         // 0-54-4---8 -> wrong
         // 0-54-----8 -> correct
-        assert_eq!(daitch_mokotoff.soundex("AKSSOL"), "054800");
+        assert_eq!(daitch_mokotoff.soundex("AKSSOL"), Ok("054800".to_string()));
 
         // GERSCHFELD
         // G-E-RS-CH-F-E-L-D
@@ -439,7 +451,7 @@ mod tests {
         // 5--4/94-5/--7-8-3 -> correct
         assert_eq!(
             daitch_mokotoff.soundex("GERSCHFELD"),
-            "547830|545783|594783|594578"
+            Ok("547830|545783|594783|594578".to_string())
         );
     }
 
@@ -449,14 +461,20 @@ mod tests {
             .build()
             .unwrap();
 
-        assert_eq!(daitch_mokotoff.encode("AUERBACH"), "097400");
-        assert_eq!(daitch_mokotoff.encode("OHRBACH"), "097400");
-        assert_eq!(daitch_mokotoff.encode("LIPSHITZ"), "874400");
-        assert_eq!(daitch_mokotoff.encode("LIPPSZYC"), "874400");
-        assert_eq!(daitch_mokotoff.encode("LEWINSKY"), "876450");
-        assert_eq!(daitch_mokotoff.encode("LEVINSKI"), "876450");
-        assert_eq!(daitch_mokotoff.encode("SZLAMAWICZ"), "486740");
-        assert_eq!(daitch_mokotoff.encode("SHLAMOVITZ"), "486740");
+        assert_eq!(daitch_mokotoff.encode("AUERBACH"), Ok("097400".to_string()));
+        assert_eq!(daitch_mokotoff.encode("OHRBACH"), Ok("097400".to_string()));
+        assert_eq!(daitch_mokotoff.encode("LIPSHITZ"), Ok("874400".to_string()));
+        assert_eq!(daitch_mokotoff.encode("LIPPSZYC"), Ok("874400".to_string()));
+        assert_eq!(daitch_mokotoff.encode("LEWINSKY"), Ok("876450".to_string()));
+        assert_eq!(daitch_mokotoff.encode("LEVINSKI"), Ok("876450".to_string()));
+        assert_eq!(
+            daitch_mokotoff.encode("SZLAMAWICZ"),
+            Ok("486740".to_string())
+        );
+        assert_eq!(
+            daitch_mokotoff.encode("SHLAMOVITZ"),
+            Ok("486740".to_string())
+        );
     }
 
     #[test]
@@ -470,7 +488,11 @@ mod tests {
         ]
         .iter()
         {
-            assert_eq!(daitch_mokotoff.encode(v), "079600", "Error for {v}");
+            assert_eq!(
+                daitch_mokotoff.encode(v),
+                Ok("079600".to_string()),
+                "Error for {v}"
+            );
         }
     }
 
@@ -495,7 +517,11 @@ mod tests {
         ]
         .iter()
         {
-            assert_eq!(daitch_mokotoff.encode(v), "565463", "Error for {v}");
+            assert_eq!(
+                daitch_mokotoff.encode(v),
+                Ok("565463".to_string()),
+                "Error for {v}"
+            );
         }
     }
 
@@ -507,9 +533,12 @@ mod tests {
 
         assert_eq!(
             daitch_mokotoff.encode(" \t\n\r Washington \t\n\r "),
-            "746536"
+            Ok("746536".to_string())
         );
-        assert_eq!(daitch_mokotoff.encode("Washington"), "746536");
+        assert_eq!(
+            daitch_mokotoff.encode("Washington"),
+            Ok("746536".to_string())
+        );
     }
 
     #[test]
@@ -518,24 +547,57 @@ mod tests {
             .build()
             .unwrap();
 
-        assert_eq!(daitch_mokotoff.soundex("GOLDEN"), "583600");
-        assert_eq!(daitch_mokotoff.soundex("Alpert"), "087930");
-        assert_eq!(daitch_mokotoff.soundex("Breuer"), "791900");
-        assert_eq!(daitch_mokotoff.soundex("Haber"), "579000");
-        assert_eq!(daitch_mokotoff.soundex("Mannheim"), "665600");
-        assert_eq!(daitch_mokotoff.soundex("Mintz"), "664000");
-        assert_eq!(daitch_mokotoff.soundex("Topf"), "370000");
-        assert_eq!(daitch_mokotoff.soundex("Kleinmann"), "586660");
-        assert_eq!(daitch_mokotoff.soundex("Ben Aron"), "769600");
+        assert_eq!(daitch_mokotoff.soundex("GOLDEN"), Ok("583600".to_string()));
+        assert_eq!(daitch_mokotoff.soundex("Alpert"), Ok("087930".to_string()));
+        assert_eq!(daitch_mokotoff.soundex("Breuer"), Ok("791900".to_string()));
+        assert_eq!(daitch_mokotoff.soundex("Haber"), Ok("579000".to_string()));
+        assert_eq!(
+            daitch_mokotoff.soundex("Mannheim"),
+            Ok("665600".to_string())
+        );
+        assert_eq!(daitch_mokotoff.soundex("Mintz"), Ok("664000".to_string()));
+        assert_eq!(daitch_mokotoff.soundex("Topf"), Ok("370000".to_string()));
+        assert_eq!(
+            daitch_mokotoff.soundex("Kleinmann"),
+            Ok("586660".to_string())
+        );
+        assert_eq!(
+            daitch_mokotoff.soundex("Ben Aron"),
+            Ok("769600".to_string())
+        );
 
-        assert_eq!(daitch_mokotoff.soundex("AUERBACH"), "097400|097500");
-        assert_eq!(daitch_mokotoff.soundex("OHRBACH"), "097400|097500");
-        assert_eq!(daitch_mokotoff.soundex("LIPSHITZ"), "874400");
-        assert_eq!(daitch_mokotoff.soundex("LIPPSZYC"), "874400|874500");
-        assert_eq!(daitch_mokotoff.soundex("LEWINSKY"), "876450");
-        assert_eq!(daitch_mokotoff.soundex("LEVINSKI"), "876450");
-        assert_eq!(daitch_mokotoff.soundex("SZLAMAWICZ"), "486740");
-        assert_eq!(daitch_mokotoff.soundex("SHLAMOVITZ"), "486740");
+        assert_eq!(
+            daitch_mokotoff.soundex("AUERBACH"),
+            Ok("097400|097500".to_string())
+        );
+        assert_eq!(
+            daitch_mokotoff.soundex("OHRBACH"),
+            Ok("097400|097500".to_string())
+        );
+        assert_eq!(
+            daitch_mokotoff.soundex("LIPSHITZ"),
+            Ok("874400".to_string())
+        );
+        assert_eq!(
+            daitch_mokotoff.soundex("LIPPSZYC"),
+            Ok("874400|874500".to_string())
+        );
+        assert_eq!(
+            daitch_mokotoff.soundex("LEWINSKY"),
+            Ok("876450".to_string())
+        );
+        assert_eq!(
+            daitch_mokotoff.soundex("LEVINSKI"),
+            Ok("876450".to_string())
+        );
+        assert_eq!(
+            daitch_mokotoff.soundex("SZLAMAWICZ"),
+            Ok("486740".to_string())
+        );
+        assert_eq!(
+            daitch_mokotoff.soundex("SHLAMOVITZ"),
+            Ok("486740".to_string())
+        );
     }
 
     #[test]
@@ -544,17 +606,35 @@ mod tests {
             .build()
             .unwrap();
 
-        assert_eq!(daitch_mokotoff.soundex("Ceniow"), "467000|567000");
-        assert_eq!(daitch_mokotoff.soundex("Tsenyuv"), "467000");
-        assert_eq!(daitch_mokotoff.soundex("Holubica"), "587400|587500");
-        assert_eq!(daitch_mokotoff.soundex("Golubitsa"), "587400");
-        assert_eq!(daitch_mokotoff.soundex("Przemysl"), "746480|794648");
-        assert_eq!(daitch_mokotoff.soundex("Pshemeshil"), "746480");
+        assert_eq!(
+            daitch_mokotoff.soundex("Ceniow"),
+            Ok("467000|567000".to_string())
+        );
+        assert_eq!(daitch_mokotoff.soundex("Tsenyuv"), Ok("467000".to_string()));
+        assert_eq!(
+            daitch_mokotoff.soundex("Holubica"),
+            Ok("587400|587500".to_string())
+        );
+        assert_eq!(
+            daitch_mokotoff.soundex("Golubitsa"),
+            Ok("587400".to_string())
+        );
+        assert_eq!(
+            daitch_mokotoff.soundex("Przemysl"),
+            Ok("746480|794648".to_string())
+        );
+        assert_eq!(
+            daitch_mokotoff.soundex("Pshemeshil"),
+            Ok("746480".to_string())
+        );
         assert_eq!(
             daitch_mokotoff.soundex("Rosochowaciec"),
-            "944744|944745|944754|944755|945744|945745|945754|945755"
+            Ok("944744|944745|944754|944755|945744|945745|945754|945755".to_string())
         );
-        assert_eq!(daitch_mokotoff.soundex("Rosokhovatsets"), "945744");
+        assert_eq!(
+            daitch_mokotoff.soundex("Rosokhovatsets"),
+            Ok("945744".to_string())
+        );
     }
 
     #[test]
@@ -563,17 +643,29 @@ mod tests {
             .build()
             .unwrap();
 
-        assert_eq!(daitch_mokotoff.soundex("Peters"), "734000|739400");
-        assert_eq!(daitch_mokotoff.soundex("Peterson"), "734600|739460");
-        assert_eq!(daitch_mokotoff.soundex("Moskowitz"), "645740");
-        assert_eq!(daitch_mokotoff.soundex("Moskovitz"), "645740");
+        assert_eq!(
+            daitch_mokotoff.soundex("Peters"),
+            Ok("734000|739400".to_string())
+        );
+        assert_eq!(
+            daitch_mokotoff.soundex("Peterson"),
+            Ok("734600|739460".to_string())
+        );
+        assert_eq!(
+            daitch_mokotoff.soundex("Moskowitz"),
+            Ok("645740".to_string())
+        );
+        assert_eq!(
+            daitch_mokotoff.soundex("Moskovitz"),
+            Ok("645740".to_string())
+        );
         assert_eq!(
             daitch_mokotoff.soundex("Jackson"),
-            "154600|145460|454600|445460"
+            Ok("154600|145460|454600|445460".to_string())
         );
         assert_eq!(
             daitch_mokotoff.soundex("Jackson-Jackson"),
-            "154654|154645|154644|145465|145464|454654|454645|454644|445465|445464"
+            Ok("154654|154645|154644|145465|145464|454654|454645|454644|445465|445464".to_string())
         );
     }
 
@@ -583,8 +675,14 @@ mod tests {
             .build()
             .unwrap();
 
-        assert_eq!(daitch_mokotoff.soundex("ţamas"), "364000|464000");
-        assert_eq!(daitch_mokotoff.soundex("țamas"), "364000|464000");
+        assert_eq!(
+            daitch_mokotoff.soundex("ţamas"),
+            Ok("364000|464000".to_string())
+        );
+        assert_eq!(
+            daitch_mokotoff.soundex("țamas"),
+            Ok("364000|464000".to_string())
+        );
     }
 
     #[test]
@@ -592,8 +690,14 @@ mod tests {
     fn test_embedded_dm() {
         let daitch_mokotoff = DaitchMokotoffSoundexBuilder::default().build().unwrap();
 
-        assert_eq!(daitch_mokotoff.soundex("ţamas"), "364000|464000");
-        assert_eq!(daitch_mokotoff.soundex("țamas"), "364000|464000");
+        assert_eq!(
+            daitch_mokotoff.soundex("ţamas"),
+            Ok("364000|464000".to_string())
+        );
+        assert_eq!(
+            daitch_mokotoff.soundex("țamas"),
+            Ok("364000|464000".to_string())
+        );
     }
 
     #[test]
@@ -601,7 +705,13 @@ mod tests {
     fn test_default_daitch_mokotoff() {
         let daitch_mokotoff = DaitchMokotoffSoundex::default();
 
-        assert_eq!(daitch_mokotoff.soundex("ţamas"), "364000|464000");
-        assert_eq!(daitch_mokotoff.soundex("țamas"), "364000|464000");
+        assert_eq!(
+            daitch_mokotoff.soundex("ţamas"),
+            Ok("364000|464000".to_string())
+        );
+        assert_eq!(
+            daitch_mokotoff.soundex("țamas"),
+            Ok("364000|464000".to_string())
+        );
     }
 }

@@ -70,6 +70,7 @@ pub use crate::refined_soundex::RefinedSoundex;
 pub use crate::soundex::{
     Soundex, DEFAULT_US_ENGLISH_GENEALOGY_MAPPING_SOUNDEX, DEFAULT_US_ENGLISH_MAPPING_SOUNDEX,
 };
+pub use crate::soundex_commons::{SoundexCommons, SoundexConvertError, SoundexEncodeError};
 
 mod beider_morse;
 mod caverphone;
@@ -84,6 +85,7 @@ mod nysiis;
 mod phonex;
 mod refined_soundex;
 mod soundex;
+pub(crate) mod soundex_commons;
 
 /// This represents a parsing error. It contains the
 /// line number, the line, and if possible the filename.
@@ -146,6 +148,8 @@ fn build_parse_error(
 
 /// This trait represents a phonetic algorithm.
 pub trait Encoder {
+    type Error: std::error::Error;
+
     /// This method convert a string into its code.
     ///
     /// # Parameter
@@ -161,13 +165,27 @@ pub trait Encoder {
     /// Example using [Caverphone1] algorithm.
     ///
     /// ```rust
+    /// # fn main() -> anyhow::Result<()> {
     /// use rphonetic::{Caverphone1, Encoder};
     ///
     /// let caverphone = Caverphone1;
     ///
-    /// assert_eq!(caverphone.encode("Thompson"), "TMPSN1");
+    /// assert_eq!(caverphone.encode("Thompson")?, "TMPSN1");
+    /// #   Ok(())
+    /// # }
     /// ```
-    fn encode(&self, s: &str) -> String;
+    fn encode(&self, s: &str) -> Result<String, Self::Error>;
+
+    /// Call [encode](Self::encode) but unwrap the result.
+    ///
+    /// # Panic
+    ///
+    /// This method panic if the underlying `encode` call
+    /// returns an error.
+    fn encode_unchecked(&self, s: &str) -> String {
+        #[allow(clippy::unwrap_in_result)]
+        self.encode(s).unwrap()
+    }
 
     /// This method check that two strings have the same code.
     ///
@@ -185,95 +203,30 @@ pub trait Encoder {
     /// Example with [Caverphone1]
     ///
     /// ```rust
+    /// # fn main() -> anyhow::Result<()> {
     /// use rphonetic::{Encoder, Caverphone1};
     ///
     /// let caverphone = Caverphone1;
-    /// assert!(!caverphone.is_encoded_equals("Peter", "Stevenson"));
-    /// assert!(caverphone.is_encoded_equals("Peter", "Peady"));
+    /// assert!(!caverphone.is_encoded_equals("Peter", "Stevenson")?);
+    /// assert!(caverphone.is_encoded_equals("Peter", "Peady")?);
+    /// #   Ok(())
+    /// # }
     /// ```
-    fn is_encoded_equals(&self, first: &str, second: &str) -> bool {
-        let f = self.encode(first);
-        let s = self.encode(second);
+    fn is_encoded_equals(&self, first: &str, second: &str) -> Result<bool, Self::Error> {
+        let f = self.encode(first)?;
+        let s = self.encode(second)?;
 
-        f == s
+        Ok(f == s)
     }
-}
 
-trait SoundexUtils {
-    fn soundex_clean(value: &str) -> String {
-        value
-            .chars()
-            .filter(|c| c.is_alphabetic())
-            .map(|c| c.to_uppercase().collect::<String>())
-            .collect()
-    }
-}
-
-/// This trait represent a soundex algorithm (except for [Nysiis]).
-///
-/// It has a method, [difference(value1, value2)](Soundex::difference) that returns
-/// the number of letter that are at the same place in both encoded strings.
-pub trait SoundexCommons: Encoder {
-    /// This methode compute the number of characters thar are at the same place
-    /// in both encoded strings.
+    /// Call [is_encoded_equals](Self::is_encoded_equals) but unwrap the result.
     ///
-    /// It calls [encode(value)](Encoder::encode).
+    /// # Panic
     ///
-    ///
-    /// # Parameters
-    ///
-    /// * `value1` : first value
-    /// * `value2` : second value
-    ///
-    /// # Return
-    ///
-    /// The number of characters at the same position. 0 indicates no similarities, while 4 (out of 4)
-    /// indicates strong similarity. Please note that [RefinedSoundex] difference can be greater than 4.
-    ///
-    /// # Examples
-    ///
-    /// An example with [RefinedSoundex] :
-    ///
-    /// ```rust
-    /// use rphonetic::{RefinedSoundex, Soundex, SoundexCommons};
-    ///
-    /// let refined_soundex = RefinedSoundex::default();
-    ///
-    /// // Low similarity
-    /// assert_eq!(refined_soundex.difference("Margaret", "Andrew"), 1);
-    ///
-    /// // High similarity
-    /// assert_eq!(refined_soundex.difference("Smithers", "Smythers"), 8);
-    /// ```
-    ///
-    /// With [Soundex], maximum proximity will be 4 as values are coded with 4 characters :
-    ///
-    /// ```rust
-    /// use rphonetic::{Soundex, SoundexCommons};
-    ///
-    /// let soundex = Soundex::default();
-    ///
-    /// // Low similarity
-    /// assert_eq!(soundex.difference("Margaret", "Andrew"), 1);
-    ///
-    /// // High similarity
-    /// assert_eq!(soundex.difference("Smithers", "Smythers"), 4);
-    /// ```
-    fn difference(&self, value1: &str, value2: &str) -> usize {
-        let value1 = self.encode(value1);
-        let value2 = self.encode(value2);
-
-        if value1.is_empty() || value2.is_empty() {
-            return 0;
-        }
-
-        let mut result: usize = 0;
-        for (ch1, ch2) in value1.chars().zip(value2.chars()) {
-            if ch1 == ch2 {
-                result += 1;
-            }
-        }
-
-        result
+    /// This method panic if the underlying `is_encoded_equals` call
+    /// returns an error.
+    fn is_encoded_equals_unchecked(&self, first: &str, second: &str) -> bool {
+        #[allow(clippy::unwrap_in_result)]
+        self.is_encoded_equals(first, second).unwrap()
     }
 }
