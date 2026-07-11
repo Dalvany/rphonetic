@@ -1,9 +1,16 @@
+#![allow(clippy::unwrap_used)]
+use std::error::Error;
 use std::path::PathBuf;
 
 use criterion::{criterion_group, criterion_main, Criterion};
 use rphonetic::*;
 
-fn bench_encoder(c: &mut Criterion, encoder_name: &str, encoder: Box<dyn Encoder>, text: &str) {
+fn bench_encoder<T: Error>(
+    c: &mut Criterion,
+    encoder_name: &str,
+    encoder: Box<dyn Encoder<Error = T>>,
+    text: &str,
+) {
     c.bench_function(encoder_name, |b| b.iter(|| encoder.encode(text)));
 }
 

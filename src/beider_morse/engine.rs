@@ -1,4 +1,5 @@
 use std::collections::{BTreeMap, BTreeSet};
+use std::convert::Infallible;
 use std::sync::LazyLock;
 
 use serde::{Deserialize, Serialize};
@@ -185,12 +186,16 @@ impl PhoneticEngine<'_> {
         PhonemeBuilder { phonemes }
     }
 
-    pub fn encode(&self, input: &str) -> String {
+    pub fn encode(&self, input: &str) -> Result<String, Infallible> {
         let languages = self.lang.guess_languages(input);
         self.encode_with_language_set(input, &languages)
     }
 
-    pub fn encode_with_language_set(&self, input: &str, languages: &LanguageSet) -> String {
+    pub fn encode_with_language_set(
+        &self,
+        input: &str,
+        languages: &LanguageSet,
+    ) -> Result<String, Infallible> {
         let l = if languages.is_singleton() {
             match languages.any() {
                 Some(l) => l,
@@ -218,15 +223,15 @@ impl PhoneticEngine<'_> {
                 let mut combined = String::with_capacity(remainder.len() + 1);
                 combined.push('d');
                 combined.push_str(remainder);
-                let combined = self.encode(&combined);
-                let remainder = self.encode(remainder);
+                let combined = self.encode(&combined)?;
+                let remainder = self.encode(remainder)?;
                 let mut result = String::with_capacity(remainder.len() + combined.len() + 5);
                 result.push('(');
                 result.push_str(&remainder);
                 result.push_str(")-(");
                 result.push_str(&combined);
                 result.push(')');
-                return result;
+                return Ok(result);
             }
             for prefix in NAME_PREFIXES.get(&self.name_type).unwrap() {
                 let mut p = String::with_capacity(prefix.len() + 1);
@@ -236,15 +241,15 @@ impl PhoneticEngine<'_> {
                     let mut combined = String::with_capacity(prefix.len() + remainder.len());
                     combined.push_str(prefix);
                     combined.push_str(remainder);
-                    let combined = self.encode(&combined);
-                    let remainder = self.encode(remainder);
+                    let combined = self.encode(&combined)?;
+                    let remainder = self.encode(remainder)?;
                     let mut result = String::with_capacity(remainder.len() + combined.len() + 5);
                     result.push('(');
                     result.push_str(&remainder);
                     result.push_str(")-(");
                     result.push_str(&combined);
                     result.push(')');
-                    return result;
+                    return Ok(result);
                 }
             }
         }
@@ -256,8 +261,8 @@ impl PhoneticEngine<'_> {
             return words
                 .iter()
                 .map(|v| self.encode(v))
-                .collect::<Vec<String>>()
-                .join("-");
+                .collect::<Result<Vec<String>, Infallible>>()
+                .map(|v| v.join("-"));
         }
 
         let words2: Vec<&str> = words
@@ -306,7 +311,7 @@ impl PhoneticEngine<'_> {
         let phoneme_builder = self.apply_final_rule(phoneme_builder, final_rules1);
         let phoneme_builder = self.apply_final_rule(phoneme_builder, final_rules2);
 
-        phoneme_builder.make_string()
+        Ok(phoneme_builder.make_string())
     }
 }
 
@@ -318,10 +323,19 @@ mod tests {
     use crate::beider_morse::DEFAULT_MAX_PHONEMES;
     use crate::{ConfigFiles, RuleType};
 
-    static DATA: [(&str, &str, NameType, RuleType, bool, usize); 8] = [
+    type Tuple = (
+        &'static str,
+        Result<&'static str, Infallible>,
+        NameType,
+        RuleType,
+        bool,
+        usize,
+    );
+
+    static DATA: [Tuple; 8] = [
             (
                 "Renault",
-                "rinD|rinDlt|rina|rinalt|rino|rinolt|rinu|rinult",
+                Ok("rinD|rinDlt|rina|rinalt|rino|rinolt|rinu|rinult"),
                 NameType::Generic,
                 RuleType::Approx,
                 true,
@@ -329,7 +343,7 @@ mod tests {
             ),
             (
                 "Renault",
-                "rYnDlt|rYnalt|rYnult|rinDlt|rinalt|rinolt|rinult",
+                Ok("rYnDlt|rYnalt|rYnult|rinDlt|rinalt|rinolt|rinult"),
                 NameType::Ashkenazi,
                 RuleType::Approx,
                 true,
@@ -337,7 +351,7 @@ mod tests {
             ),
             (
                 "Renault",
-                "rinDlt",
+                Ok("rinDlt"),
                 NameType::Ashkenazi,
                 RuleType::Approx,
                 true,
@@ -345,7 +359,7 @@ mod tests {
             ),
             (
                 "Renault",
-                "rinDlt",
+                Ok("rinDlt"),
                 NameType::Sephardic,
                 RuleType::Approx,
                 true,
@@ -353,7 +367,7 @@ mod tests {
             ),
             (
                 "SntJohn-Smith",
-                "sntjonsmit",
+                Ok("sntjonsmit"),
                 NameType::Generic,
                 RuleType::Exact,
                 true,
@@ -361,7 +375,7 @@ mod tests {
             ),
             (
                 "d'ortley",
-                "(ortlaj|ortlej)-(dortlaj|dortlej)",
+                Ok("(ortlaj|ortlej)-(dortlaj|dortlej)"),
                 NameType::Generic,
                 RuleType::Exact,
                 true,
@@ -369,15 +383,15 @@ mod tests {
             ),
             (
                 "van helsing",
-                "(elSink|elsink|helSink|helsink|helzink|xelsink)-(banhelsink|fanhelsink|fanhelzink|vanhelsink|vanhelzink|vanjelsink)",
+                Ok("(elSink|elsink|helSink|helsink|helzink|xelsink)-(banhelsink|fanhelsink|fanhelzink|vanhelsink|vanhelzink|vanjelsink)"),
                 NameType::Generic,
                 RuleType::Exact,
                 false,
                 10
             ),
             (
-                "Judenburg", "\
-                iudnbYrk|iudnbirk|iudnburk|xudnbirk|xudnburk|zudnbirk|zudnburk",
+                "Judenburg", Ok("\
+                iudnbYrk|iudnbirk|iudnburk|xudnbirk|xudnburk|zudnbirk|zudnburk"),
                 NameType::Generic,
                 RuleType::Approx,
                 true,
@@ -405,8 +419,8 @@ mod tests {
 
             assert_eq!(
                 result,
-                expected.to_string(),
-                "Wrong get '{result}' instead of '{expected}' for data at index {index}"
+                expected.map(str::to_string),
+                "Wrong get '{result:?}' instead of '{expected:?}' for data at index {index}"
             );
         }
     }
@@ -444,8 +458,10 @@ mod tests {
         });
 
         match language_set {
-            None => engine.encode(input),
-            Some(language_set) => engine.encode_with_language_set(input, &language_set),
+            None => engine.encode(input).unwrap(),
+            Some(language_set) => engine
+                .encode_with_language_set(input, &language_set)
+                .unwrap(),
         }
     }
 

@@ -98,7 +98,7 @@ fn parse_rule(
                 right_context,
                 phoneme,
             };
-            let ch = pattern.chars().next().unwrap();
+            let ch = pattern.chars().next().ok_or(ParseBmError::EmptyPattern)?;
             result.entry(ch).or_default().push(rule);
             continue;
         }
