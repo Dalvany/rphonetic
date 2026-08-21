@@ -6,6 +6,8 @@ permissions:
   pull-requests: write
   # Used to push to branches, push tags, and create releases.
   contents: write
+  # Required for OIDC token exchange
+  id-token: write
 
 # The action runs on every push to the main branch.
 on:
