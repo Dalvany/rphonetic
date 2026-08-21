@@ -1,3 +1,5 @@
+use std::convert::Infallible;
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -30,10 +32,13 @@ const VARSON: &str = "CSPTG";
 /// # Example
 ///
 /// ```rust
+/// # fn main() -> anyhow::Result<()> {
 /// use rphonetic::{Encoder, Metaphone};
 /// let metaphone = Metaphone::default();
 ///
-/// assert_eq!(metaphone.encode("Joanne"), "JN");
+/// assert_eq!(metaphone.encode("Joanne")?, "JN");
+/// #   Ok(())
+/// # }
 /// ```
 #[derive(Copy, Clone, Debug, Ord, PartialOrd, Eq, PartialEq, Hash, Serialize, Deserialize)]
 pub struct Metaphone {
@@ -83,11 +88,13 @@ impl Default for Metaphone {
 }
 
 impl Encoder for Metaphone {
-    fn encode(&self, value: &str) -> String {
+    type Error = Infallible;
+
+    fn encode(&self, value: &str) -> Result<String, Self::Error> {
         let inwd = value.to_uppercase();
 
         if inwd.len() == 1 {
-            return inwd;
+            return Ok(inwd);
         }
 
         let mut local = String::with_capacity(40);
@@ -284,7 +291,7 @@ impl Encoder for Metaphone {
             }
         }
 
-        code
+        Ok(code)
     }
 }
 
@@ -303,8 +310,9 @@ mod tests {
         ];
 
         for (v1, v2) in data.iter() {
-            assert!(
+            assert_eq!(
                 metaphone.is_encoded_equals(v1, v2),
+                Ok(true),
                 "{v1} should be equals to {v2}"
             );
         }
@@ -316,8 +324,9 @@ mod tests {
         let data: Vec<(&str, &str)> = vec![("Lawrence", "Lorenza"), ("Gary", "Cahra")];
 
         for (v1, v2) in data.iter() {
-            assert!(
+            assert_eq!(
                 metaphone.is_encoded_equals(v1, v2),
+                Ok(true),
                 "{v1} should be equals to {v2}"
             );
         }
@@ -330,8 +339,9 @@ mod tests {
         let v1 = "Aero";
         let data: Vec<&str> = vec!["Eure"];
         for v2 in data.iter() {
-            assert!(
+            assert_eq!(
                 metaphone.is_encoded_equals(v1, v2),
+                Ok(true),
                 "{v1} should be equals to {v2}"
             );
         }
@@ -347,8 +357,9 @@ mod tests {
             "Woodie", "Woody",
         ];
         for v2 in data.iter() {
-            assert!(
+            assert_eq!(
                 metaphone.is_encoded_equals(v1, v2),
+                Ok(true),
                 "{v1} should be equals to {v2}"
             );
         }
@@ -361,8 +372,9 @@ mod tests {
         let v1 = "Albert";
         let data: Vec<&str> = vec!["Ailbert", "Alberik", "Albert", "Alberto", "Albrecht"];
         for v2 in data.iter() {
-            assert!(
+            assert_eq!(
                 metaphone.is_encoded_equals(v1, v2),
+                Ok(true),
                 "{v1} should be equals to {v2}"
             );
         }
@@ -381,8 +393,9 @@ mod tests {
             "Kiri", "Kora", "Kore", "Kori", "Korie", "Korrie", "Korry",
         ];
         for v2 in data.iter() {
-            assert!(
+            assert_eq!(
                 metaphone.is_encoded_equals(v1, v2),
+                Ok(true),
                 "{v1} should be equals to {v2}"
             );
         }
@@ -403,8 +416,9 @@ mod tests {
             "Juana", "June", "Junia", "Junie",
         ];
         for v2 in data.iter() {
-            assert!(
+            assert_eq!(
                 metaphone.is_encoded_equals(v1, v2),
+                Ok(true),
                 "{v1} should be equals to {v2}"
             );
         }
@@ -420,8 +434,9 @@ mod tests {
             "Netta", "Netti", "Nettie", "Netty", "Nita", "Nydia",
         ];
         for v2 in data.iter() {
-            assert!(
+            assert_eq!(
                 metaphone.is_encoded_equals(v1, v2),
+                Ok(true),
                 "{v1} should be equals to {v2}"
             );
         }
@@ -438,8 +453,9 @@ mod tests {
             "Myrah",
         ];
         for v2 in data.iter() {
-            assert!(
+            assert_eq!(
                 metaphone.is_encoded_equals(v1, v2),
+                Ok(true),
                 "{v1} should be equals to {v2}"
             );
         }
@@ -452,8 +468,9 @@ mod tests {
         let v1 = "Paris";
         let data: Vec<&str> = vec!["Pearcy", "Perris", "Piercy", "Pierz", "Pryse"];
         for v2 in data.iter() {
-            assert!(
+            assert_eq!(
                 metaphone.is_encoded_equals(v1, v2),
+                Ok(true),
                 "{v1} should be equals to {v2}"
             );
         }
@@ -468,8 +485,9 @@ mod tests {
             "Peadar", "Peder", "Pedro", "Peter", "Petr", "Peyter", "Pieter", "Pietro", "Piotr",
         ];
         for v2 in data.iter() {
-            assert!(
+            assert_eq!(
                 metaphone.is_encoded_equals(v1, v2),
+                Ok(true),
                 "{v1} should be equals to {v2}"
             );
         }
@@ -482,8 +500,9 @@ mod tests {
         let v1 = "Ray";
         let data: Vec<&str> = vec!["Ray", "Rey", "Roi", "Roy", "Ruy"];
         for v2 in data.iter() {
-            assert!(
+            assert_eq!(
                 metaphone.is_encoded_equals(v1, v2),
+                Ok(true),
                 "{v1} should be equals to {v2}"
             );
         }
@@ -499,8 +518,9 @@ mod tests {
             "Suzann", "Suzanna", "Suzanne", "Zuzana",
         ];
         for v2 in data.iter() {
-            assert!(
+            assert_eq!(
                 metaphone.is_encoded_equals(v1, v2),
+                Ok(true),
                 "{v1} should be equals to {v2}"
             );
         }
@@ -513,8 +533,9 @@ mod tests {
         let v1 = "Wright";
         let data: Vec<&str> = vec!["Rota", "Rudd", "Ryde"];
         for v2 in data.iter() {
-            assert!(
+            assert_eq!(
                 metaphone.is_encoded_equals(v1, v2),
+                Ok(true),
                 "{v1} should be equals to {v2}"
             );
         }
@@ -530,8 +551,9 @@ mod tests {
             "Xylina",
         ];
         for v2 in data.iter() {
-            assert!(
+            assert_eq!(
                 metaphone.is_encoded_equals(v1, v2),
+                Ok(true),
                 "{v1} should be equals to {v2}"
             );
         }
@@ -541,35 +563,35 @@ mod tests {
     fn test_metaphone() {
         let metaphone = Metaphone::default();
 
-        assert_eq!(metaphone.encode("howl"), "HL");
-        assert_eq!(metaphone.encode("testing"), "TSTN");
-        assert_eq!(metaphone.encode("The"), "0");
-        assert_eq!(metaphone.encode("quick"), "KK");
-        assert_eq!(metaphone.encode("brown"), "BRN");
-        assert_eq!(metaphone.encode("fox"), "FKS");
-        assert_eq!(metaphone.encode("jumped"), "JMPT");
-        assert_eq!(metaphone.encode("over"), "OFR");
-        assert_eq!(metaphone.encode("the"), "0");
-        assert_eq!(metaphone.encode("lazy"), "LS");
-        assert_eq!(metaphone.encode("dogs"), "TKS");
+        assert_eq!(metaphone.encode("howl"), Ok("HL".to_string()));
+        assert_eq!(metaphone.encode("testing"), Ok("TSTN".to_string()));
+        assert_eq!(metaphone.encode("The"), Ok("0".to_string()));
+        assert_eq!(metaphone.encode("quick"), Ok("KK".to_string()));
+        assert_eq!(metaphone.encode("brown"), Ok("BRN".to_string()));
+        assert_eq!(metaphone.encode("fox"), Ok("FKS".to_string()));
+        assert_eq!(metaphone.encode("jumped"), Ok("JMPT".to_string()));
+        assert_eq!(metaphone.encode("over"), Ok("OFR".to_string()));
+        assert_eq!(metaphone.encode("the"), Ok("0".to_string()));
+        assert_eq!(metaphone.encode("lazy"), Ok("LS".to_string()));
+        assert_eq!(metaphone.encode("dogs"), Ok("TKS".to_string()));
     }
 
     #[test]
     fn test_word_ending_in_mb() {
         let metaphone = Metaphone::default();
 
-        assert_eq!(metaphone.encode("COMB"), "KM");
-        assert_eq!(metaphone.encode("TOMB"), "TM");
-        assert_eq!(metaphone.encode("WOMB"), "WM");
+        assert_eq!(metaphone.encode("COMB"), Ok("KM".to_string()));
+        assert_eq!(metaphone.encode("TOMB"), Ok("TM".to_string()));
+        assert_eq!(metaphone.encode("WOMB"), Ok("WM".to_string()));
     }
 
     #[test]
     fn test_discard_of_sce_or_sci_or_scy() {
         let metaphone = Metaphone::default();
 
-        assert_eq!(metaphone.encode("SCIENCE"), "SNS");
-        assert_eq!(metaphone.encode("SCENE"), "SN");
-        assert_eq!(metaphone.encode("SCY"), "S");
+        assert_eq!(metaphone.encode("SCIENCE"), Ok("SNS".to_string()));
+        assert_eq!(metaphone.encode("SCENE"), Ok("SN".to_string()));
+        assert_eq!(metaphone.encode("SCY"), Ok("S".to_string()));
     }
 
     #[test]
@@ -589,95 +611,95 @@ mod tests {
     fn test_why() {
         let metaphone = Metaphone::default();
 
-        assert_eq!(metaphone.encode("WHY"), "");
+        assert_eq!(metaphone.encode("WHY"), Ok("".to_string()));
     }
 
     #[test]
     fn test_words_with_cia() {
         let metaphone = Metaphone::default();
 
-        assert_eq!(metaphone.encode("CIAPO"), "XP");
+        assert_eq!(metaphone.encode("CIAPO"), Ok("XP".to_string()));
     }
 
     #[test]
     fn test_translate_of_sch_and_ch() {
         let metaphone = Metaphone::default();
 
-        assert_eq!(metaphone.encode("SCHEDULE"), "SKTL");
-        assert_eq!(metaphone.encode("SCHEMATIC"), "SKMT");
-        assert_eq!(metaphone.encode("CHARACTER"), "KRKT");
-        assert_eq!(metaphone.encode("TEACH"), "TX");
+        assert_eq!(metaphone.encode("SCHEDULE"), Ok("SKTL".to_string()));
+        assert_eq!(metaphone.encode("SCHEMATIC"), Ok("SKMT".to_string()));
+        assert_eq!(metaphone.encode("CHARACTER"), Ok("KRKT".to_string()));
+        assert_eq!(metaphone.encode("TEACH"), Ok("TX".to_string()));
     }
 
     #[test]
     fn test_translate_to_j_of_dge_or_dgi_or_dgy() {
         let metaphone = Metaphone::default();
 
-        assert_eq!(metaphone.encode("DODGY"), "TJ");
-        assert_eq!(metaphone.encode("DODGE"), "TJ");
-        assert_eq!(metaphone.encode("ADGIEMTI"), "AJMT");
+        assert_eq!(metaphone.encode("DODGY"), Ok("TJ".to_string()));
+        assert_eq!(metaphone.encode("DODGE"), Ok("TJ".to_string()));
+        assert_eq!(metaphone.encode("ADGIEMTI"), Ok("AJMT".to_string()));
     }
 
     #[test]
     fn test_discard_of_silent_h_after_g() {
         let metaphone = Metaphone::default();
 
-        assert_eq!(metaphone.encode("GHENT"), "KNT");
-        assert_eq!(metaphone.encode("BAUGH"), "B");
+        assert_eq!(metaphone.encode("GHENT"), Ok("KNT".to_string()));
+        assert_eq!(metaphone.encode("BAUGH"), Ok("B".to_string()));
     }
 
     #[test]
     fn test_discard_of_silent_gn() {
         let metaphone = Metaphone::default();
 
-        assert_eq!(metaphone.encode("GNU"), "N");
-        assert_eq!(metaphone.encode("SIGNED"), "SNT");
+        assert_eq!(metaphone.encode("GNU"), Ok("N".to_string()));
+        assert_eq!(metaphone.encode("SIGNED"), Ok("SNT".to_string()));
     }
 
     #[test]
     fn test_ph_to_f() {
         let metaphone = Metaphone::default();
 
-        assert_eq!(metaphone.encode("PHISH"), "FX");
+        assert_eq!(metaphone.encode("PHISH"), Ok("FX".to_string()));
     }
 
     #[test]
     fn test_sh_and_sio_and_sia_to_x() {
         let metaphone = Metaphone::default();
 
-        assert_eq!(metaphone.encode("SHOT"), "XT");
-        assert_eq!(metaphone.encode("ODSIAN"), "OTXN");
-        assert_eq!(metaphone.encode("PULSION"), "PLXN");
+        assert_eq!(metaphone.encode("SHOT"), Ok("XT".to_string()));
+        assert_eq!(metaphone.encode("ODSIAN"), Ok("OTXN".to_string()));
+        assert_eq!(metaphone.encode("PULSION"), Ok("PLXN".to_string()));
     }
 
     #[test]
     fn test_tio_and_tia_to_x() {
         let metaphone = Metaphone::default();
 
-        assert_eq!(metaphone.encode("OTIA"), "OX");
-        assert_eq!(metaphone.encode("PORTION"), "PRXN");
+        assert_eq!(metaphone.encode("OTIA"), Ok("OX".to_string()));
+        assert_eq!(metaphone.encode("PORTION"), Ok("PRXN".to_string()));
     }
 
     #[test]
     fn test_tch() {
         let metaphone = Metaphone::default();
 
-        assert_eq!(metaphone.encode("RETCH"), "RX");
-        assert_eq!(metaphone.encode("WATCH"), "WX");
+        assert_eq!(metaphone.encode("RETCH"), Ok("RX".to_string()));
+        assert_eq!(metaphone.encode("WATCH"), Ok("WX".to_string()));
     }
 
     #[test]
     fn test_exceed_length() {
         let metaphone = Metaphone::default();
 
-        assert_eq!(metaphone.encode("AXEAXE"), "AKSK");
+        assert_eq!(metaphone.encode("AXEAXE"), Ok("AKSK".to_string()));
     }
 
     #[test]
     fn test_set_max_length_with_truncation() {
         let metaphone = Metaphone::new(Some(6));
 
-        assert_eq!(metaphone.encode("AXEAXEAXE"), "AKSKSK");
+        assert_eq!(metaphone.encode("AXEAXEAXE"), Ok("AKSKSK".to_string()));
     }
 
     #[test]
@@ -685,7 +707,7 @@ mod tests {
         let encoder = Metaphone::new(None);
 
         let result = encoder.encode("ALLERTON");
-        assert_eq!(result, "ALRTN");
+        assert_eq!(result, Ok("ALRTN".to_string()));
     }
 
     #[test]
@@ -693,6 +715,6 @@ mod tests {
         let encoder = Metaphone::new(None);
 
         let result = encoder.encode("synchronization");
-        assert_eq!(result, "SNXRNSXN");
+        assert_eq!(result, Ok("SNXRNSXN".to_string()));
     }
 }
