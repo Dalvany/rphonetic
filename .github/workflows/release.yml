@@ -6,8 +6,6 @@ permissions:
   pull-requests: write
   # Used to push to branches, push tags, and create releases.
   contents: write
-  # Required for OIDC token exchange
-  id-token: write
 
 # The action runs on every push to the main branch.
 on:
@@ -55,6 +53,8 @@ jobs:
     if: ${{ github.event.pull_request.merged == true && startsWith(github.head_ref, 'release-plz-') }}
     name: Release-plz release
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write  
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
