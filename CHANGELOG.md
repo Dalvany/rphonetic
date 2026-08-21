@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.1.0](https://github.com/Dalvany/rphonetic/compare/v3.0.6...v3.1.0) - 2026-08-21
+
+### Added
+
+- use thiserror ([#73](https://github.com/Dalvany/rphonetic/pull/73))
+- configure clippy
+
+### Fixed
+
+- *(ci)* improve job
+- *(ci)* add permission for trusted publisher support
+- *(metaphone)* region_match matching unanchored instead of at the index ([#79](https://github.com/Dalvany/rphonetic/pull/79)),
+  thanks to [KBS0](https://github.com/youdie006).
+- remove some unwrap ([#74](https://github.com/Dalvany/rphonetic/pull/74))
+- auto fix warnings
+
+### Other
+
+- add one contributing requirement
+- improve contributing guidlines
+- Bump actions/checkout from 6 to 7 ([#78](https://github.com/Dalvany/rphonetic/pull/78))
+- Bump codecov/codecov-action from 6 to 7 ([#76](https://github.com/Dalvany/rphonetic/pull/76))
+
 ## [3.0.6](https://github.com/Dalvany/rphonetic/compare/v3.0.5...v3.0.6) - 2026-01-18
 
 ### Fixed
