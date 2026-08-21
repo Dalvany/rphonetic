@@ -8,8 +8,9 @@ In case of pull request, please run [rustfmt](https://github.com/rust-lang/rustf
 
 ## Mendatory
 
-As I use [release-plz](https://release-plz.dev/) to release new version, commit must follow
+- As I use [release-plz](https://release-plz.dev/) to release new version, commit must follow
 [conventional commit](https://www.conventionalcommits.org/en/v1.0.0/) (and [release-plz details](https://release-plz.dev/docs/changelog/format)).
+- CI must be successful, especially `test`,`clippy` and `fmt`.
 
 ## Not mendatory but appreciated
 
@@ -25,8 +26,8 @@ check for duplicates).
 I'm not fond of IA, and though I would probably won't refuse code, pull request, comments made by an AI,
 I'd like that to keep it limited `:)` :
 
-* code made by AI be limited (several lines is fine but large portion of code won't if I see it too much)
-* comments, pull request descriptions are also ok but I would prefere if they are done by humans (but you
+- code made by AI be limited (several lines is fine but large portion of code won't if I see it too much)
+- comments, pull request descriptions are also ok but I would prefere if they are done by humans (but you
   can use it to translate from your native tongue to english, use AI as draft then wording on your own,
   improving wording).
 
