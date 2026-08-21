@@ -65,7 +65,7 @@ impl Metaphone {
     }
 
     fn region_match(text: &str, index: usize, test: &str) -> bool {
-        index + test.len() - 1 < text.len() && text[index..].contains(test)
+        index + test.len() - 1 < text.len() && text[index..].starts_with(test)
     }
 
     fn is_last_char(wdsz: usize, n: usize) -> bool {
@@ -570,6 +570,19 @@ mod tests {
         assert_eq!(metaphone.encode("SCIENCE"), "SNS");
         assert_eq!(metaphone.encode("SCENE"), "SN");
         assert_eq!(metaphone.encode("SCY"), "S");
+    }
+
+    #[test]
+    fn test_region_match_is_anchored() {
+        // region_match must match the test string AT the given index, not
+        // anywhere in the remaining slice. An unanchored `contains` let a
+        // later "SH" wrongly trigger the X sound on an earlier plain S.
+        let metaphone = Metaphone::default();
+
+        // The leading S is not followed by H, so it stays S; only the trailing
+        // SH becomes X. commons-codec reference: "SX".
+        assert_eq!(metaphone.encode("SASH"), "SX");
+        assert_eq!(metaphone.encode("SASHA"), "SX");
     }
 
     #[test]
