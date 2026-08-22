@@ -23,17 +23,17 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
-
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
-
+      - uses: rust-lang/crates-io-auth-action@v1
+        id: auth
       - name: Run release-plz
         uses: release-plz/action@v0.5
         with:
           command: release-pr
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+          CARGO_REGISTRY_TOKEN: ${{ steps.auth.outputs.token }}
 
   release-plz-release:
     if: ${{ github.event.pull_request.merged == true && startsWith(github.head_ref, 'release-plz-') }}
@@ -49,7 +49,6 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
-
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
       - uses: rust-lang/crates-io-auth-action@v1
