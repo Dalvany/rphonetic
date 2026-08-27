@@ -340,14 +340,14 @@ impl<'a> BeiderMorseBuilder<'a> {
 
 #[cfg(test)]
 mod tests {
+    use std::sync::LazyLock;
+
     use super::*;
     #[cfg(feature = "embedded_bm")]
     use crate::beider_morse::rule::PrivateRuleType;
 
-    lazy_static::lazy_static! {
-        static ref CONFIG_FILE: ConfigFiles =
-            ConfigFiles::new(&PathBuf::from("./test_assets/cc-rules/")).unwrap();
-    }
+    static CONFIG_FILE: LazyLock<ConfigFiles> =
+        LazyLock::new(|| ConfigFiles::new(&PathBuf::from("./test_assets/cc-rules/")).unwrap());
 
     #[test]
     fn test_all_chars() -> Result<(), BMError> {
