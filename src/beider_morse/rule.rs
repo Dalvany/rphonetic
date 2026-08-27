@@ -435,6 +435,7 @@ impl Rules {
 #[cfg(feature = "embedded_bm")]
 mod embedded {
     use std::collections::BTreeMap;
+    use std::sync::LazyLock;
 
     use super::*;
 
@@ -462,28 +463,29 @@ mod embedded {
     const SEP_EXACT_COMMON: &str = include_str!("../../rules/bm/sep_exact_common.txt");
     const SEP_RULES_ANY: &str = include_str!("../../rules/bm/sep_rules_any.txt");
 
-    lazy_static::lazy_static! {
-        pub static ref EMBEDDED_RULES: BTreeMap<&'static str, &'static str> = BTreeMap::from([
-            ("ash_exact_approx_common", ASH_EXACT_APPROX_COMMON),
-            ("ash_approx_any", ASH_APPROX_ANY),
-            ("ash_approx_common", ASH_APPROX_COMMON),
-            ("ash_exact_any", ASH_EXACT_ANY),
-            ("ash_exact_common", ASH_EXACT_COMMON),
-            ("ash_rules_any", ASH_RULES_ANY),
-            ("gen_exact_approx_common", GEN_EXACT_APPROX_COMMON),
-            ("gen_approx_any", GEN_APPROX_ANY),
-            ("gen_approx_common", GEN_APPROX_COMMON),
-            ("gen_exact_any", GEN_EXACT_ANY),
-            ("gen_exact_common", GEN_EXACT_COMMON),
-            ("gen_rules_any", GEN_RULES_ANY),
-            ("sep_exact_approx_common", SEP_EXACT_APPROX_COMMON),
-            ("sep_approx_any", SEP_APPROX_ANY),
-            ("sep_approx_common", SEP_APPROX_COMMON),
-            ("sep_exact_any", SEP_EXACT_ANY),
-            ("sep_exact_common", SEP_EXACT_COMMON),
-            ("sep_rules_any", SEP_RULES_ANY),
-        ]);
-    }
+    pub static EMBEDDED_RULES: LazyLock<BTreeMap<&'static str, &'static str>> =
+        LazyLock::new(|| {
+            BTreeMap::from([
+                ("ash_exact_approx_common", ASH_EXACT_APPROX_COMMON),
+                ("ash_approx_any", ASH_APPROX_ANY),
+                ("ash_approx_common", ASH_APPROX_COMMON),
+                ("ash_exact_any", ASH_EXACT_ANY),
+                ("ash_exact_common", ASH_EXACT_COMMON),
+                ("ash_rules_any", ASH_RULES_ANY),
+                ("gen_exact_approx_common", GEN_EXACT_APPROX_COMMON),
+                ("gen_approx_any", GEN_APPROX_ANY),
+                ("gen_approx_common", GEN_APPROX_COMMON),
+                ("gen_exact_any", GEN_EXACT_ANY),
+                ("gen_exact_common", GEN_EXACT_COMMON),
+                ("gen_rules_any", GEN_RULES_ANY),
+                ("sep_exact_approx_common", SEP_EXACT_APPROX_COMMON),
+                ("sep_approx_any", SEP_APPROX_ANY),
+                ("sep_approx_common", SEP_APPROX_COMMON),
+                ("sep_exact_any", SEP_EXACT_ANY),
+                ("sep_exact_common", SEP_EXACT_COMMON),
+                ("sep_rules_any", SEP_RULES_ANY),
+            ])
+        });
 
     impl Default for Rules {
         fn default() -> Self {

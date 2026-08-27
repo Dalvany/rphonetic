@@ -2,7 +2,7 @@
 name = "rphonetic"
 version = "3.1.0"
 edition = "2021"
-rust-version = "1.65.0"
+rust-version = "1.80.0"
 authors = ["dalvany", "Crabe de France"]
 description = "Rust port of phonetic Apache commons-codec algorithms"
 repository = "https://github.com/Dalvany/rphonetic"
@@ -29,7 +29,6 @@ embedded_dm = []
 [dependencies]
 regex = "1.11"
 nom = "8.0"
-lazy_static = "1.5"
 serde = { version = "1.0", features = ["derive"] }
 enum-iterator = "2.0"
 either = "1.15"

@@ -1,4 +1,5 @@
 use std::collections::{BTreeMap, BTreeSet};
+use std::sync::LazyLock;
 
 use serde::{Deserialize, Serialize};
 
@@ -8,28 +9,30 @@ use crate::beider_morse::rule::{Phoneme, PhonemeList, PrivateRuleType, Rule, Rul
 use crate::helper::CharSequence;
 use crate::NameType;
 
-lazy_static::lazy_static! {
-    static ref NAME_PREFIXES: BTreeMap<NameType, BTreeSet<&'static str>> = BTreeMap::from([
+type NamePrefix = BTreeMap<NameType, BTreeSet<&'static str>>;
+
+static NAME_PREFIXES: LazyLock<NamePrefix> = LazyLock::new(|| {
+    BTreeMap::from([
         (
             NameType::Ashkenazi,
-            BTreeSet::from(["bar", "ben", "da", "de", "van", "von"])
+            BTreeSet::from(["bar", "ben", "da", "de", "van", "von"]),
         ),
         (
             NameType::Generic,
             BTreeSet::from([
                 "da", "dal", "de", "del", "dela", "de la", "della", "des", "di", "do", "dos", "du",
-                "van", "von"
-            ])
+                "van", "von",
+            ]),
         ),
         (
             NameType::Sephardic,
             BTreeSet::from([
                 "al", "el", "da", "dal", "de", "del", "dela", "de la", "della", "des", "di", "do",
-                "dos", "du", "van", "von"
-            ])
-        )
-    ]);
-}
+                "dos", "du", "van", "von",
+            ]),
+        ),
+    ])
+});
 
 #[derive(Clone, Debug, Eq, PartialEq, Hash, Serialize, Deserialize)]
 struct PhonemeBuilder {
@@ -315,8 +318,7 @@ mod tests {
     use crate::beider_morse::DEFAULT_MAX_PHONEMES;
     use crate::{ConfigFiles, PhoneticError, RuleType};
 
-    lazy_static::lazy_static! {
-        static ref DATA: [(&'static str, &'static str, NameType, RuleType, bool, usize); 8] = [
+    static DATA: [(&str, &str, NameType, RuleType, bool, usize); 8] = [
             (
                 "Renault",
                 "rinD|rinDlt|rina|rinalt|rino|rinolt|rinu|rinult",
@@ -382,7 +384,6 @@ mod tests {
                 10
             ),
         ];
-    }
 
     #[test]
     fn test_encode() -> Result<(), PhoneticError> {
