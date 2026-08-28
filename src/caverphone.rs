@@ -1,3 +1,5 @@
+use std::convert::Infallible;
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -26,19 +28,24 @@ const TEN_1: &str = "1111111111";
 /// # Example
 ///
 /// ```rust
+/// # fn main() -> anyhow::Result<()> {
 /// use rphonetic::{Caverphone1, Encoder};
 ///
 /// let caverphone = Caverphone1;
 ///
-/// assert_eq!(caverphone.encode("Thompson"), "TMPSN1");
+/// assert_eq!(caverphone.encode("Thompson")?, "TMPSN1");
+/// #   Ok(())
+/// # }
 /// ```
 #[derive(Copy, Clone, Debug, Ord, PartialOrd, Eq, PartialEq, Hash, Serialize, Deserialize)]
 pub struct Caverphone1;
 
 impl Encoder for Caverphone1 {
-    fn encode(&self, s: &str) -> String {
+    type Error = Infallible;
+
+    fn encode(&self, s: &str) -> Result<String, Self::Error> {
         if s.is_empty() {
-            return SIX_1.to_string();
+            return Ok(SIX_1.to_string());
         }
 
         let txt = s.to_lowercase();
@@ -135,7 +142,7 @@ impl Encoder for Caverphone1 {
 
         let txt = txt + SIX_1;
 
-        txt[0..SIX_1.len()].to_string()
+        Ok(txt[0..SIX_1.len()].to_string())
     }
 }
 
@@ -144,19 +151,24 @@ impl Encoder for Caverphone1 {
 /// # Example
 ///
 /// ```rust
+/// # fn main() -> anyhow::Result<()> {
 /// use rphonetic::{Caverphone2, Encoder};
 ///
 /// let caverphone = Caverphone2;
 ///
-/// assert_eq!(caverphone.encode("Thompson"), "TMPSN11111");
+/// assert_eq!(caverphone.encode("Thompson")?, "TMPSN11111");
+/// #   Ok(())
+/// # }
 /// ```
 #[derive(Copy, Clone, Debug, Ord, PartialOrd, Eq, PartialEq, Hash, Serialize, Deserialize)]
 pub struct Caverphone2;
 
 impl Encoder for Caverphone2 {
-    fn encode(&self, s: &str) -> String {
+    type Error = Infallible;
+
+    fn encode(&self, s: &str) -> Result<String, Self::Error> {
         if s.is_empty() {
-            return TEN_1.to_string();
+            return Ok(TEN_1.to_string());
         }
 
         let txt = s.to_lowercase();
@@ -270,7 +282,7 @@ impl Encoder for Caverphone2 {
 
         let txt = txt + TEN_1;
 
-        txt[0..TEN_1.len()].to_string()
+        Ok(txt[0..TEN_1.len()].to_string())
     }
 }
 
@@ -283,82 +295,85 @@ mod tests {
     fn test_caverphone1_revisited_common_code_at1111() {
         let caverphone = Caverphone1 {};
 
-        assert_eq!(caverphone.encode("add"), "AT1111");
-        assert_eq!(caverphone.encode("aid"), "AT1111");
-        assert_eq!(caverphone.encode("at"), "AT1111");
-        assert_eq!(caverphone.encode("art"), "AT1111");
-        assert_eq!(caverphone.encode("eat"), "AT1111");
-        assert_eq!(caverphone.encode("earth"), "AT1111");
-        assert_eq!(caverphone.encode("head"), "AT1111");
-        assert_eq!(caverphone.encode("hit"), "AT1111");
-        assert_eq!(caverphone.encode("hot"), "AT1111");
-        assert_eq!(caverphone.encode("hold"), "AT1111");
-        assert_eq!(caverphone.encode("hard"), "AT1111");
-        assert_eq!(caverphone.encode("heart"), "AT1111");
-        assert_eq!(caverphone.encode("it"), "AT1111");
-        assert_eq!(caverphone.encode("out"), "AT1111");
-        assert_eq!(caverphone.encode("old"), "AT1111");
+        assert_eq!(caverphone.encode("add"), Ok("AT1111".to_string()));
+        assert_eq!(caverphone.encode("aid"), Ok("AT1111".to_string()));
+        assert_eq!(caverphone.encode("at"), Ok("AT1111".to_string()));
+        assert_eq!(caverphone.encode("art"), Ok("AT1111".to_string()));
+        assert_eq!(caverphone.encode("eat"), Ok("AT1111".to_string()));
+        assert_eq!(caverphone.encode("earth"), Ok("AT1111".to_string()));
+        assert_eq!(caverphone.encode("head"), Ok("AT1111".to_string()));
+        assert_eq!(caverphone.encode("hit"), Ok("AT1111".to_string()));
+        assert_eq!(caverphone.encode("hot"), Ok("AT1111".to_string()));
+        assert_eq!(caverphone.encode("hold"), Ok("AT1111".to_string()));
+        assert_eq!(caverphone.encode("hard"), Ok("AT1111".to_string()));
+        assert_eq!(caverphone.encode("heart"), Ok("AT1111".to_string()));
+        assert_eq!(caverphone.encode("it"), Ok("AT1111".to_string()));
+        assert_eq!(caverphone.encode("out"), Ok("AT1111".to_string()));
+        assert_eq!(caverphone.encode("old"), Ok("AT1111".to_string()));
     }
 
     #[test]
     fn test_end_mb_caverphone1() {
         let caverphone = Caverphone1;
 
-        assert_eq!(caverphone.encode("mb"), "M11111");
-        assert_eq!(caverphone.encode("mbmb"), "MPM111");
+        assert_eq!(caverphone.encode("mb"), Ok("M11111".to_string()));
+        assert_eq!(caverphone.encode("mbmb"), Ok("MPM111".to_string()));
     }
 
     #[test]
     fn test_is_caverphone1_equals() {
         let caverphone = Caverphone1;
 
-        assert!(!caverphone.is_encoded_equals("Peter", "Stevenson"));
-        assert!(caverphone.is_encoded_equals("Peter", "Peady"));
+        assert_eq!(
+            caverphone.is_encoded_equals("Peter", "Stevenson"),
+            Ok(false)
+        );
+        assert_eq!(caverphone.is_encoded_equals("Peter", "Peady"), Ok(true));
     }
 
     #[test]
     fn test_specification_v1examples() {
         let caverphone = Caverphone1;
 
-        assert_eq!(caverphone.encode("David"), "TFT111");
-        assert_eq!(caverphone.encode("Whittle"), "WTL111");
+        assert_eq!(caverphone.encode("David"), Ok("TFT111".to_string()));
+        assert_eq!(caverphone.encode("Whittle"), Ok("WTL111".to_string()));
     }
 
     #[test]
     fn test_wikipedia_examples() {
         let caverphone = Caverphone1;
 
-        assert_eq!(caverphone.encode("Lee"), "L11111");
-        assert_eq!(caverphone.encode("Thompson"), "TMPSN1");
+        assert_eq!(caverphone.encode("Lee"), Ok("L11111".to_string()));
+        assert_eq!(caverphone.encode("Thompson"), Ok("TMPSN1".to_string()));
     }
 
     #[test]
     fn test_caverphone_revisited_common_code_at11111111() {
         let caverphone = Caverphone2;
 
-        assert_eq!(caverphone.encode("add"), "AT11111111");
-        assert_eq!(caverphone.encode("aid"), "AT11111111");
-        assert_eq!(caverphone.encode("at"), "AT11111111");
-        assert_eq!(caverphone.encode("art"), "AT11111111");
-        assert_eq!(caverphone.encode("eat"), "AT11111111");
-        assert_eq!(caverphone.encode("earth"), "AT11111111");
-        assert_eq!(caverphone.encode("head"), "AT11111111");
-        assert_eq!(caverphone.encode("hit"), "AT11111111");
-        assert_eq!(caverphone.encode("hot"), "AT11111111");
-        assert_eq!(caverphone.encode("hold"), "AT11111111");
-        assert_eq!(caverphone.encode("hard"), "AT11111111");
-        assert_eq!(caverphone.encode("heart"), "AT11111111");
-        assert_eq!(caverphone.encode("it"), "AT11111111");
-        assert_eq!(caverphone.encode("out"), "AT11111111");
-        assert_eq!(caverphone.encode("old"), "AT11111111");
+        assert_eq!(caverphone.encode("add"), Ok("AT11111111".to_string()));
+        assert_eq!(caverphone.encode("aid"), Ok("AT11111111".to_string()));
+        assert_eq!(caverphone.encode("at"), Ok("AT11111111".to_string()));
+        assert_eq!(caverphone.encode("art"), Ok("AT11111111".to_string()));
+        assert_eq!(caverphone.encode("eat"), Ok("AT11111111".to_string()));
+        assert_eq!(caverphone.encode("earth"), Ok("AT11111111".to_string()));
+        assert_eq!(caverphone.encode("head"), Ok("AT11111111".to_string()));
+        assert_eq!(caverphone.encode("hit"), Ok("AT11111111".to_string()));
+        assert_eq!(caverphone.encode("hot"), Ok("AT11111111".to_string()));
+        assert_eq!(caverphone.encode("hold"), Ok("AT11111111".to_string()));
+        assert_eq!(caverphone.encode("hard"), Ok("AT11111111".to_string()));
+        assert_eq!(caverphone.encode("heart"), Ok("AT11111111".to_string()));
+        assert_eq!(caverphone.encode("it"), Ok("AT11111111".to_string()));
+        assert_eq!(caverphone.encode("out"), Ok("AT11111111".to_string()));
+        assert_eq!(caverphone.encode("old"), Ok("AT11111111".to_string()));
     }
 
     #[test]
     fn test_caverphone_revisited_examples() {
         let caverphone = Caverphone2;
 
-        assert_eq!(caverphone.encode("Stevenson"), "STFNSN1111");
-        assert_eq!(caverphone.encode("Peter"), "PTA1111111");
+        assert_eq!(caverphone.encode("Stevenson"), Ok("STFNSN1111".to_string()));
+        assert_eq!(caverphone.encode("Peter"), Ok("PTA1111111".to_string()));
     }
 
     #[test]
@@ -382,7 +397,7 @@ mod tests {
         for name in names {
             assert_eq!(
                 caverphone.encode(name),
-                "KLN1111111",
+                Ok("KLN1111111".to_string()),
                 "{name} cause the error"
             );
         }
@@ -406,7 +421,7 @@ mod tests {
         for name in names {
             assert_eq!(
                 caverphone.encode(name),
-                "TN11111111",
+                Ok("TN11111111".to_string()),
                 "{name} cause the error"
             );
         }
@@ -430,7 +445,7 @@ mod tests {
         for name in names {
             assert_eq!(
                 caverphone.encode(name),
-                "TTA1111111",
+                Ok("TTA1111111".to_string()),
                 "{name} cause the error"
             );
         }
@@ -440,42 +455,45 @@ mod tests {
     fn test_caverphone_revisited_random_words() {
         let caverphone = Caverphone2;
 
-        assert_eq!(caverphone.encode("rather"), "RTA1111111");
-        assert_eq!(caverphone.encode("ready"), "RTA1111111");
-        assert_eq!(caverphone.encode("writer"), "RTA1111111");
+        assert_eq!(caverphone.encode("rather"), Ok("RTA1111111".to_string()));
+        assert_eq!(caverphone.encode("ready"), Ok("RTA1111111".to_string()));
+        assert_eq!(caverphone.encode("writer"), Ok("RTA1111111".to_string()));
 
-        assert_eq!(caverphone.encode("social"), "SSA1111111");
+        assert_eq!(caverphone.encode("social"), Ok("SSA1111111".to_string()));
 
-        assert_eq!(caverphone.encode("able"), "APA1111111");
-        assert_eq!(caverphone.encode("appear"), "APA1111111");
+        assert_eq!(caverphone.encode("able"), Ok("APA1111111".to_string()));
+        assert_eq!(caverphone.encode("appear"), Ok("APA1111111".to_string()));
     }
 
     #[test]
     fn test_end_mb_caverphone2() {
         let caverphone = Caverphone2;
 
-        assert_eq!(caverphone.encode("mb"), "M111111111");
-        assert_eq!(caverphone.encode("mbmb"), "MPM1111111");
+        assert_eq!(caverphone.encode("mb"), Ok("M111111111".to_string()));
+        assert_eq!(caverphone.encode("mbmb"), Ok("MPM1111111".to_string()));
     }
 
     #[test]
     fn test_is_caverphone2_equals() {
         let caverphone = Caverphone2;
 
-        assert!(!caverphone.is_encoded_equals("Peter", "Stevenson"));
-        assert!(caverphone.is_encoded_equals("Peter", "Peady"));
+        assert_eq!(
+            caverphone.is_encoded_equals("Peter", "Stevenson"),
+            Ok(false)
+        );
+        assert_eq!(caverphone.is_encoded_equals("Peter", "Peady"), Ok(true));
     }
 
     #[test]
     fn test_specification_examples() {
         let caverphone = Caverphone2;
 
-        assert_eq!(caverphone.encode("Peter"), "PTA1111111");
-        assert_eq!(caverphone.encode("ready"), "RTA1111111");
-        assert_eq!(caverphone.encode("social"), "SSA1111111");
-        assert_eq!(caverphone.encode("able"), "APA1111111");
-        assert_eq!(caverphone.encode("Tedder"), "TTA1111111");
-        assert_eq!(caverphone.encode("Karleen"), "KLN1111111");
-        assert_eq!(caverphone.encode("Dyun"), "TN11111111");
+        assert_eq!(caverphone.encode("Peter"), Ok("PTA1111111".to_string()));
+        assert_eq!(caverphone.encode("ready"), Ok("RTA1111111".to_string()));
+        assert_eq!(caverphone.encode("social"), Ok("SSA1111111".to_string()));
+        assert_eq!(caverphone.encode("able"), Ok("APA1111111".to_string()));
+        assert_eq!(caverphone.encode("Tedder"), Ok("TTA1111111".to_string()));
+        assert_eq!(caverphone.encode("Karleen"), Ok("KLN1111111".to_string()));
+        assert_eq!(caverphone.encode("Dyun"), Ok("TN11111111".to_string()));
     }
 }

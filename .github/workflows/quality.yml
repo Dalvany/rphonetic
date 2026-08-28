@@ -24,7 +24,7 @@ jobs:
         uses: Swatinem/rust-cache@v2
       - uses: taiki-e/install-action@cargo-hack
       - name: Check compilation
-        run: cargo hack check --all --each-feature --clean-per-run --no-dev-deps
+        run: cargo hack check --tests --all --each-feature --clean-per-run
 
   tests:
     needs: build
