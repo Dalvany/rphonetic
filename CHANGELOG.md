@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.0.0](https://github.com/Dalvany/rphonetic/compare/v3.1.0...v4.0.0) - 2026-09-03
+
+### Added
+
+- [**breaking**] remove lazy_static ([#84](https://github.com/Dalvany/rphonetic/pull/84))
+
+### Fixed
+
+- *(cologne)* do not let H separate two identical codes ([#85](https://github.com/Dalvany/rphonetic/pull/85))
+- fix release workflow
+- *(ci)* fix ci
+- *(ci)* fix release workflow
+
 ## [3.1.0](https://github.com/Dalvany/rphonetic/compare/v3.0.6...v3.1.0) - 2026-08-21
 
 ### Added
