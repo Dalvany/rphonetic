@@ -278,6 +278,7 @@ mod tests {
             ("ganz", "Gans"),
             ("ganz", "G\u{00e4}nse"), // Gänse
             ("Miyagi", "Miyako"),
+            ("M\u{00fc}lhler", "M\u{00fc}ller"), // Mülhler / Müller: H does not separate the two L codes
         ];
 
         for (a, b) in data {
