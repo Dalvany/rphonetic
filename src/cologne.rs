@@ -47,7 +47,13 @@ impl CologneOutput {
             self.buffer.push(ch);
         }
 
-        self.last_char = ch;
+        // `H` yields no code at all, so it must not separate two identical codes: the algorithm
+        // collapses adjacent codes before it drops zeros, and after an `H` the codes are adjacent
+        // (`Mülhler` is `657`, like `Müller`). A vowel yields `0` and does separate them
+        // (`Hoffmann` stays `0366`).
+        if ch != CHAR_IGNORE {
+            self.last_char = ch;
+        }
     }
 }
 
@@ -237,6 +243,9 @@ mod tests {
             ("shch", "84"), // CODEC-254
             ("xch", "484"), // CODEC-255
             ("heithabu", "021"),
+            ("Mülhler", "657"), // H between identical codes does not separate them
+            ("Bhb", "1"),
+            ("Kirchhoff", "4743"),
         ];
 
         for (test, expected) in data {
