@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- [**breaking**] remove lazy_static ([#84](https://github.com/Dalvany/rphonetic/pull/84))
+- [**breaking**] remove lazy_static and use Lazy lock. This increase the MSRV to 1.80.0 ([#84](https://github.com/Dalvany/rphonetic/pull/84))
 
 ### Fixed
 
