@@ -18,7 +18,8 @@ use std::str::FromStr;
 
 use serde::{Deserialize, Serialize};
 
-use crate::{Encoder, SoundexCommons, SoundexUtils};
+use crate::soundex_commons::SoundexUtils;
+use crate::{Encoder, SoundexCommons, SoundexConvertError, SoundexEncodeError};
 
 const ENGLISH_MAPPING: [char; 26] = [
     '0', '1', '3', '6', '0', '2', '4', '0', '0', '4', '3', '7', '8', '8', '0', '1', '5', '9', '3',
@@ -32,10 +33,13 @@ const ENGLISH_MAPPING: [char; 26] = [
 /// [Default] implementation provides an array for english US.
 ///
 /// ```rust
+/// # fn main() -> anyhow::Result<()> {
 /// use rphonetic::{Encoder, RefinedSoundex};
 /// let refined_soundex = RefinedSoundex::default();
 ///
-/// assert_eq!(refined_soundex.encode("jumped"), "J408106");
+/// assert_eq!(refined_soundex.encode("jumped")?, "J408106");
+/// #   Ok(())
+/// # }
 /// ```
 #[derive(Copy, Clone, Debug, Ord, PartialOrd, Eq, PartialEq, Hash, Serialize, Deserialize)]
 pub struct RefinedSoundex {
@@ -56,44 +60,16 @@ impl RefinedSoundex {
     pub fn new(mapping: [char; 26]) -> Self {
         Self { mapping }
     }
-
-    fn get_mapping_code(&self, ch: char) -> char {
-        self.mapping[ch as usize - 65]
-    }
 }
 
-impl FromStr for RefinedSoundex {
-    type Err = Vec<char>;
-
-    /// Construct a [RefinedSoundex] from the mapping in parameter. This [str] will
-    /// be converted into an array of 26 chars, so `mapping`'s length must be 26.
-    ///
-    /// # Parameters
-    ///
-    /// * `mapping`: str that contains the corresponding code for each character.
-    ///
-    /// # Example
-    ///
-    /// ```rust
-    /// # fn main() -> Result<(), Vec<char>> {
-    /// use rphonetic::{Encoder, RefinedSoundex};
-    ///
-    /// // Construct an encoder with 'A' coded into '0', 'B' into '1', 'C' into '3', 'D' into '6', 'E' into '0', ...etc
-    /// // (this is the default mapping)
-    /// let refined_soundex = "01360240043788015936020505".parse::<RefinedSoundex>()?;
-    ///
-    /// assert_eq!(refined_soundex.encode("jumped"), "J408106");
-    /// #    Ok(())
-    /// # }
-    /// ```
-    fn from_str(mapping: &str) -> Result<Self, Self::Err> {
-        let mapping: [char; 26] = mapping.chars().collect::<Vec<char>>().try_into()?;
-        Ok(Self { mapping })
+impl From<[char; 26]> for RefinedSoundex {
+    fn from(mapping: [char; 26]) -> Self {
+        Self { mapping }
     }
 }
 
 impl TryFrom<&str> for RefinedSoundex {
-    type Error = Vec<char>;
+    type Error = SoundexConvertError;
 
     /// Construct a [RefinedSoundex] from the mapping in parameter. This [str] will
     /// be converted into an array of 26 chars, so `mapping`'s length must be 26.
@@ -102,28 +78,69 @@ impl TryFrom<&str> for RefinedSoundex {
     ///
     /// * `mapping`: str that contains the corresponding code for each character.
     ///
+    /// # Errors
+    ///
+    /// Returns an error the number of [char] in the [str] isn't equals to 26.
+    ///
     /// # Example
     ///
     /// ```rust
-    /// # fn main() -> Result<(), Vec<char>> {
+    /// # fn main() -> anyhow::Result<()> {
     /// use rphonetic::{Encoder, RefinedSoundex};
     ///
     /// // Construct an encoder with 'A' coded into '0', 'B' into '1', 'C' into '3', 'D' into '6', 'E' into '0', ...etc
     /// // (this is the default mapping)
     /// let refined_soundex = RefinedSoundex::try_from("01360240043788015936020505")?;
     ///
-    /// assert_eq!(refined_soundex.encode("jumped"), "J408106");
+    /// assert_eq!(refined_soundex.encode("jumped")?, "J408106");
     /// #    Ok(())
     /// # }
     /// ```
     fn try_from(mapping: &str) -> Result<Self, Self::Error> {
-        let mapping: [char; 26] = mapping.chars().collect::<Vec<char>>().try_into()?;
-        Ok(Self { mapping })
+        let mapping: [char; 26] = mapping
+            .chars()
+            .collect::<Vec<char>>()
+            .try_into()
+            .map_err(SoundexConvertError)?;
+        Ok(Self::from(mapping))
+    }
+}
+
+impl FromStr for RefinedSoundex {
+    type Err = SoundexConvertError;
+
+    /// Construct a [RefinedSoundex] from the mapping in parameter. This [str] will
+    /// be converted into an array of 26 chars, so `mapping`'s length must be 26.
+    ///
+    /// # Parameters
+    ///
+    /// * `mapping`: str that contains the corresponding code for each character.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error the number of [char] in the [str] isn't equals to 26.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// # fn main() -> anyhow::Result<()> {
+    /// use rphonetic::{Encoder, RefinedSoundex};
+    ///
+    /// // Construct an encoder with 'A' coded into '0', 'B' into '1', 'C' into '3', 'D' into '6', 'E' into '0', ...etc
+    /// // (this is the default mapping)
+    /// let refined_soundex = "01360240043788015936020505".parse::<RefinedSoundex>()?;
+    ///
+    /// assert_eq!(refined_soundex.encode("jumped")?, "J408106");
+    /// #    Ok(())
+    /// # }
+    /// ```
+    fn from_str(mapping: &str) -> Result<Self, Self::Err> {
+        Self::try_from(mapping)
     }
 }
 
 impl TryFrom<String> for RefinedSoundex {
-    type Error = Vec<char>;
+    type Error = SoundexConvertError;
 
     /// Construct a [RefinedSoundex] from the mapping in parameter. This [String] will
     /// be converted into an array of 26 chars, so `mapping`'s length must be 26.
@@ -135,19 +152,19 @@ impl TryFrom<String> for RefinedSoundex {
     /// # Example
     ///
     /// ```rust
-    /// # fn main() -> Result<(), Vec<char>> {
+    /// # fn main() -> anyhow::Result<()> {
     /// use rphonetic::{Encoder, RefinedSoundex};
     ///
     /// // Construct an encoder with 'A' coded into '0', 'B' into '1', 'C' into '3', 'D' into '6', 'E' into '0', ...etc
     /// // (this is the default mapping)
     /// let refined_soundex = RefinedSoundex::try_from("01360240043788015936020505".to_string())?;
     ///
-    /// assert_eq!(refined_soundex.encode("jumped"), "J408106");
+    /// assert_eq!(refined_soundex.encode("jumped")?, "J408106");
     /// #    Ok(())
     /// # }
     /// ```
     fn try_from(mapping: String) -> Result<Self, Self::Error> {
-        mapping.as_str().parse::<RefinedSoundex>()
+        Self::try_from(mapping.as_str())
     }
 }
 
@@ -159,8 +176,15 @@ impl Default for RefinedSoundex {
     }
 }
 
+/// [Encoder] implementation.
+///
+/// Note that it should be safe to use the `unchecked` method
+/// for this algorithm because non ASCII letters are removed. Then
+/// all `get(...)` calls on slice must be safe.
 impl Encoder for RefinedSoundex {
-    fn encode(&self, value: &str) -> String {
+    type Error = SoundexEncodeError;
+
+    fn encode(&self, value: &str) -> Result<String, Self::Error> {
         let value = Self::soundex_clean(value);
 
         let mut code = match value.chars().next() {
@@ -169,20 +193,20 @@ impl Encoder for RefinedSoundex {
                 code.push(ch);
                 code
             }
-            None => return value,
+            None => return Ok(value),
         };
 
         let mut previous: Option<char> = None;
 
         for ch in value.chars() {
-            let code_value = self.get_mapping_code(ch);
+            let code_value = crate::soundex_commons::get_mapping_code(&self.mapping, ch)?;
             if Some(code_value) != previous {
                 code.push(code_value);
             }
             previous = Some(code_value);
         }
 
-        code
+        Ok(code)
     }
 }
 
@@ -198,34 +222,43 @@ mod tests {
     fn test_difference() {
         let refined_soundex = RefinedSoundex::default();
 
-        assert_eq!(refined_soundex.difference("", ""), 0);
-        assert_eq!(refined_soundex.difference(" ", " "), 0);
-        assert_eq!(refined_soundex.difference("Smith", "Smythe"), 6);
-        assert_eq!(refined_soundex.difference("Ann", "Andrew"), 3);
-        assert_eq!(refined_soundex.difference("Margaret", "Andrew"), 1);
-        assert_eq!(refined_soundex.difference("Janet", "Margaret"), 1);
-        assert_eq!(refined_soundex.difference("Green", "Greene"), 5);
-        assert_eq!(refined_soundex.difference("Blotchet-Halls", "Greene"), 1);
-        assert_eq!(refined_soundex.difference("Smith", "Smythe"), 6);
-        assert_eq!(refined_soundex.difference("Smithers", "Smythers"), 8);
-        assert_eq!(refined_soundex.difference("Anothers", "Brothers"), 5);
+        assert_eq!(refined_soundex.difference("", ""), Ok(0));
+        assert_eq!(refined_soundex.difference(" ", " "), Ok(0));
+        assert_eq!(refined_soundex.difference("Smith", "Smythe"), Ok(6));
+        assert_eq!(refined_soundex.difference("Ann", "Andrew"), Ok(3));
+        assert_eq!(refined_soundex.difference("Margaret", "Andrew"), Ok(1));
+        assert_eq!(refined_soundex.difference("Janet", "Margaret"), Ok(1));
+        assert_eq!(refined_soundex.difference("Green", "Greene"), Ok(5));
+        assert_eq!(
+            refined_soundex.difference("Blotchet-Halls", "Greene"),
+            Ok(1)
+        );
+        assert_eq!(refined_soundex.difference("Smith", "Smythe"), Ok(6));
+        assert_eq!(refined_soundex.difference("Smithers", "Smythers"), Ok(8));
+        assert_eq!(refined_soundex.difference("Anothers", "Brothers"), Ok(5));
     }
 
     #[test]
     fn test_encode() {
         let refined_soundex = RefinedSoundex::default();
 
-        assert_eq!(refined_soundex.encode("testing"), "T6036084");
-        assert_eq!(refined_soundex.encode("TESTING"), "T6036084");
-        assert_eq!(refined_soundex.encode("The"), "T60");
-        assert_eq!(refined_soundex.encode("quick"), "Q503");
-        assert_eq!(refined_soundex.encode("brown"), "B1908");
-        assert_eq!(refined_soundex.encode("fox"), "F205");
-        assert_eq!(refined_soundex.encode("jumped"), "J408106");
-        assert_eq!(refined_soundex.encode("over"), "O0209");
-        assert_eq!(refined_soundex.encode("the"), "T60");
-        assert_eq!(refined_soundex.encode("lazy"), "L7050");
-        assert_eq!(refined_soundex.encode("dogs"), "D6043");
+        assert_eq!(
+            refined_soundex.encode("testing"),
+            Ok("T6036084".to_string())
+        );
+        assert_eq!(
+            refined_soundex.encode("TESTING"),
+            Ok("T6036084".to_string())
+        );
+        assert_eq!(refined_soundex.encode("The"), Ok("T60".to_string()));
+        assert_eq!(refined_soundex.encode("quick"), Ok("Q503".to_string()));
+        assert_eq!(refined_soundex.encode("brown"), Ok("B1908".to_string()));
+        assert_eq!(refined_soundex.encode("fox"), Ok("F205".to_string()));
+        assert_eq!(refined_soundex.encode("jumped"), Ok("J408106".to_string()));
+        assert_eq!(refined_soundex.encode("over"), Ok("O0209".to_string()));
+        assert_eq!(refined_soundex.encode("the"), Ok("T60".to_string()));
+        assert_eq!(refined_soundex.encode("lazy"), Ok("L7050".to_string()));
+        assert_eq!(refined_soundex.encode("dogs"), Ok("D6043".to_string()));
     }
 
     #[test]
@@ -237,18 +270,14 @@ mod tests {
     }
 
     #[test]
-    fn test_try_from_str() -> Result<(), Vec<char>> {
-        let refined_soundex = RefinedSoundex::try_from("01360240043788015936020505")?;
-        assert_eq!(refined_soundex, RefinedSoundex::default());
-
-        Ok(())
+    fn test_try_from_str() {
+        let refined_soundex = RefinedSoundex::try_from("01360240043788015936020505");
+        assert_eq!(refined_soundex, Ok(RefinedSoundex::default()));
     }
 
     #[test]
-    fn test_try_from_string() -> Result<(), Vec<char>> {
-        let refined_soundex = RefinedSoundex::try_from("01360240043788015936020505".to_string())?;
-        assert_eq!(refined_soundex, RefinedSoundex::default());
-
-        Ok(())
+    fn test_try_from_string() {
+        let refined_soundex = RefinedSoundex::try_from("01360240043788015936020505".to_string());
+        assert_eq!(refined_soundex, Ok(RefinedSoundex::default()));
     }
 }

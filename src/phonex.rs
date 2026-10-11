@@ -1,3 +1,5 @@
+use std::convert::Infallible;
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -17,7 +19,8 @@
 use serde::{Deserialize, Serialize};
 
 use crate::helper::is_vowel;
-use crate::{Encoder, SoundexUtils};
+use crate::soundex_commons::SoundexUtils;
+use crate::Encoder;
 
 /// Phonex is a modification of the venerable Soundex algorithm. It accounts
 /// for a few more letter combinations to improve accuracy on some data sets.
@@ -26,10 +29,13 @@ use crate::{Encoder, SoundexUtils};
 /// Series published by the University of Newcastle Upon Tyne Computing Science.
 ///
 /// ```rust
+/// # fn main() -> anyhow::Result<()> {
 /// use rphonetic::{Phonex, Encoder};
 ///
 /// let phonex = Phonex::default();
-/// assert_eq!(phonex.encode("KNUTH"),"N300");
+/// assert_eq!(phonex.encode("KNUTH")?,"N300");
+/// #   Ok(())
+/// # }
 /// ```
 #[derive(Copy, Clone, Debug, Ord, PartialOrd, Eq, PartialEq, Hash, Serialize, Deserialize)]
 pub struct Phonex {
@@ -150,7 +156,9 @@ impl Default for Phonex {
 impl SoundexUtils for Phonex {}
 
 impl Encoder for Phonex {
-    fn encode(&self, value: &str) -> String {
+    type Error = Infallible;
+
+    fn encode(&self, value: &str) -> Result<String, Self::Error> {
         let input = self.preprocess(value);
 
         let mut chars = input.chars().enumerate().peekable();
@@ -213,7 +221,7 @@ impl Encoder for Phonex {
             result.push('0');
         }
 
-        result
+        Ok(result)
     }
 }
 
@@ -266,7 +274,7 @@ mod tests {
         for (value, expected) in values {
             assert_eq!(
                 phonex.encode(value),
-                expected,
+                Ok(expected.to_string()),
                 "Encoding {value} should output {expected}"
             );
         }
@@ -385,13 +393,13 @@ mod tests {
     fn test_encode_number() {
         let encoder = Phonex::default();
 
-        assert_eq!(encoder.encode("123456789"), "0000");
+        assert_eq!(encoder.encode("123456789"), Ok("0000".to_string()));
     }
 
     #[test]
     fn test_encode_empty_string() {
         let encoder = Phonex::default();
 
-        assert_eq!(encoder.encode(""), "0000");
+        assert_eq!(encoder.encode(""), Ok("0000".to_string()));
     }
 }

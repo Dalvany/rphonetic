@@ -1,3 +1,5 @@
+use std::convert::Infallible;
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -70,14 +72,17 @@ const CHAR_TO_TRIM: [char; 5] = ['-', '&', '\'', '.', ','];
 /// # Example
 ///
 /// ```rust
+/// # fn main() -> anyhow::Result<()> {
 /// use rphonetic::{Encoder, MatchRatingApproach};
 ///
 /// let match_rating = MatchRatingApproach;
-/// assert_eq!(match_rating.encode("Smith"), "SMTH");
+/// assert_eq!(match_rating.encode("Smith")?, "SMTH");
 /// // This is a match
-/// assert!(match_rating.is_encoded_equals("Franciszek", "Frances"));
+/// assert!(match_rating.is_encoded_equals("Franciszek", "Frances")?);
 /// // This does not match
-/// assert!(!match_rating.is_encoded_equals("Karl", "Alessandro"));
+/// assert!(!match_rating.is_encoded_equals("Karl", "Alessandro")?);
+/// #   Ok(())
+/// # }
 /// ```
 #[derive(Copy, Clone, Debug, Ord, PartialOrd, Eq, PartialEq, Hash, Serialize, Deserialize)]
 pub struct MatchRatingApproach;
@@ -186,9 +191,11 @@ impl MatchRatingApproach {
 }
 
 impl Encoder for MatchRatingApproach {
-    fn encode(&self, value: &str) -> String {
+    type Error = Infallible;
+
+    fn encode(&self, value: &str) -> Result<String, Self::Error> {
         if value.trim().is_empty() || value.trim().len() == 1 {
-            return String::new();
+            return Ok(String::new());
         }
 
         // We can do clean_name and remove_vowels in one pass, but I keep for the
@@ -196,27 +203,27 @@ impl Encoder for MatchRatingApproach {
         let value = MatchRatingApproach::clean_name(value);
         let value = MatchRatingApproach::remove_vowels(value);
         let value = MatchRatingApproach::remove_double_consonants(value);
-        MatchRatingApproach::get_first3_last3(value)
+        Ok(MatchRatingApproach::get_first3_last3(value))
     }
 
-    fn is_encoded_equals(&self, first: &str, second: &str) -> bool {
+    fn is_encoded_equals(&self, first: &str, second: &str) -> Result<bool, Self::Error> {
         if first.trim().is_empty() || second.trim().is_empty() {
-            return false;
+            return Ok(false);
         }
 
         if first.trim().len() == 1 || second.trim().len() == 1 {
-            return false;
+            return Ok(false);
         }
 
         if first == second {
-            return true;
+            return Ok(true);
         }
 
-        let name1 = self.encode(first);
-        let name2 = self.encode(second);
+        let name1 = self.encode(first)?;
+        let name2 = self.encode(second)?;
 
         if name1.len().abs_diff(name2.len()) >= 3 {
-            return false;
+            return Ok(false);
         }
 
         let sum_length = name1.len() + name2.len();
@@ -224,7 +231,7 @@ impl Encoder for MatchRatingApproach {
         let min_rating = MatchRatingApproach::get_minimum_rating(sum_length);
         let count = MatchRatingApproach::left_to_right_then_right_to_left_processing(name1, name2);
 
-        count >= min_rating
+        Ok(count >= min_rating)
     }
 }
 
@@ -441,318 +448,345 @@ mod tests {
     #[test]
     fn test_is_encode_equals_corner_case_second_name_nothing_returns_false() {
         let encoder = MatchRatingApproach;
-        assert!(!encoder.is_encoded_equals("test", ""));
+        assert_eq!(encoder.is_encoded_equals("test", ""), Ok(false));
     }
 
     #[test]
     fn test_is_encode_equals_corner_case_first_name_nothing_returns_false() {
         let encoder = MatchRatingApproach;
-        assert!(!encoder.is_encoded_equals("", "test"));
+        assert_eq!(encoder.is_encoded_equals("", "test"), Ok(false));
     }
 
     #[test]
     fn test_is_encode_equals_corner_case_second_name_just_space_returns_false() {
         let encoder = MatchRatingApproach;
-        assert!(!encoder.is_encoded_equals("test", " "));
+        assert_eq!(encoder.is_encoded_equals("test", " "), Ok(false));
     }
 
     #[test]
     fn test_is_encode_equals_corner_case_first_name_just_space_returns_false() {
         let encoder = MatchRatingApproach;
-        assert!(!encoder.is_encoded_equals(" ", "test"));
+        assert_eq!(encoder.is_encoded_equals(" ", "test"), Ok(false));
     }
 
     #[test]
     fn test_is_encode_equals_corner_case_first_name_just_1_letter_returns_false() {
         let encoder = MatchRatingApproach;
-        assert!(!encoder.is_encoded_equals("t", "test"));
+        assert_eq!(encoder.is_encoded_equals("t", "test"), Ok(false));
     }
 
     #[test]
     fn test_is_encode_equals_second_name_just_1_letter_returns_false() {
         let encoder = MatchRatingApproach;
-        assert!(!encoder.is_encoded_equals("test", "t"));
+        assert_eq!(encoder.is_encoded_equals("test", "t"), Ok(false));
     }
 
     #[test]
     fn test_get_encoding_harper_hrpr() {
         let encoder = MatchRatingApproach;
-        assert_eq!(encoder.encode("HARPER"), "HRPR");
+        assert_eq!(encoder.encode("HARPER"), Ok("HRPR".to_string()));
     }
 
     #[test]
     fn test_get_encoding_smith_to_smth() {
         let encoder = MatchRatingApproach;
-        assert_eq!(encoder.encode("Smith"), "SMTH");
+        assert_eq!(encoder.encode("Smith"), Ok("SMTH".to_string()));
     }
 
     #[test]
     fn test_get_encoding_smyth_to_smyth() {
         let encoder = MatchRatingApproach;
-        assert_eq!(encoder.encode("Smyth"), "SMYTH");
+        assert_eq!(encoder.encode("Smyth"), Ok("SMYTH".to_string()));
     }
 
     #[test]
     fn test_get_encoding_space_to_nothing() {
         let encoder = MatchRatingApproach;
-        assert_eq!(encoder.encode(" "), "");
+        assert_eq!(encoder.encode(" "), Ok("".to_string()));
     }
 
     #[test]
     fn test_get_encoding_no_space_to_nothing() {
         let encoder = MatchRatingApproach;
-        assert_eq!(encoder.encode(""), "");
+        assert_eq!(encoder.encode(""), Ok("".to_string()));
     }
 
     #[test]
     fn test_get_encoding_one_letter_to_nothing() {
         let encoder = MatchRatingApproach;
-        assert_eq!(encoder.encode("E"), "");
+        assert_eq!(encoder.encode("E"), Ok("".to_string()));
     }
 
     #[test]
-    fn test_compare_name_same_names_returns_false_successfully() {
+    fn test_compare_name_same_names_returns_true_successfully() {
         let encoder = MatchRatingApproach;
-        assert!(encoder.is_encoded_equals("John", "John"));
+        assert_eq!(encoder.is_encoded_equals("John", "John"), Ok(true));
     }
 
     #[test]
     fn test_compare_smith_smyth_successfully_matched() {
         let encoder = MatchRatingApproach;
-        assert!(encoder.is_encoded_equals("smith", "smyth"));
+        assert_eq!(encoder.is_encoded_equals("smith", "smyth"), Ok(true));
     }
 
     #[test]
     fn test_compare_burns_bourne_successfully_matched() {
         let encoder = MatchRatingApproach;
-        assert!(encoder.is_encoded_equals("Burns", "Bourne"));
+        assert_eq!(encoder.is_encoded_equals("Burns", "Bourne"), Ok(true));
     }
 
     #[test]
     fn test_compare_short_names_al_ed_works_but_no_match() {
         let encoder = MatchRatingApproach;
-        assert!(!encoder.is_encoded_equals("Al", "Ed"));
+        assert_eq!(encoder.is_encoded_equals("Al", "Ed"), Ok(false));
     }
 
     #[test]
     fn test_compare_catherine_kathryn_successfully_matched() {
         let encoder = MatchRatingApproach;
-        assert!(encoder.is_encoded_equals("Catherine", "Kathryn"));
+        assert_eq!(encoder.is_encoded_equals("Catherine", "Kathryn"), Ok(true));
     }
 
     #[test]
     fn test_compare_brian_bryan_successfully_matched() {
         let encoder = MatchRatingApproach;
-        assert!(encoder.is_encoded_equals("Brian", "Bryan"));
+        assert_eq!(encoder.is_encoded_equals("Brian", "Bryan"), Ok(true));
     }
 
     #[test]
     fn test_compare_sean_shaun_successfully_matched() {
         let encoder = MatchRatingApproach;
-        assert!(encoder.is_encoded_equals("Séan", "Shaun"));
+        assert_eq!(encoder.is_encoded_equals("Séan", "Shaun"), Ok(true));
     }
 
     #[test]
     fn test_compare_colm_colin_with_accents_and_symbols_and_spaces_successfully_matched() {
         let encoder = MatchRatingApproach;
-        assert!(encoder.is_encoded_equals("Cólm", "C-olín"));
+        assert_eq!(encoder.is_encoded_equals("Cólm", "C-olín"), Ok(true));
     }
 
     #[test]
     fn test_compare_stephen_steven_successfully_matched() {
         let encoder = MatchRatingApproach;
-        assert!(encoder.is_encoded_equals("Stephen", "Steven"));
+        assert_eq!(encoder.is_encoded_equals("Stephen", "Steven"), Ok(true));
     }
 
     #[test]
     fn test_compare_steven_stefan_successfully_matched() {
         let encoder = MatchRatingApproach;
-        assert!(encoder.is_encoded_equals("Steven", "Stefan"));
+        assert_eq!(encoder.is_encoded_equals("Steven", "Stefan"), Ok(true));
     }
 
     #[test]
     fn test_compare_stephen_stefan_successfully_matched() {
         let encoder = MatchRatingApproach;
-        assert!(encoder.is_encoded_equals("Stephen", "Stefan"));
+        assert_eq!(encoder.is_encoded_equals("Stephen", "Stefan"), Ok(true));
     }
 
     #[test]
     fn test_compare_sam_samuel_successfully_matched() {
         let encoder = MatchRatingApproach;
-        assert!(encoder.is_encoded_equals("Sam", "Samuel"));
+        assert_eq!(encoder.is_encoded_equals("Sam", "Samuel"), Ok(true));
     }
 
     #[test]
     fn test_compare_micky_michael_successfully_matched() {
         let encoder = MatchRatingApproach;
-        assert!(encoder.is_encoded_equals("Micky", "Michael"));
+        assert_eq!(encoder.is_encoded_equals("Micky", "Michael"), Ok(true));
     }
 
     #[test]
     fn test_compare_oona_oonagh_successfully_matched() {
         let encoder = MatchRatingApproach;
-        assert!(encoder.is_encoded_equals("Oona", "Oonagh"));
+        assert_eq!(encoder.is_encoded_equals("Oona", "Oonagh"), Ok(true));
     }
 
     #[test]
     fn test_compare_sophie_sofia_successfully_matched() {
         let encoder = MatchRatingApproach;
-        assert!(encoder.is_encoded_equals("Sophie", "Sofia"));
+        assert_eq!(encoder.is_encoded_equals("Sophie", "Sofia"), Ok(true));
     }
 
     #[test]
     fn test_compare_franciszek_frances_successfully_matched() {
         let encoder = MatchRatingApproach;
-        assert!(encoder.is_encoded_equals("Franciszek", "Frances"));
+        assert_eq!(encoder.is_encoded_equals("Franciszek", "Frances"), Ok(true));
     }
 
     #[test]
     fn test_compare_tomasz_tom_successfully_matched() {
         let encoder = MatchRatingApproach;
-        assert!(encoder.is_encoded_equals("Tomasz", "tom"));
+        assert_eq!(encoder.is_encoded_equals("Tomasz", "tom"), Ok(true));
     }
 
     #[test]
     fn test_compare_small_input_cark_kl_successfully_matched() {
         let encoder = MatchRatingApproach;
-        assert!(encoder.is_encoded_equals("Kl", "Karl"));
+        assert_eq!(encoder.is_encoded_equals("Kl", "Karl"), Ok(true));
     }
 
     #[test]
     fn test_compare_name_to_single_letter_karl_c_does_not_match() {
         let encoder = MatchRatingApproach;
-        assert!(!encoder.is_encoded_equals("Karl", "C"));
+        assert_eq!(encoder.is_encoded_equals("Karl", "C"), Ok(false));
     }
 
     #[test]
     fn test_compare_zach_zakaria_successfully_matched() {
         let encoder = MatchRatingApproach;
-        assert!(encoder.is_encoded_equals("Zach", "Zacharia"));
+        assert_eq!(encoder.is_encoded_equals("Zach", "Zacharia"), Ok(true));
     }
 
     #[test]
     fn test_compare_karl_alessandro_does_not_match() {
         let encoder = MatchRatingApproach;
-        assert!(!encoder.is_encoded_equals("Karl", "Alessandro"));
+        assert_eq!(encoder.is_encoded_equals("Karl", "Alessandro"), Ok(false));
     }
 
     #[test]
     fn test_compare_forenames_una_oonagh_should_successfully_match_but_does_not() {
         let encoder = MatchRatingApproach;
-        assert!(!encoder.is_encoded_equals("Úna", "Oonagh"));
+        assert_eq!(encoder.is_encoded_equals("Úna", "Oonagh"), Ok(false));
     }
 
     #[test]
     fn test_compare_surname_osullivan_osuilleabhain_successful_match() {
         let encoder = MatchRatingApproach;
-        assert!(encoder.is_encoded_equals("O'Sullivan", "Ó ' Súilleabháin"));
+        assert_eq!(
+            encoder.is_encoded_equals("O'Sullivan", "Ó ' Súilleabháin"),
+            Ok(true)
+        );
     }
 
     #[test]
     fn test_compare_long_surnames_moriarty_omuircheartaigh_does_not_successful_match() {
         let encoder = MatchRatingApproach;
-        assert!(!encoder.is_encoded_equals("Moriarty", "OMuircheartaigh"));
+        assert_eq!(
+            encoder.is_encoded_equals("Moriarty", "OMuircheartaigh"),
+            Ok(false)
+        );
     }
 
     #[test]
     fn test_compare_long_surnames_omuircheartaigh_omireadhaigh_successful_match() {
         let encoder = MatchRatingApproach;
-        assert!(encoder.is_encoded_equals("o'muireadhaigh", "Ó 'Muircheartaigh "));
+        assert_eq!(
+            encoder.is_encoded_equals("o'muireadhaigh", "Ó 'Muircheartaigh "),
+            Ok(true)
+        );
     }
 
     #[test]
     fn test_compare_surname_cooperflynn_superlyn_successfully_matched() {
         let encoder = MatchRatingApproach;
-        assert!(encoder.is_encoded_equals("Cooper-Flynn", "Super-Lyn"));
+        assert_eq!(
+            encoder.is_encoded_equals("Cooper-Flynn", "Super-Lyn"),
+            Ok(true)
+        );
     }
 
     #[test]
     fn test_compare_surname_hailey_halley_successfully_matched() {
         let encoder = MatchRatingApproach;
-        assert!(encoder.is_encoded_equals("Hailey", "Halley"));
+        assert_eq!(encoder.is_encoded_equals("Hailey", "Halley"), Ok(true));
     }
 
     #[test]
     fn test_compare_surname_auerbach_uhrbach_successfully_matched() {
         let encoder = MatchRatingApproach;
-        assert!(encoder.is_encoded_equals("Auerbach", "Uhrbach"));
+        assert_eq!(encoder.is_encoded_equals("Auerbach", "Uhrbach"), Ok(true));
     }
 
     #[test]
     fn test_compare_surname_moskowitz_moskovitz_successfully_matched() {
         let encoder = MatchRatingApproach;
-        assert!(encoder.is_encoded_equals("Moskowitz", "Moskovitz"));
+        assert_eq!(
+            encoder.is_encoded_equals("Moskowitz", "Moskovitz"),
+            Ok(true)
+        );
     }
 
     #[test]
     fn test_compare_surname_lipshitz_lippszyc_successfully_matched() {
         let encoder = MatchRatingApproach;
-        assert!(encoder.is_encoded_equals("LIPSHITZ", "LIPPSZYC"));
+        assert_eq!(encoder.is_encoded_equals("LIPSHITZ", "LIPPSZYC"), Ok(true));
     }
 
     #[test]
     fn test_compare_surname_lewinsky_levinski_successfully_matched() {
         let encoder = MatchRatingApproach;
-        assert!(encoder.is_encoded_equals("LEWINSKY", "LEVINSKI"));
+        assert_eq!(encoder.is_encoded_equals("LEWINSKY", "LEVINSKI"), Ok(true));
     }
 
     #[test]
     fn test_compare_surname_szlamawicz_shlamovitz_successfully_matched() {
         let encoder = MatchRatingApproach;
-        assert!(encoder.is_encoded_equals("SZLAMAWICZ", "SHLAMOVITZ"));
+        assert_eq!(
+            encoder.is_encoded_equals("SZLAMAWICZ", "SHLAMOVITZ"),
+            Ok(true)
+        );
     }
 
     #[test]
     fn test_compare_surname_rosochowaciec_rosokhovatsets_successfully_matched() {
         let encoder = MatchRatingApproach;
-        assert!(encoder.is_encoded_equals("R o s o ch o w a c ie c", " R o s o k ho v a ts e ts"));
+        assert_eq!(
+            encoder.is_encoded_equals("R o s o ch o w a c ie c", " R o s o k ho v a ts e ts"),
+            Ok(true)
+        );
     }
 
     #[test]
     fn test_compare_surname_przemysl_pshemeshil_successfully_matched() {
         let encoder = MatchRatingApproach;
-        assert!(encoder.is_encoded_equals(" P rz e m y s l", " P sh e m e sh i l"));
+        assert_eq!(
+            encoder.is_encoded_equals(" P rz e m y s l", " P sh e m e sh i l"),
+            Ok(true)
+        );
     }
 
     #[test]
     fn test_compare_peterson_peters_successfully_matched() {
         let encoder = MatchRatingApproach;
-        assert!(encoder.is_encoded_equals("Peterson", "Peters"));
+        assert_eq!(encoder.is_encoded_equals("Peterson", "Peters"), Ok(true));
     }
 
     #[test]
     fn test_compare_mcgowan_mcgeoghegan_successfully_matched() {
         let encoder = MatchRatingApproach;
-        assert!(encoder.is_encoded_equals("McGowan", "Mc Geoghegan"));
+        assert_eq!(
+            encoder.is_encoded_equals("McGowan", "Mc Geoghegan"),
+            Ok(true)
+        );
     }
 
     #[test]
     fn test_compare_surnames_corner_case_murphy_space_no_match() {
         let encoder = MatchRatingApproach;
-        assert!(!encoder.is_encoded_equals("Murphy", " "));
+        assert_eq!(encoder.is_encoded_equals("Murphy", " "), Ok(false));
     }
 
     #[test]
     fn test_compare_surnames_corner_case_murphy_no_space_no_match() {
         let encoder = MatchRatingApproach;
-        assert!(!encoder.is_encoded_equals("Murphy", ""));
+        assert_eq!(encoder.is_encoded_equals("Murphy", ""), Ok(false));
     }
 
     #[test]
     fn test_compare_surnames_murphy_lynch_no_match_expected() {
         let encoder = MatchRatingApproach;
-        assert!(!encoder.is_encoded_equals("Murphy", "Lynch"));
+        assert_eq!(encoder.is_encoded_equals("Murphy", "Lynch"), Ok(false));
     }
 
     #[test]
     fn test_compare_forenames_sean_john_match_expected() {
         let encoder = MatchRatingApproach;
-        assert!(encoder.is_encoded_equals("Sean", "John"));
+        assert_eq!(encoder.is_encoded_equals("Sean", "John"), Ok(true));
     }
 
     #[test]
     fn test_compare_forenames_sean_pete_no_match_expected() {
         let encoder = MatchRatingApproach;
-        assert!(!encoder.is_encoded_equals("Sean", "Pete"));
+        assert_eq!(encoder.is_encoded_equals("Sean", "Pete"), Ok(false));
     }
 }

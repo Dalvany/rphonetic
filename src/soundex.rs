@@ -1,3 +1,5 @@
+use std::str::FromStr;
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -14,11 +16,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-use std::str::FromStr;
-
 use serde::{Deserialize, Serialize};
 
-use crate::{Encoder, SoundexCommons, SoundexUtils};
+use crate::soundex_commons::SoundexUtils;
+use crate::{Encoder, SoundexCommons, SoundexConvertError, SoundexEncodeError};
 
 const SILENT: char = '-';
 
@@ -66,10 +67,14 @@ fn has_silent_in_mapping(mapping: [char; 26]) -> bool {
 /// # Example :
 ///
 /// ```rust
+/// # fn main() -> anyhow::Result<()> {
 /// use rphonetic::{Encoder, Soundex};
 ///
 /// let soundex = Soundex::default();
-/// assert_eq!(soundex.encode("jumped"), "J513");
+/// assert_eq!(soundex.encode("jumped")?, "J513");
+///
+/// #   Ok(())
+/// # }
 /// ```
 #[derive(Copy, Clone, Debug, Ord, PartialOrd, Eq, PartialEq, Hash, Serialize, Deserialize)]
 pub struct Soundex {
@@ -96,10 +101,6 @@ impl Soundex {
             special_case_h_w,
         }
     }
-
-    fn get_mapping_code(&self, ch: char) -> char {
-        self.mapping[ch as usize - 65]
-    }
 }
 
 /// This is the [Default] implementation for [Soundex], it returns an instance
@@ -125,7 +126,7 @@ impl From<[char; 26]> for Soundex {
 }
 
 impl TryFrom<&str> for Soundex {
-    type Error = Vec<char>;
+    type Error = SoundexConvertError;
 
     /// Construct a [Soundex] from the mapping in parameter. This [str] will
     /// be converted into an array of 26 chars, so `mapping`'s length must be 26.
@@ -136,28 +137,36 @@ impl TryFrom<&str> for Soundex {
     ///
     /// * `mapping`: str that contains the corresponding code for each character.
     ///
+    /// # Errors
+    ///
+    /// Returns an error the number of [char] in the [str] isn't equals to 26.
+    ///
     /// # Example
     ///
     /// ```rust
-    /// # fn main() -> Result<(), Vec<char>> {
+    /// # fn main() -> anyhow::Result<()> {
     /// use rphonetic::{Encoder, Soundex};
     ///
     /// // Construct an encoder with 'A' coded into '0', 'B' into '1', 'C' into '3', 'D' into '6', 'E' into '0', ...etc
     /// // (this is the default mapping)
     /// let soundex = Soundex::try_from("01360240043788015936020505")?;
     ///
-    /// assert_eq!(soundex.encode("jumped"), "J816");
+    /// assert_eq!(soundex.encode("jumped")?, "J816");
     /// #    Ok(())
     /// # }
     /// ```
     fn try_from(mapping: &str) -> Result<Self, Self::Error> {
-        let mapping: [char; 26] = mapping.chars().collect::<Vec<char>>().try_into()?;
+        let mapping: [char; 26] = mapping
+            .chars()
+            .collect::<Vec<char>>()
+            .try_into()
+            .map_err(SoundexConvertError)?;
         Ok(Self::from(mapping))
     }
 }
 
 impl FromStr for Soundex {
-    type Err = Vec<char>;
+    type Err = SoundexConvertError;
 
     /// Construct a [Soundex] from the mapping in parameter. This [str] will
     /// be converted into an array of 26 chars, so `mapping`'s length must be 26.
@@ -168,28 +177,31 @@ impl FromStr for Soundex {
     ///
     /// * `mapping`: str that contains the corresponding code for each character.
     ///
+    /// # Errors
+    ///
+    /// Returns an error the number of [char] in the [str] isn't equals to 26.
+    ///
     /// # Example
     ///
     /// ```rust
-    /// # fn main() -> Result<(), Vec<char>> {
+    /// # fn main() -> anyhow::Result<()> {
     /// use rphonetic::{Encoder, Soundex};
     ///
     /// // Construct an encoder with 'A' coded into '0', 'B' into '1', 'C' into '3', 'D' into '6', 'E' into '0', ...etc
     /// // (this is the default mapping)
     /// let soundex = "01360240043788015936020505".parse::<Soundex>()?;
     ///
-    /// assert_eq!(soundex.encode("jumped"), "J816");
+    /// assert_eq!(soundex.encode("jumped")?, "J816");
     /// #    Ok(())
     /// # }
     /// ```
     fn from_str(mapping: &str) -> Result<Self, Self::Err> {
-        let mapping: [char; 26] = mapping.chars().collect::<Vec<char>>().try_into()?;
-        Ok(Self::from(mapping))
+        Self::try_from(mapping)
     }
 }
 
 impl TryFrom<String> for Soundex {
-    type Error = Vec<char>;
+    type Error = SoundexConvertError;
 
     /// Construct a [Soundex] from the mapping in parameter. This [String] will
     /// be converted into an array of 26 chars, so `mapping`'s length must be 26.
@@ -203,24 +215,31 @@ impl TryFrom<String> for Soundex {
     /// # Example
     ///
     /// ```rust
-    /// # fn main() -> Result<(), Vec<char>> {
+    /// # fn main() -> anyhow::Result<()> {
     /// use rphonetic::{Encoder, Soundex};
     ///
     /// // Construct an encoder with 'A' coded into '0', 'B' into '1', 'C' into '3', 'D' into '6', 'E' into '0', ...etc
     /// // (this is the default mapping)
     /// let soundex = Soundex::try_from("01360240043788015936020505".to_string())?;
     ///
-    /// assert_eq!(soundex.encode("jumped"), "J816");
+    /// assert_eq!(soundex.encode("jumped")?, "J816");
     /// #    Ok(())
     /// # }
     /// ```
     fn try_from(mapping: String) -> Result<Self, Self::Error> {
-        mapping.as_str().parse::<Self>()
+        Self::try_from(mapping.as_str())
     }
 }
 
+/// [Encoder] implementation.
+///
+/// Note that it should be safe to use the `unchecked` method
+/// for this algorithm because non ASCII letters are removed. Then
+/// all `get(...)` calls on slice must be safe.
 impl Encoder for Soundex {
-    fn encode(&self, value: &str) -> String {
+    type Error = SoundexEncodeError;
+
+    fn encode(&self, value: &str) -> Result<String, Self::Error> {
         let value = Self::soundex_clean(value);
         let mut iterator = value.chars();
 
@@ -228,11 +247,11 @@ impl Encoder for Soundex {
 
         match iterator.next() {
             Some(ch) => code[0] = ch,
-            None => return value,
+            None => return Ok(value),
         }
 
         let mut count = 1;
-        let mut previous = self.get_mapping_code(code[0]);
+        let mut previous = crate::soundex_commons::get_mapping_code(&self.mapping, code[0])?;
         while count < code.len() {
             match iterator.next() {
                 None => break,
@@ -240,7 +259,7 @@ impl Encoder for Soundex {
                     if self.special_case_h_w && (ch == 'H' || ch == 'W') {
                         continue;
                     }
-                    let digit = self.get_mapping_code(ch);
+                    let digit = crate::soundex_commons::get_mapping_code(&self.mapping, ch)?;
                     if digit == SILENT {
                         continue;
                     }
@@ -254,7 +273,7 @@ impl Encoder for Soundex {
             }
         }
 
-        code.iter().collect()
+        Ok(code.iter().collect())
     }
 }
 
@@ -264,6 +283,8 @@ impl SoundexCommons for Soundex {}
 
 #[cfg(test)]
 mod tests {
+    // Note : can't test characters outside ascii letter range, because call to 'soundex_clean'
+    // prevent this case.
     use super::*;
 
     fn check_encoding(data: Vec<&str>, expected: &str) {
@@ -272,7 +293,7 @@ mod tests {
         for v in data {
             assert_eq!(
                 soundex.encode(v),
-                expected,
+                Ok(expected.to_string()),
                 "Encoding {v} should return {expected}"
             );
         }
@@ -295,88 +316,88 @@ mod tests {
     fn test_bad_characters() {
         let soundex = Soundex::default();
 
-        assert_eq!(soundex.encode("HOL>MES"), "H452");
+        assert_eq!(soundex.encode("HOL>MES"), Ok("H452".to_string()));
     }
 
     #[test]
     fn test_difference() {
         let soundex = Soundex::default();
 
-        assert_eq!(soundex.difference(" ", " "), 0);
-        assert_eq!(soundex.difference("Smith", "Smythe"), 4);
-        assert_eq!(soundex.difference("Ann", "Andrew"), 2);
-        assert_eq!(soundex.difference("Margaret", "Andrew"), 1);
-        assert_eq!(soundex.difference("Janet", "Margaret"), 0);
-        assert_eq!(soundex.difference("Green", "Greene"), 4);
-        assert_eq!(soundex.difference("Blotchet-Halls", "Greene"), 0);
-        assert_eq!(soundex.difference("Smith", "Smythe"), 4);
-        assert_eq!(soundex.difference("Smithers", "Smythers"), 4);
-        assert_eq!(soundex.difference("Anothers", "Brothers"), 2);
+        assert_eq!(soundex.difference(" ", " "), Ok(0));
+        assert_eq!(soundex.difference("Smith", "Smythe"), Ok(4));
+        assert_eq!(soundex.difference("Ann", "Andrew"), Ok(2));
+        assert_eq!(soundex.difference("Margaret", "Andrew"), Ok(1));
+        assert_eq!(soundex.difference("Janet", "Margaret"), Ok(0));
+        assert_eq!(soundex.difference("Green", "Greene"), Ok(4));
+        assert_eq!(soundex.difference("Blotchet-Halls", "Greene"), Ok(0));
+        assert_eq!(soundex.difference("Smith", "Smythe"), Ok(4));
+        assert_eq!(soundex.difference("Smithers", "Smythers"), Ok(4));
+        assert_eq!(soundex.difference("Anothers", "Brothers"), Ok(2));
     }
 
     #[test]
     fn test_encode_basic() {
         let soundex = Soundex::default();
 
-        assert_eq!(soundex.encode("testing"), "T235");
-        assert_eq!(soundex.encode("The"), "T000");
-        assert_eq!(soundex.encode("quick"), "Q200");
-        assert_eq!(soundex.encode("brown"), "B650");
-        assert_eq!(soundex.encode("fox"), "F200");
-        assert_eq!(soundex.encode("jumped"), "J513");
-        assert_eq!(soundex.encode("over"), "O160");
-        assert_eq!(soundex.encode("the"), "T000");
-        assert_eq!(soundex.encode("lazy"), "L200");
-        assert_eq!(soundex.encode("dogs"), "D200");
+        assert_eq!(soundex.encode("testing"), Ok("T235".to_string()));
+        assert_eq!(soundex.encode("The"), Ok("T000".to_string()));
+        assert_eq!(soundex.encode("quick"), Ok("Q200".to_string()));
+        assert_eq!(soundex.encode("brown"), Ok("B650".to_string()));
+        assert_eq!(soundex.encode("fox"), Ok("F200".to_string()));
+        assert_eq!(soundex.encode("jumped"), Ok("J513".to_string()));
+        assert_eq!(soundex.encode("over"), Ok("O160".to_string()));
+        assert_eq!(soundex.encode("the"), Ok("T000".to_string()));
+        assert_eq!(soundex.encode("lazy"), Ok("L200".to_string()));
+        assert_eq!(soundex.encode("dogs"), Ok("D200".to_string()));
     }
 
     #[test]
     fn test_encode_batch2() {
         let soundex = Soundex::default();
 
-        assert_eq!(soundex.encode("Allricht"), "A462");
-        assert_eq!(soundex.encode("Eberhard"), "E166");
-        assert_eq!(soundex.encode("Engebrethson"), "E521");
-        assert_eq!(soundex.encode("Heimbach"), "H512");
-        assert_eq!(soundex.encode("Hanselmann"), "H524");
-        assert_eq!(soundex.encode("Hildebrand"), "H431");
-        assert_eq!(soundex.encode("Kavanagh"), "K152");
-        assert_eq!(soundex.encode("Lind"), "L530");
-        assert_eq!(soundex.encode("Lukaschowsky"), "L222");
-        assert_eq!(soundex.encode("McDonnell"), "M235");
-        assert_eq!(soundex.encode("McGee"), "M200");
-        assert_eq!(soundex.encode("Opnian"), "O155");
-        assert_eq!(soundex.encode("Oppenheimer"), "O155");
-        assert_eq!(soundex.encode("Riedemanas"), "R355");
-        assert_eq!(soundex.encode("Zita"), "Z300");
-        assert_eq!(soundex.encode("Zitzmeinn"), "Z325");
+        assert_eq!(soundex.encode("Allricht"), Ok("A462".to_string()));
+        assert_eq!(soundex.encode("Eberhard"), Ok("E166".to_string()));
+        assert_eq!(soundex.encode("Engebrethson"), Ok("E521".to_string()));
+        assert_eq!(soundex.encode("Heimbach"), Ok("H512".to_string()));
+        assert_eq!(soundex.encode("Hanselmann"), Ok("H524".to_string()));
+        assert_eq!(soundex.encode("Hildebrand"), Ok("H431".to_string()));
+        assert_eq!(soundex.encode("Kavanagh"), Ok("K152".to_string()));
+        assert_eq!(soundex.encode("Lind"), Ok("L530".to_string()));
+        assert_eq!(soundex.encode("Lukaschowsky"), Ok("L222".to_string()));
+        assert_eq!(soundex.encode("McDonnell"), Ok("M235".to_string()));
+        assert_eq!(soundex.encode("McGee"), Ok("M200".to_string()));
+        assert_eq!(soundex.encode("Opnian"), Ok("O155".to_string()));
+        assert_eq!(soundex.encode("Oppenheimer"), Ok("O155".to_string()));
+        assert_eq!(soundex.encode("Riedemanas"), Ok("R355".to_string()));
+        assert_eq!(soundex.encode("Zita"), Ok("Z300".to_string()));
+        assert_eq!(soundex.encode("Zitzmeinn"), Ok("Z325".to_string()));
     }
 
     #[test]
     fn test_encode_batch3() {
         let soundex = Soundex::default();
 
-        assert_eq!(soundex.encode("Washington"), "W252");
-        assert_eq!(soundex.encode("Lee"), "L000");
-        assert_eq!(soundex.encode("Gutierrez"), "G362");
-        assert_eq!(soundex.encode("Pfister"), "P236");
-        assert_eq!(soundex.encode("Jackson"), "J250");
-        assert_eq!(soundex.encode("Tymczak"), "T522");
-        assert_eq!(soundex.encode("VanDeusen"), "V532");
+        assert_eq!(soundex.encode("Washington"), Ok("W252".to_string()));
+        assert_eq!(soundex.encode("Lee"), Ok("L000".to_string()));
+        assert_eq!(soundex.encode("Gutierrez"), Ok("G362".to_string()));
+        assert_eq!(soundex.encode("Pfister"), Ok("P236".to_string()));
+        assert_eq!(soundex.encode("Jackson"), Ok("J250".to_string()));
+        assert_eq!(soundex.encode("Tymczak"), Ok("T522".to_string()));
+        assert_eq!(soundex.encode("VanDeusen"), Ok("V532".to_string()));
     }
 
     #[test]
     fn test_encode_batch4() {
         let soundex = Soundex::default();
 
-        assert_eq!(soundex.encode("HOLMES"), "H452");
-        assert_eq!(soundex.encode("ADOMOMI"), "A355");
-        assert_eq!(soundex.encode("VONDERLEHR"), "V536");
-        assert_eq!(soundex.encode("BALL"), "B400");
-        assert_eq!(soundex.encode("SHAW"), "S000");
-        assert_eq!(soundex.encode("JACKSON"), "J250");
-        assert_eq!(soundex.encode("SCANLON"), "S545");
-        assert_eq!(soundex.encode("SAINTJOHN"), "S532");
+        assert_eq!(soundex.encode("HOLMES"), Ok("H452".to_string()));
+        assert_eq!(soundex.encode("ADOMOMI"), Ok("A355".to_string()));
+        assert_eq!(soundex.encode("VONDERLEHR"), Ok("V536".to_string()));
+        assert_eq!(soundex.encode("BALL"), Ok("B400".to_string()));
+        assert_eq!(soundex.encode("SHAW"), Ok("S000".to_string()));
+        assert_eq!(soundex.encode("JACKSON"), Ok("J250".to_string()));
+        assert_eq!(soundex.encode("SCANLON"), Ok("S545".to_string()));
+        assert_eq!(soundex.encode("SAINTJOHN"), Ok("S532".to_string()));
     }
 
     #[test]
@@ -411,33 +432,36 @@ mod tests {
     fn test_encode_ignore_trimmable() {
         let soundex = Soundex::default();
 
-        assert_eq!(soundex.encode(" \t\n\r Washington \t\n\r "), "W252");
+        assert_eq!(
+            soundex.encode(" \t\n\r Washington \t\n\r "),
+            Ok("W252".to_string())
+        );
     }
 
     #[test]
     fn test_hw_rule_ex1() {
         let soundex = Soundex::default();
 
-        assert_eq!(soundex.encode("Ashcraft"), "A261");
-        assert_eq!(soundex.encode("Ashcroft"), "A261");
-        assert_eq!(soundex.encode("yehudit"), "Y330");
-        assert_eq!(soundex.encode("yhwdyt"), "Y330");
+        assert_eq!(soundex.encode("Ashcraft"), Ok("A261".to_string()));
+        assert_eq!(soundex.encode("Ashcroft"), Ok("A261".to_string()));
+        assert_eq!(soundex.encode("yehudit"), Ok("Y330".to_string()));
+        assert_eq!(soundex.encode("yhwdyt"), Ok("Y330".to_string()));
     }
 
     #[test]
     fn test_hw_rule_ex2() {
         let soundex = Soundex::default();
 
-        assert_eq!(soundex.encode("BOOTHDAVIS"), "B312");
-        assert_eq!(soundex.encode("BOOTH-DAVIS"), "B312");
+        assert_eq!(soundex.encode("BOOTHDAVIS"), Ok("B312".to_string()));
+        assert_eq!(soundex.encode("BOOTH-DAVIS"), Ok("B312".to_string()));
     }
 
     #[test]
     fn test_hw_rule_ex3() {
         let soundex = Soundex::default();
 
-        assert_eq!(soundex.encode("Sgler"), "S460");
-        assert_eq!(soundex.encode("Swhgler"), "S460");
+        assert_eq!(soundex.encode("Sgler"), Ok("S460".to_string()));
+        assert_eq!(soundex.encode("Swhgler"), Ok("S460".to_string()));
 
         let data = vec![
             "SAILOR", "SALYER", "SAYLOR", "SCHALLER", "SCHELLER", "SCHILLER", "SCHOOLER",
@@ -451,8 +475,8 @@ mod tests {
     fn test_ms_sql_server1() {
         let soundex = Soundex::default();
 
-        assert_eq!(soundex.encode("Smith"), "S530");
-        assert_eq!(soundex.encode("Smythe"), "S530");
+        assert_eq!(soundex.encode("Smith"), Ok("S530".to_string()));
+        assert_eq!(soundex.encode("Smythe"), Ok("S530".to_string()));
     }
 
     #[test]
@@ -468,71 +492,67 @@ mod tests {
     fn test_ms_sql_server3() {
         let soundex = Soundex::default();
 
-        assert_eq!(soundex.encode("Ann"), "A500");
-        assert_eq!(soundex.encode("Andrew"), "A536");
-        assert_eq!(soundex.encode("Janet"), "J530");
-        assert_eq!(soundex.encode("Margaret"), "M626");
-        assert_eq!(soundex.encode("Steven"), "S315");
-        assert_eq!(soundex.encode("Michael"), "M240");
-        assert_eq!(soundex.encode("Robert"), "R163");
-        assert_eq!(soundex.encode("Laura"), "L600");
-        assert_eq!(soundex.encode("Anne"), "A500");
+        assert_eq!(soundex.encode("Ann"), Ok("A500".to_string()));
+        assert_eq!(soundex.encode("Andrew"), Ok("A536".to_string()));
+        assert_eq!(soundex.encode("Janet"), Ok("J530".to_string()));
+        assert_eq!(soundex.encode("Margaret"), Ok("M626".to_string()));
+        assert_eq!(soundex.encode("Steven"), Ok("S315".to_string()));
+        assert_eq!(soundex.encode("Michael"), Ok("M240".to_string()));
+        assert_eq!(soundex.encode("Robert"), Ok("R163".to_string()));
+        assert_eq!(soundex.encode("Laura"), Ok("L600".to_string()));
+        assert_eq!(soundex.encode("Anne"), Ok("A500".to_string()));
     }
 
     #[test]
     fn test_wikipedia_american_soundex() {
         let soundex = Soundex::default();
 
-        assert_eq!(soundex.encode("Robert"), "R163");
-        assert_eq!(soundex.encode("Rupert"), "R163");
-        assert_eq!(soundex.encode("Ashcraft"), "A261");
-        assert_eq!(soundex.encode("Ashcroft"), "A261");
-        assert_eq!(soundex.encode("Tymczak"), "T522");
-        assert_eq!(soundex.encode("Pfister"), "P236");
+        assert_eq!(soundex.encode("Robert"), Ok("R163".to_string()));
+        assert_eq!(soundex.encode("Rupert"), Ok("R163".to_string()));
+        assert_eq!(soundex.encode("Ashcraft"), Ok("A261".to_string()));
+        assert_eq!(soundex.encode("Ashcroft"), Ok("A261".to_string()));
+        assert_eq!(soundex.encode("Tymczak"), Ok("T522".to_string()));
+        assert_eq!(soundex.encode("Pfister"), Ok("P236".to_string()));
     }
 
     #[test]
     fn test_genealogy() {
         let soundex = Soundex::from(DEFAULT_US_ENGLISH_GENEALOGY_MAPPING_SOUNDEX);
 
-        assert_eq!(soundex.encode("Heggenburger"), "H251");
-        assert_eq!(soundex.encode("Blackman"), "B425");
-        assert_eq!(soundex.encode("Schmidt"), "S530");
-        assert_eq!(soundex.encode("Lippmann"), "L150");
-        assert_eq!(soundex.encode("Dodds"), "D200");
-        assert_eq!(soundex.encode("Dhdds"), "D200");
-        assert_eq!(soundex.encode("Dwdds"), "D200");
+        assert_eq!(soundex.encode("Heggenburger"), Ok("H251".to_string()));
+        assert_eq!(soundex.encode("Blackman"), Ok("B425".to_string()));
+        assert_eq!(soundex.encode("Schmidt"), Ok("S530".to_string()));
+        assert_eq!(soundex.encode("Lippmann"), Ok("L150".to_string()));
+        assert_eq!(soundex.encode("Dodds"), Ok("D200".to_string()));
+        assert_eq!(soundex.encode("Dhdds"), Ok("D200".to_string()));
+        assert_eq!(soundex.encode("Dwdds"), Ok("D200".to_string()));
     }
 
     #[test]
     fn test_simplified_soundex() {
         let soundex = Soundex::new(DEFAULT_US_ENGLISH_MAPPING_SOUNDEX, false);
 
-        assert_eq!(soundex.encode("WILLIAMS"), "W452");
-        assert_eq!(soundex.encode("BARAGWANATH"), "B625");
-        assert_eq!(soundex.encode("DONNELL"), "D540");
-        assert_eq!(soundex.encode("LLOYD"), "L300");
-        assert_eq!(soundex.encode("WOOLCOCK"), "W422");
-        assert_eq!(soundex.encode("Dodds"), "D320");
-        assert_eq!(soundex.encode("Dhdds"), "D320");
-        assert_eq!(soundex.encode("Dwdds"), "D320");
+        assert_eq!(soundex.encode("WILLIAMS"), Ok("W452".to_string()));
+        assert_eq!(soundex.encode("BARAGWANATH"), Ok("B625".to_string()));
+        assert_eq!(soundex.encode("DONNELL"), Ok("D540".to_string()));
+        assert_eq!(soundex.encode("LLOYD"), Ok("L300".to_string()));
+        assert_eq!(soundex.encode("WOOLCOCK"), Ok("W422".to_string()));
+        assert_eq!(soundex.encode("Dodds"), Ok("D320".to_string()));
+        assert_eq!(soundex.encode("Dhdds"), Ok("D320".to_string()));
+        assert_eq!(soundex.encode("Dwdds"), Ok("D320".to_string()));
     }
 
     #[test]
-    fn test_try_from_str() -> Result<(), Vec<char>> {
-        let result = Soundex::try_from("01230120022455012623010202")?;
+    fn test_try_from_str() {
+        let result = Soundex::try_from("01230120022455012623010202");
 
-        assert_eq!(result, Soundex::default());
-
-        Ok(())
+        assert_eq!(result, Ok(Soundex::default()));
     }
 
     #[test]
-    fn test_try_from_string() -> Result<(), Vec<char>> {
-        let result = Soundex::try_from("01230120022455012623010202".to_string())?;
+    fn test_try_from_string() {
+        let result = Soundex::try_from("01230120022455012623010202".to_string());
 
-        assert_eq!(result, Soundex::default());
-
-        Ok(())
+        assert_eq!(result, Ok(Soundex::default()));
     }
 }

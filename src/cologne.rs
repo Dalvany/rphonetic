@@ -1,3 +1,5 @@
+use std::convert::Infallible;
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -62,17 +64,22 @@ impl CologneOutput {
 /// # Example :
 ///
 /// ```rust
+/// # fn main() -> anyhow::Result<()> {
 /// use rphonetic::{Cologne, Encoder};
 ///
 /// let cologne = Cologne;
 ///
-/// assert_eq!(cologne.encode("m\u{00FC}ller"), "657");
+/// assert_eq!(cologne.encode("m\u{00FC}ller")?, "657");
+/// #   Ok(())
+/// # }
 /// ```
 #[derive(Copy, Clone, Debug, Ord, PartialOrd, Eq, PartialEq, Hash, Serialize, Deserialize)]
 pub struct Cologne;
 
 impl Encoder for Cologne {
-    fn encode(&self, s: &str) -> String {
+    type Error = Infallible;
+
+    fn encode(&self, s: &str) -> Result<String, Self::Error> {
         let mut output = CologneOutput::with_capacity(s.len());
 
         // Uppercase and aumlaut transcription
@@ -134,7 +141,7 @@ impl Encoder for Cologne {
             last_char = ch;
         }
 
-        output.buffer
+        Ok(output.buffer)
     }
 }
 
@@ -147,21 +154,21 @@ mod tests {
     fn test_aabjoe() {
         let result = Cologne.encode("Aabjoe");
 
-        assert_eq!(result, "01");
+        assert_eq!(result, Ok("01".to_string()));
     }
 
     #[test]
     fn test_aaclan() {
         let result = Cologne.encode("Aaclan");
 
-        assert_eq!(result, "0856");
+        assert_eq!(result, Ok("0856".to_string()));
     }
 
     #[test]
     fn test_aychlmajr_for_codec122() {
         let result = Cologne.encode("Aychlmajr");
 
-        assert_eq!(result, "04567");
+        assert_eq!(result, Ok("04567".to_string()));
     }
 
     #[test]
@@ -202,7 +209,7 @@ mod tests {
 
         for (test, expected) in data {
             let result = Cologne.encode(test);
-            assert_eq!(result, expected, "Wrong for {test}");
+            assert_eq!(result, Ok(expected.to_string()), "Wrong for {test}");
         }
     }
 
@@ -250,7 +257,7 @@ mod tests {
 
         for (test, expected) in data {
             let result = Cologne.encode(test);
-            assert_eq!(result, expected, "Wrong for {test}");
+            assert_eq!(result, Ok(expected.to_string()), "Wrong for {test}");
         }
     }
 
@@ -263,7 +270,7 @@ mod tests {
 
         for (test, expected) in data {
             let result = Cologne.encode(test);
-            assert_eq!(result, expected, "Wrong for {test}");
+            assert_eq!(result, Ok(expected.to_string()), "Wrong for {test}");
         }
     }
 
@@ -283,7 +290,11 @@ mod tests {
 
         for (a, b) in data {
             let result = Cologne.is_encoded_equals(a, b);
-            assert!(result, "Encoding {a} and {b} gives a different result");
+            assert_eq!(
+                result,
+                Ok(true),
+                "Encoding {a} and {b} gives a different result"
+            );
         }
     }
 
@@ -293,7 +304,7 @@ mod tests {
 
         for text in data {
             let result = Cologne.encode(text);
-            assert_eq!(result, "65");
+            assert_eq!(result, Ok("65".to_string()));
         }
     }
 
@@ -303,7 +314,7 @@ mod tests {
 
         for text in data {
             let result = Cologne.encode(text);
-            assert_eq!(result, "67");
+            assert_eq!(result, Ok("67".to_string()));
         }
     }
 
@@ -319,7 +330,7 @@ mod tests {
 
         for text in data {
             let result = Cologne.encode(text);
-            assert_eq!(result, "28282");
+            assert_eq!(result, Ok("28282".to_string()));
         }
     }
 }

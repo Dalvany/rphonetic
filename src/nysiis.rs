@@ -1,3 +1,5 @@
+use std::convert::Infallible;
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -17,7 +19,8 @@
 use serde::{Deserialize, Serialize};
 
 use crate::helper::is_vowel;
-use crate::{Encoder, SoundexUtils};
+use crate::soundex_commons::SoundexUtils;
+use crate::Encoder;
 
 const CHARS_A: &str = "A";
 const CHARS_AF: &str = "AF";
@@ -52,15 +55,18 @@ const TRUE_LENGTH: usize = 6;
 /// A `new` constructor is provided, allowing code to have more than 6 characters.
 ///
 /// ```rust
+/// # fn main() -> anyhow::Result<()> {
 /// use rphonetic::{Nysiis, Encoder};
 ///
 /// // Strict
 /// let nysiis = Nysiis::default();
-/// assert_eq!(nysiis.encode("WESTERLUND"),"WASTAR");
+/// assert_eq!(nysiis.encode("WESTERLUND")?,"WASTAR");
 ///
 /// // Not strict
 /// let nysiis = Nysiis::new(false);
-/// assert_eq!(nysiis.encode("WESTERLUND"),"WASTARLAD");
+/// assert_eq!(nysiis.encode("WESTERLUND")?,"WASTARLAD");
+/// #   Ok(())
+/// # }
 /// ```
 #[derive(Copy, Clone, Debug, Ord, PartialOrd, Eq, PartialEq, Hash, Serialize, Deserialize)]
 pub struct Nysiis {
@@ -129,11 +135,13 @@ impl Default for Nysiis {
 impl SoundexUtils for Nysiis {}
 
 impl Encoder for Nysiis {
-    fn encode(&self, value: &str) -> String {
+    type Error = Infallible;
+
+    fn encode(&self, value: &str) -> Result<String, Self::Error> {
         let mut tmp = Self::soundex_clean(value);
 
         if tmp.is_empty() {
-            return tmp;
+            return Ok(tmp);
         }
 
         if tmp.starts_with(START_MAC) {
@@ -215,9 +223,9 @@ impl Encoder for Nysiis {
 
         if self.strict {
             let min = std::cmp::min(result.len(), TRUE_LENGTH);
-            result[..min].to_string()
+            Ok(result[..min].to_string())
         } else {
-            result
+            Ok(result)
         }
     }
 }
@@ -229,7 +237,7 @@ mod tests {
     fn encode_all(values: Vec<&str>, expected: &str) {
         let nysiis = Nysiis::default();
         for v in values {
-            assert_eq!(nysiis.encode(v), expected);
+            assert_eq!(nysiis.encode(v), Ok(expected.to_string()));
         }
     }
 
@@ -238,7 +246,7 @@ mod tests {
         for (value, expected) in values {
             assert_eq!(
                 nysiis.encode(value),
-                expected,
+                Ok(expected.to_string()),
                 "Encoding {value} should output {expected}"
             );
         }
@@ -420,7 +428,7 @@ mod tests {
         let nysiis = Nysiis::default();
 
         let result = nysiis.encode("WESTERLUND");
-        assert!(result.len() <= 6);
-        assert_eq!(result, "WASTAR");
+        assert!(result.as_ref().map(|v| v.len()) <= Ok(6));
+        assert_eq!(result, Ok("WASTAR".to_string()));
     }
 }

@@ -1,3 +1,4 @@
+use std::convert::Infallible;
 use std::ffi::OsString;
 use std::fmt::{Display, Formatter};
 use std::path::PathBuf;
@@ -16,7 +17,7 @@ use crate::beider_morse::lang::Langs;
 pub use crate::beider_morse::languages::LanguageSet;
 use crate::beider_morse::languages::Languages;
 use crate::beider_morse::rule::Rules;
-use crate::{Encoder, PhoneticError};
+use crate::{Encoder, ParseError};
 
 mod engine;
 mod lang;
@@ -29,10 +30,45 @@ const GEN: &str = "gen";
 const SEP: &str = "sep";
 const DEFAULT_MAX_PHONEMES: usize = 20;
 
+/// Beider-Morse parsing errors.
+#[derive(Debug, Error)]
+pub enum ParseBmError {
+    /// Unable to read rule.
+    #[error(transparent)]
+    IoError(#[from] std::io::Error),
+    /// Beider Morse rule can't be parsed.
+    #[error(transparent)]
+    Parse(#[from] ParseError),
+    /// Missing name type.
+    #[error("Missing name type {0}")]
+    MissingNameType(NameType),
+    /// Missing closing square bracket for a phonem expression.
+    #[error("Phoneme expression '{0}' has a '[' but doesn't ends with an ']'")]
+    UnclosedPhonemeExpression(String),
+    /// Missing closing parenthesis for a phonem rule.
+    #[error("Phoneme rule '{0}' has a '(' but doesn't ends with an ')'")]
+    UnclosedPhonemeRule(String),
+    /// Regex can't be compiled.
+    #[error(transparent)]
+    Regex(#[from] regex::Error),
+    /// Embedded rules are missing.
+    #[error("Missing embedded rule {0}")]
+    MissingEmbedded(String),
+    /// `embedded_bm` should be enable.
+    #[error("Feature 'embedded_bm' is disabled")]
+    FeatureDisabled,
+    /// The name type is unknown.
+    #[error("Unknown name type {0}")]
+    UnknownNameType(NameType),
+    /// Beider-Morse pattern is empty.
+    #[error("Empty pattern")]
+    EmptyPattern,
+}
+
 /// Beider-Morse errors.
 #[derive(Debug, Clone, PartialEq, Error)]
 pub enum BMError {
-    /// This error can be raised when parsing a [NameType] that isn't
+    /// This error can be raised when parsing a [NameType] that isn'trun
     /// a variant of the enum or when a filename does not contain
     /// a [NameType] variant.
     #[error("Unknown NameType {0}")]
@@ -154,7 +190,7 @@ impl TryFrom<OsString> for NameType {
 ///
 /// If `embedded_bm` feature is enable, then there is a [Default] implementation
 /// that only support `any` and `common` languages rules for each variant of
-/// [NameType]. It is provided as a convenience but as files are embedded into
+/// [NameType]. It is provided as a convenience but because files are embedded into
 /// code, it can result in a significant increase of binary size. The preferred
 /// way is to construct a new [ConfigFiles] with a [path to files](ConfigFiles#new).
 #[derive(Debug, Clone)]
@@ -174,7 +210,7 @@ impl ConfigFiles {
     ///
     /// # Errors :
     /// Returns a [BMError] if it misses some files or some rules are not well-formed.
-    pub fn new(directory: &PathBuf) -> Result<Self, PhoneticError> {
+    pub fn new(directory: &PathBuf) -> Result<Self, ParseBmError> {
         let languages = Languages::try_from(directory)?;
         let langs = Langs::new(directory, &languages)?;
         let rules = Rules::new(directory, &languages)?;
@@ -208,7 +244,7 @@ impl ConfigFiles {
 /// # Example
 ///
 /// ```rust
-/// # fn main() -> Result<(), rphonetic::PhoneticError> {
+/// # fn main() -> anyhow::Result<()> {
 /// use std::path::PathBuf;
 /// use rphonetic::{BeiderMorseBuilder, ConfigFiles, Encoder};
 ///
@@ -216,7 +252,7 @@ impl ConfigFiles {
 /// let builder = BeiderMorseBuilder::new(&config_files);
 /// let beider_morse = builder.build();
 ///
-/// assert_eq!(beider_morse.encode("Van Helsing"),"(Ylznk|ilzn|ilznk|xilzn|xilznk)-(banilznk|bonilznk|fYnYlznk|fYnilznk|fanYlznk|fanilznk|fonYlznk|fonilznk|vYnYlznk|vYnilznk|vanYlznk|vaniilznk|vanilzn|vanilznk|vonYlznk|voniilznk|vonilzn|vonilznk)");
+/// assert_eq!(beider_morse.encode("Van Helsing")?,"(Ylznk|ilzn|ilznk|xilzn|xilznk)-(banilznk|bonilznk|fYnYlznk|fYnilznk|fanYlznk|fanilznk|fonYlznk|fonilznk|vYnYlznk|vYnilznk|vanYlznk|vaniilznk|vanilzn|vanilznk|vonYlznk|voniilznk|vonilzn|vonilznk)");
 /// #   Ok(())
 /// # }
 /// ```
@@ -238,7 +274,7 @@ impl BeiderMorse<'_> {
     /// # Example
     ///
     /// ```rust
-    /// # fn main() -> Result<(), rphonetic::PhoneticError> {
+    /// # fn main() -> anyhow::Result<()> {
     /// use std::path::PathBuf;
     /// use rphonetic::{BeiderMorseBuilder, ConfigFiles, Encoder, LanguageSet, RuleType};
     ///
@@ -246,24 +282,30 @@ impl BeiderMorse<'_> {
     /// let builder = BeiderMorseBuilder::new(&config_files).rule_type(RuleType::Exact);
     /// let beider_morse = builder.build();
     ///
-    /// assert_eq!(beider_morse.encode("Angelo"),"anZelo|andZelo|angelo|anhelo|anjelo|anxelo");
+    /// assert_eq!(beider_morse.encode("Angelo")?,"anZelo|andZelo|angelo|anhelo|anjelo|anxelo");
     ///
     /// let language_set = LanguageSet::from(vec!["italian", "greek", "spanish"]);
-    /// assert_eq!(beider_morse.encode_with_languages("Angelo", &language_set),"andZelo|angelo|anxelo");
+    /// assert_eq!(beider_morse.encode_with_languages("Angelo", &language_set)?,"andZelo|angelo|anxelo");
     ///
     /// let language_set = LanguageSet::from(vec!["italian"]);
-    /// assert_eq!(beider_morse.encode_with_languages("Angelo", &language_set),"andZelo");
+    /// assert_eq!(beider_morse.encode_with_languages("Angelo", &language_set)?,"andZelo");
     ///
     /// #   Ok(())
     /// # }
     /// ```
-    pub fn encode_with_languages(&self, value: &str, languages: &LanguageSet) -> String {
+    pub fn encode_with_languages(
+        &self,
+        value: &str,
+        languages: &LanguageSet,
+    ) -> Result<String, Infallible> {
         self.engine.encode_with_language_set(value, languages)
     }
 }
 
 impl Encoder for BeiderMorse<'_> {
-    fn encode(&self, value: &str) -> String {
+    type Error = Infallible;
+
+    fn encode(&self, value: &str) -> Result<String, Infallible> {
         self.engine.encode(value)
     }
 }
@@ -373,7 +415,7 @@ mod tests {
             .max_phonemes(10);
         let encoder = builder.build();
 
-        let result = encoder.encode(input);
+        let result = encoder.encode(input).unwrap();
         assert!(!result.is_empty());
 
         let result = result.split('|').count();
@@ -387,8 +429,11 @@ mod tests {
         let builder = BeiderMorseBuilder::new(&CONFIG_FILE);
         let encoder = builder.build();
         for ch in 'a'..='z' {
-            assert_ne!(encoder.encode(&ch.to_string()), "");
-            assert_ne!(encoder.encode(&ch.to_ascii_uppercase().to_string()), "");
+            assert_ne!(encoder.encode(&ch.to_string()), Ok("".to_string()));
+            assert_ne!(
+                encoder.encode(&ch.to_ascii_uppercase().to_string()),
+                Ok("".to_string())
+            );
         }
 
         Ok(())
@@ -403,8 +448,11 @@ mod tests {
                 let mut string = String::with_capacity(2);
                 string.push(ch1);
                 string.push(ch2);
-                assert_ne!(encoder.encode(&string), "");
-                assert_ne!(encoder.encode(&string.to_ascii_uppercase().to_string()), "");
+                assert_ne!(encoder.encode(&string), Ok("".to_string()));
+                assert_ne!(
+                    encoder.encode(&string.to_ascii_uppercase().to_string()),
+                    Ok("".to_string())
+                );
             }
         }
 
@@ -424,7 +472,7 @@ mod tests {
         let encoder = builder.build();
 
         for d in data {
-            assert_ne!(encoder.encode(d), "");
+            assert_ne!(encoder.encode(d), Ok("".to_string()));
         }
 
         Ok(())
@@ -435,7 +483,7 @@ mod tests {
         let builder = BeiderMorseBuilder::new(&CONFIG_FILE);
         let encoder = builder.build();
 
-        assert_ne!(encoder.encode("gna"), "");
+        assert_ne!(encoder.encode("gna"), Ok("".to_string()));
 
         Ok(())
     }
@@ -445,7 +493,7 @@ mod tests {
         let builder = BeiderMorseBuilder::new(&CONFIG_FILE);
         let encoder = builder.build();
 
-        assert_ne!(encoder.encode("MacGhilleseatheanaich"), "");
+        assert_ne!(encoder.encode("MacGhilleseatheanaich"), Ok("".to_string()));
 
         Ok(())
     }
@@ -462,12 +510,12 @@ mod tests {
         for i in 0..40 {
             let ch = *test_chars.get(i % test_chars.len()).unwrap();
             string.push(ch);
-            assert_ne!(encoder.encode(&string), "");
+            assert_ne!(encoder.encode(&string), Ok("".to_string()));
         }
 
         assert_ne!(
             encoder.encode("ItstheendoftheworldasweknowitandIfeelfine"),
-            ""
+            Ok("".to_string())
         );
 
         Ok(())
@@ -480,7 +528,7 @@ mod tests {
 
         assert_ne!(
             encoder.encode("abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz"),
-            ""
+            Ok("".to_string())
         );
 
         Ok(())
@@ -493,7 +541,7 @@ mod tests {
 
         assert_ne!(
             encoder.encode("abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz"),
-            ""
+            Ok("".to_string())
         );
 
         Ok(())
