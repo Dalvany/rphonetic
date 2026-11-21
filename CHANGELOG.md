@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.0.1](https://github.com/Dalvany/rphonetic/compare/v4.0.0...v4.0.1) - 2026-11-21
+
+### Fixed
+
+- *(double_metaphone)* match commons-codec for CH before T/S, VAN/VON and short -IER words ([#88](https://github.com/Dalvany/rphonetic/pull/88)). Thanks to [bardrop](https://github.com/bardrop)
+
 ## [4.0.0](https://github.com/Dalvany/rphonetic/compare/v3.1.0...v4.0.0) - 2026-09-03
 
 ### Added
@@ -15,7 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- *(cologne)* do not let H separate two identical codes ([#85](https://github.com/Dalvany/rphonetic/pull/85))
+- *(cologne)* do not let H separate two identical codes ([#85](https://github.com/Dalvany/rphonetic/pull/85)). Thanks to [guizmaii](https://github.com/guizmaii)
 - fix release workflow
 - *(ci)* fix ci
 - *(ci)* fix release workflow
