@@ -504,11 +504,11 @@ impl DoubleMetaphone {
     }
 
     fn condition_ch1(value: &str, index: isize) -> bool {
-        (Self::contains(value, 0, 4, vec!["VAN", "VON"])
+        (Self::contains(value, 0, 4, vec!["VAN ", "VON "])
             || Self::contains(value, 0, 3, vec!["SCH"]))
             || (index > 1
                 && Self::contains(value, index - 2, 6, vec!["ORCHES", "ARCHIT", "ORCHID"]))
-            || (index > 1 && Self::contains(value, index + 2, 1, vec!["T", "S"]))
+            || Self::contains(value, index + 2, 1, vec!["T", "S"])
             || ((index == 0 || Self::contains(value, index - 1, 1, vec!["A", "O", "U", "E"]))
                 && (Self::contains_array(value, index + 2, 1, L_R_N_M_B_H_F_V_W_SPACE)
                     || (index as usize) + 1 == value.len() - 1))
@@ -786,8 +786,7 @@ impl DoubleMetaphone {
         index: isize,
         slavo_germanic: bool,
     ) -> usize {
-        if index > 3
-            && index == value.len() as isize - 1
+        if index == value.len() as isize - 1
             && !slavo_germanic
             && Self::contains(value, index - 2, 2, vec!["IE"])
             && !Self::contains(value, index - 4, 2, vec!["ME", "MA"])
@@ -3513,5 +3512,48 @@ mod tests {
 
         let result = encoder.encode_alternate("synchronization");
         assert_eq!(result, "SNKRNSXN");
+    }
+
+    // Expected values are from Apache commons-codec 1.17.1 `DoubleMetaphone`.
+    #[test]
+    fn test_ch_before_t_or_s_near_start() {
+        let encoder = DoubleMetaphone::default();
+
+        for (value, primary, alternate) in [
+            ("ichthus", "AK0S", "AKTS"),
+            ("ocht", "AKT", "AKT"),
+            ("chthonic", "K0NK", "KTNK"),
+        ] {
+            assert_eq!(encoder.encode(value), primary, "{value}");
+            assert_eq!(encoder.encode_alternate(value), alternate, "{value}");
+        }
+    }
+
+    #[test]
+    fn test_ch_after_van_or_von() {
+        let encoder = DoubleMetaphone::default();
+
+        for (value, primary, alternate) in [
+            ("VAN CHAPPEL", "FNKP", "FNKP"),
+            ("VON CHAMIER", "FNKM", "FNKM"),
+            ("Vanchapel", "FNXP", "FNKP"),
+        ] {
+            assert_eq!(encoder.encode(value), primary, "{value}");
+            assert_eq!(encoder.encode_alternate(value), alternate, "{value}");
+        }
+    }
+
+    #[test]
+    fn test_silent_r_in_short_ier_words() {
+        let encoder = DoubleMetaphone::default();
+
+        for (value, primary, alternate) in [
+            ("pier", "P", "PR"),
+            ("tier", "T", "TR"),
+            ("hier", "H", "HR"),
+        ] {
+            assert_eq!(encoder.encode(value), primary, "{value}");
+            assert_eq!(encoder.encode_alternate(value), alternate, "{value}");
+        }
     }
 }
