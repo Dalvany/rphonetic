@@ -165,7 +165,7 @@ impl Encoder for Metaphone {
                             {
                                 code.push('K');
                             } else if Metaphone::is_next_char(&local, index, 'H') {
-                                if index == 0 && wdsz > 3 && Metaphone::is_vowel(&local, 2) {
+                                if index == 0 && wdsz >= 3 && Metaphone::is_vowel(&local, 2) {
                                     code.push('K');
                                 } else {
                                     code.push('X');
@@ -607,6 +607,17 @@ mod tests {
         assert_eq!(metaphone.encode("SCHEMATIC"), "SKMT");
         assert_eq!(metaphone.encode("CHARACTER"), "KRKT");
         assert_eq!(metaphone.encode("TEACH"), "TX");
+    }
+
+    #[test]
+    fn test_translate_of_ch_vowel_in_three_letter_word() {
+        let metaphone = Metaphone::default();
+
+        // Same as commons-codec: CH + vowel at the start is K from three letters on.
+        assert_eq!(metaphone.encode("CHA"), "K");
+        assert_eq!(metaphone.encode("CHI"), "K");
+        assert_eq!(metaphone.encode("CHAT"), "KT");
+        assert_eq!(metaphone.encode("CH"), "X");
     }
 
     #[test]
